@@ -1,9 +1,12 @@
 import { test, expect } from '@playwright/test';
+import { prepareStableApp, waitForMeteoNexaReady } from './test-helpers.mjs';
 
 test.describe('MeteoNexa custom controls and loaders', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('?preview');
-    await expect(page.locator('#weather-app')).toBeVisible({ timeout: 15000 });
+    await prepareStableApp(page);
+    await page.goto('?preview', { waitUntil: 'domcontentloaded' });
+    await waitForMeteoNexaReady(page);
+    await expect(page.locator('#weather-app')).toBeVisible({ timeout: 5000 });
   });
 
   test('main application contains no native select/checkbox/range/time widgets', async ({ page }) => {
@@ -34,12 +37,23 @@ test.describe('MeteoNexa custom controls and loaders', () => {
       if (route.request().method() !== 'POST') return route.continue();
       const body = route.request().postDataJSON() || {};
       await new Promise(resolve => setTimeout(resolve, 900));
-      await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, language: body.language || 'it', theme: body.theme || 'system', preferenceUpdatedAt: new Date().toISOString() }) });
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ok: true,
+          language: body.language || 'it',
+          theme: body.theme || 'system',
+          preferenceUpdatedAt: new Date().toISOString(),
+        }),
+      });
     });
+
     await page.evaluate(() => document.querySelector('#settings-dialog')?.showModal?.());
     const before = await page.locator('body').getAttribute('data-theme');
     const target = before === 'light' ? 'dark' : 'light';
     const trigger = page.locator('#theme-setting');
+
     await trigger.click();
     await page.locator(`#theme-setting-menu [data-meteo-option="${target}"]`).click();
     await expect(page.locator('body')).toHaveAttribute('data-theme', target, { timeout: 350 });
@@ -69,8 +83,14 @@ test.describe('MeteoNexa custom controls and loaders', () => {
       button.type = 'button';
       button.textContent = 'QA loader';
       document.body.appendChild(button);
-      button.addEventListener('click', () => window.MeteoNexaLoader.run('QA', 'Loading', () => new Promise(resolve => setTimeout(resolve, 800)), 700));
+      button.addEventListener('click', () => window.MeteoNexaLoader.run(
+        'QA',
+        'Loading',
+        () => new Promise(resolve => setTimeout(resolve, 800)),
+        700,
+      ));
     });
+
     const button = page.locator('#qa-loader-button');
     await button.click();
     await expect(button).toHaveClass(/button-loading/);

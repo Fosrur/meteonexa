@@ -1,21 +1,12 @@
 import { test, expect } from '@playwright/test';
-
-async function dismissPrivacyNotice(page) {
-  const notice = page.locator('#privacy-notice');
-  if (await notice.isVisible().catch(() => false)) {
-    await page.locator('#privacy-notice-ok').click();
-    await expect(notice).toBeHidden();
-  }
-}
+import { prepareStableApp, waitForMeteoNexaReady } from './test-helpers.mjs';
 
 test.describe('guest access regression', () => {
   test.beforeEach(async ({ page }) => {
-    await page.addInitScript(() => {
-      try { localStorage.clear(); sessionStorage.clear(); } catch {}
-    });
-    await page.goto('/');
-    await expect(page.locator('#auth-view')).toBeVisible({ timeout: 15000 });
-    await dismissPrivacyNotice(page);
+    await prepareStableApp(page, { clearStorage: true });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+    await waitForMeteoNexaReady(page);
+    await expect(page.locator('#auth-view')).toBeVisible({ timeout: 5000 });
   });
 
   test('the whole Continua come ospite CTA is clickable, not only its text', async ({ page }) => {
@@ -28,7 +19,7 @@ test.describe('guest access regression', () => {
 
     // Hit a safe point near the left edge, deliberately away from the label and chevron.
     await guest.click({ position: { x: 8, y: Math.max(8, Math.floor(box.height / 2)) } });
-    await expect(page.locator('#location-view')).toHaveClass(/active/, { timeout: 10000 });
+    await expect(page.locator('#location-view')).toHaveClass(/active/, { timeout: 5000 });
   });
 
   test('child label/icon never steal the pointer hit target', async ({ page }) => {
@@ -48,9 +39,13 @@ test.describe('guest access regression', () => {
       return {
         pointerEvents: style.pointerEvents,
         children,
-        probes: probes.map(([x, y]) => document.elementFromPoint(x, y)?.id || document.elementFromPoint(x, y)?.closest?.('#guest-login')?.id || ''),
+        probes: probes.map(([x, y]) => {
+          const node = document.elementFromPoint(x, y);
+          return node?.id || node?.closest?.('#guest-login')?.id || '';
+        }),
       };
     });
+
     expect(result.pointerEvents).not.toBe('none');
     expect(result.children.every(child => child.pointerEvents === 'none')).toBeTruthy();
     expect(result.probes.every(id => id === 'guest-login')).toBeTruthy();
