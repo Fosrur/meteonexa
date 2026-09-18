@@ -442,8 +442,11 @@ function applyThemePreference(preference = state.settings.theme, { persist = tru
         document.body.dataset.theme = resolved;
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', resolved === 'light' ? '#eef4f9' : '#06152f');
     try {
-        if (SERVICES.get('i18n')?.state)
-            SERVICES.get('i18n').state.theme = normalized;
+        const i18nState = SERVICES.get('i18n')?.state;
+        if (i18nState) {
+            i18nState.theme = normalized;
+            i18nState.resolvedTheme = resolved;
+        }
     }
     catch { }
     syncEnhancedSelect('theme-setting', normalized);

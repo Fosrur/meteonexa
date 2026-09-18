@@ -33,30 +33,19 @@ test.describe('MeteoNexa custom controls and loaders', () => {
     expect(await motion.evaluate(node => node.checked)).toBe(before !== 'true');
   });
 
-  test('theme changes immediately without page refresh or waiting for preference API', async ({ page }) => {
+  test('theme changes immediately without page refresh or preference persistence', async ({ page }) => {
+    let preferencePosts = 0;
     await page.route('**/api/preferences.php', async route => {
       if (route.request().method() !== 'POST') return route.continue();
-      const body = route.request().postDataJSON() || {};
-      // Deliberately slower than the local-theme assertions below. The test
-      // proves that the repaint is local-first and does not wait for persistence.
-      await new Promise(resolve => setTimeout(resolve, 2500));
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          ok: true,
-          language: body.language || 'it',
-          theme: body.theme || 'system',
-          preferenceUpdatedAt: new Date().toISOString(),
-        }),
-      });
+      preferencePosts += 1;
+      // Persistence failure must never roll back or delay the local repaint.
+      return route.abort('failed');
     });
 
     await page.evaluate(() => {
       window.__qaThemeEvents = [];
       document.addEventListener('meteonexa:theme-changed', event => {
         window.__qaThemeEvents.push({
-          at: performance.now(),
           preference: event.detail?.preference || '',
           resolved: event.detail?.resolved || '',
         });
@@ -80,11 +69,19 @@ test.describe('MeteoNexa custom controls and loaders', () => {
       () => page.evaluate(() => ({
         html: document.documentElement.dataset.theme || '',
         body: document.body?.dataset.theme || '',
+        runtimeTheme: window.MeteoNexaI18n?.state?.theme || '',
+        runtimeResolvedTheme: window.MeteoNexaI18n?.state?.resolvedTheme || '',
       })),
       { timeout: 1000 },
-    ).toEqual({ html: target, body: target });
+    ).toEqual({
+      html: target,
+      body: target,
+      runtimeTheme: target,
+      runtimeResolvedTheme: target,
+    });
 
     await expect(trigger).toHaveAttribute('value', target);
+    await expect.poll(() => preferencePosts, { timeout: 1000 }).toBeGreaterThan(0);
   });
 
   test('custom time listbox and range work with keyboard/pointer semantics', async ({ page }) => {
@@ -92,9 +89,6 @@ test.describe('MeteoNexa custom controls and loaders', () => {
       const dialog = document.querySelector('#notification-dialog');
       dialog?.showModal?.();
 
-      // Smart alerts are intentionally feature-gated for a guest preview.
-      // This is a component-semantics test, so expose only that existing
-      // section without changing the application's feature policy.
       const smart = document.querySelector('.smart-alert-preferences');
       if (smart) {
         smart.hidden = false;
@@ -127,7 +121,9 @@ test.describe('MeteoNexa custom controls and loaders', () => {
       button.type = 'button';
       button.textContent = 'QA loader';
       document.body.appendChild(button);
-      button.addEventListener('click', () => window.MeteoNexaLoader.run(
+
+      const loader = window.MeteoNexaServices.require('loader');
+      button.addEventListener('click', () => loader.run(
         'QA',
         'Loading',
         () => new Promise(resolve => setTimeout(resolve, 800)),
@@ -137,10 +133,6 @@ test.describe('MeteoNexa custom controls and loaders', () => {
 
     const button = page.locator('#qa-loader-button');
 
-    // Dispatch the real bubbling click event directly. This exercises
-    // MeteoNexa's document-level initiating-button capture and the button's
-    // own handler, without allowing the fixed sidebar geometry to intercept a
-    // synthetic pointer action created only for QA.
     await button.evaluate(node => {
       node.dispatchEvent(new MouseEvent('click', {
         bubbles: true,
