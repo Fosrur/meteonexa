@@ -55,8 +55,8 @@ if ($version !== 28) {
     fwrite(STDERR, "explicit MySQL migrations stopped at {$version}, expected 28\n");
     exit(1);
 }
-if (array_keys(meteonexa_migration_manifest()) !== range(16, 27)) {
-    fwrite(STDERR, "migration manifest is not contiguous from 16 to 27\n");
+if (array_keys(meteonexa_migration_manifest()) !== range(16, 28)) {
+    fwrite(STDERR, "migration manifest is not contiguous from 16 to 28\n");
     exit(1);
 }
 // Runtime capability sync remains idempotent self-heal after the versioned chain.

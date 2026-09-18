@@ -30,3 +30,6 @@ node_modules/
 /backups/
 /runtime-staging/
 /.env.staging
+
+# Dependency lockfile must be versioned
+!/composer.lock

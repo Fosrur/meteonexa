@@ -2706,4 +2706,7 @@ The build performs **concatenation only**: it does not reorder selectors, minify
 - `99-ux-reliability-patches.css` — final readability and async-state fixes.
 
 Other focused stylesheets (`advanced.css`, `intelligence.css`, `light-theme.css`, etc.) stay independent because they are already small, feature-scoped layers.
+## GitHub Actions evidence — RC2 remediation 2
+
+The real GitHub Actions pipeline on `Fosrur/meteonexa` is now being used as the production-readiness gate. Run 2 confirmed the MySQL 8.4 backup/restore drill end-to-end. The remaining CI findings were release-engineering issues rather than product regressions: the tracked Composer lockfile had been omitted from the repository, runtime staging ownership changed before chmod, the MySQL integration assertion still expected migrations 16..27 instead of the current 16..28 registry, and PHPStan did not scan the shared symbol-definition files used by `api/database/*`. RC2 remediation 2 restores the lockfile, makes runtime ownership/mode preparation privilege-safe, aligns the MySQL migration assertion with schema 28, and adds PHPStan symbol discovery for the shared storage/i18n/email-template functions. The full local `qa/run-all.sh` suite remains green after these changes.
 
