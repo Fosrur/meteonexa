@@ -34,7 +34,7 @@ def main():
         check('qa',403,lambda b,c: b'error-card' in b and b'403' in b,'Apache QA directory denial','text/html')
         check('__meteonexa_missing_page__',404,lambda b,c: b'error-card' in b and b'404' in b,'Apache browser 404 routing','text/html')
         check('api/__meteonexa_missing_api__',404,lambda b,c: json.loads(b).get('ok') is False,'Apache API 404 routing','application/json')
-    check('?preview',200,lambda b,c: b'id="home-chart"' in b and b'dist/weather-intelligence.' in b,'preview application shell','text/html')
+    check('?preview',200,lambda b,c: b'id="home-chart"' in b and b'asset-manifest.js' in b and b'dist/modules/esm/bootstrap.' in b,'preview application shell','text/html')
     if args.demo:
         check('api/demo/intelligence.php?lat=45.4642&lon=9.1900&location=Milano',200,lambda b,c: json.loads(b).get('ok') is True,'guest intelligence demo')
     if failures: print(f"HTTP smoke FAILED: {len(failures)}",file=sys.stderr); return 1
