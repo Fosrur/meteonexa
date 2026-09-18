@@ -1,5 +1,13 @@
 import { test, expect } from '@playwright/test';
 
+async function dismissPrivacyNotice(page) {
+  const notice = page.locator('#privacy-notice');
+  if (await notice.isVisible().catch(() => false)) {
+    await page.locator('#privacy-notice-ok').click();
+    await expect(notice).toBeHidden();
+  }
+}
+
 test.describe('guest access regression', () => {
   test.beforeEach(async ({ page }) => {
     await page.addInitScript(() => {
@@ -7,6 +15,7 @@ test.describe('guest access regression', () => {
     });
     await page.goto('/');
     await expect(page.locator('#auth-view')).toBeVisible({ timeout: 15000 });
+    await dismissPrivacyNotice(page);
   });
 
   test('the whole Continua come ospite CTA is clickable, not only its text', async ({ page }) => {

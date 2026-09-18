@@ -1,15 +1,23 @@
 import { test, expect } from '@playwright/test';
 
-async function loadBuiltAppSource(page) {
+async function dismissPrivacyNotice(page) {
+  const notice = page.locator('#privacy-notice');
+  if (await notice.isVisible().catch(() => false)) {
+    await page.locator('#privacy-notice-ok').click();
+    await expect(notice).toBeHidden();
+  }
+}
+
+async function loadBuiltSource(page, logicalPath) {
   const manifestResponse = await page.request.get('/asset-manifest.json');
   expect(manifestResponse.ok()).toBeTruthy();
   const manifest = await manifestResponse.json();
-  const source = manifest['app.js'];
-  expect(source).toMatch(/^\.\/dist\/app\.[a-f0-9]{12}\.js$/);
+  const source = manifest[logicalPath];
+  expect(source, `missing ${logicalPath} in asset manifest`).toBeTruthy();
 
-  const appResponse = await page.request.get(source.replace(/^\.\//, '/'));
-  expect(appResponse.ok()).toBeTruthy();
-  return appResponse.text();
+  const response = await page.request.get(String(source).replace(/^\.\//, '/'));
+  expect(response.ok()).toBeTruthy();
+  return response.text();
 }
 
 async function assertInteractiveChart(page, canvasSelector) {
@@ -42,28 +50,33 @@ test.describe('Firefox-safe charts', () => {
   test('home chart supports hover, click pin and keyboard', async ({ page }) => {
     await page.goto('?preview', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('#weather-app')).toBeVisible({ timeout: 10000 });
+    await dismissPrivacyNotice(page);
     await assertInteractiveChart(page, '#home-chart');
   });
 
   test('details chart supports hover and click', async ({ page }) => {
     await page.goto('?preview#details', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('#page-details')).toBeVisible({ timeout: 10000 });
+    await dismissPrivacyNotice(page);
     await assertInteractiveChart(page, '#detail-chart');
   });
 
   test('history chart is wired to the common interaction layer', async ({ page }) => {
     await page.goto('?preview', { waitUntil: 'domcontentloaded' });
-    const js = await loadBuiltAppSource(page);
-    expect(js).toContain("registerChartInteraction(canvas");
-    expect(js).toContain("const canvas = $('#history-chart')");
+    const visualization = await loadBuiltSource(page, 'modules/esm/domains/visualization.mjs');
+    const forecastHistory = await loadBuiltSource(page, 'modules/esm/domains/forecast-history.mjs');
+
+    expect(visualization).toContain('function registerChartInteraction(canvas, meta)');
+    expect(forecastHistory).toContain("const canvas = $('#history-chart')");
+    expect(forecastHistory).toContain('registerChartInteraction(canvas, {');
   });
 });
-
 
 test.describe('Mobile authentication recovery UX', () => {
   test('guest access does not focus the city search after one tap', async ({ page }) => {
     await page.goto('./', { waitUntil: 'domcontentloaded' });
     await expect(page.locator('#guest-login')).toBeVisible({ timeout: 10000 });
+    await dismissPrivacyNotice(page);
     await page.locator('#guest-login').click();
     await expect(page.locator('#location-view')).toHaveClass(/active/, { timeout: 5000 });
     await page.waitForTimeout(250);
@@ -71,22 +84,23 @@ test.describe('Mobile authentication recovery UX', () => {
     expect(activeId).not.toBe('onboarding-city');
   });
 
-
   test('cache reset path cannot block on serviceWorker.ready', async ({ page }) => {
     await page.goto('./', { waitUntil: 'domcontentloaded' });
-    const js = await loadBuiltAppSource(page);
+    const js = await loadBuiltSource(page, 'app.js');
+
     const start = js.indexOf('const PRESERVED_LOCAL_KEYS_ON_CACHE_RESET');
-    const end = js.indexOf('function updatePwaSettingsStatus()', start);
+    const end = js.indexOf('async function requestGuestCacheReceiptProof()', start);
     expect(start).toBeGreaterThan(-1);
     expect(end).toBeGreaterThan(start);
+
     const resetPath = js.slice(start, end);
     expect(resetPath).not.toContain('navigator.serviceWorker.ready');
     expect(resetPath).not.toContain('navigator.serviceWorker?.ready');
     expect(resetPath).toContain('settleBrowserOperation');
     expect(resetPath).toContain('clearMeteoNexaLocalRuntimeState({ preservePreferences: true })');
-    expect(resetPath).toContain('location.replace(logoutTarget)');
+    expect(resetPath).toContain('Promise.allSettled([');
+    expect(resetPath).toContain('unregisterMeteoNexaServiceWorkers()');
   });
-
 
   test('orphaned server email session does not rebuild login after local auth state is cleared', async ({ page }) => {
     await page.addInitScript(() => {
