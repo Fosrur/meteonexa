@@ -38,7 +38,6 @@ test.describe('MeteoNexa custom controls and loaders', () => {
     await page.route('**/api/preferences.php', async route => {
       if (route.request().method() !== 'POST') return route.continue();
       preferencePosts += 1;
-      // Persistence failure must never roll back or delay the local repaint.
       return route.abort('failed');
     });
 
@@ -86,31 +85,65 @@ test.describe('MeteoNexa custom controls and loaders', () => {
 
   test('custom time listbox and range work with keyboard/pointer semantics', async ({ page }) => {
     await page.evaluate(() => {
-      const dialog = document.querySelector('#notification-dialog');
-      dialog?.showModal?.();
+      const sourceSelect = document.querySelector('#smart-quiet-start')?.closest('[data-meteo-select-control]');
+      const sourceRange = document.querySelector('#threshold-rain');
+      if (!sourceSelect || !sourceRange) throw new Error('QA_CUSTOM_CONTROL_SOURCE_MISSING');
 
-      const smart = document.querySelector('.smart-alert-preferences');
-      if (smart) {
-        smart.hidden = false;
-        smart.removeAttribute('hidden');
-      }
+      const fixture = document.createElement('section');
+      fixture.id = 'qa-custom-controls-fixture';
+      fixture.setAttribute('aria-label', 'QA custom controls');
+      Object.assign(fixture.style, {
+        position: 'fixed',
+        left: '24px',
+        top: '24px',
+        zIndex: '2147483647',
+        width: '360px',
+        minHeight: '180px',
+        padding: '20px',
+        display: 'grid',
+        gap: '28px',
+        background: 'var(--surface, #fff)',
+      });
+
+      const select = sourceSelect.cloneNode(true);
+      const trigger = select.querySelector('[data-meteo-select]');
+      const menu = select.querySelector('.meteo-select-menu');
+      trigger.removeAttribute('data-meteo-enhanced');
+      trigger.id = 'qa-time-select';
+      trigger.setAttribute('aria-controls', 'qa-time-menu');
+      menu.id = 'qa-time-menu';
+      menu.hidden = true;
+
+      const range = sourceRange.cloneNode(true);
+      range.removeAttribute('data-meteo-enhanced');
+      range.id = 'qa-range';
+      range.style.width = '320px';
+
+      fixture.append(select, range);
+      document.body.appendChild(fixture);
+
+      window.MeteoNexaServices.require('controls').enhance(fixture);
     });
 
-    const start = page.locator('#smart-quiet-start');
+    const start = page.locator('#qa-time-select');
     await expect(start).toBeVisible({ timeout: 2000 });
     await start.click();
-    const option = page.locator('#smart-quiet-start-menu [data-meteo-option="22:30"]');
+
+    const option = page.locator('#qa-time-menu [data-meteo-option="22:30"]');
     await expect(option).toBeVisible({ timeout: 2000 });
     await option.click();
+
+    await expect(start).toHaveAttribute('value', '22:30');
     expect(await start.evaluate(node => node.value)).toBe('22:30');
 
-    const rain = page.locator('#threshold-rain');
-    await rain.scrollIntoViewIfNeeded();
-    await expect(rain).toBeVisible({ timeout: 2000 });
-    const before = Number(await rain.getAttribute('aria-valuenow'));
-    await rain.focus();
+    const range = page.locator('#qa-range');
+    await expect(range).toBeVisible({ timeout: 2000 });
+    const before = Number(await range.getAttribute('aria-valuenow'));
+
+    await range.focus();
     await page.keyboard.press('ArrowRight');
-    const after = Number(await rain.getAttribute('aria-valuenow'));
+
+    const after = Number(await range.getAttribute('aria-valuenow'));
     expect(after).toBeGreaterThan(before);
   });
 
