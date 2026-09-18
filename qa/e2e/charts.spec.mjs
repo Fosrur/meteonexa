@@ -1,5 +1,17 @@
 import { test, expect } from '@playwright/test';
 
+async function loadBuiltAppSource(page) {
+  const manifestResponse = await page.request.get('/asset-manifest.json');
+  expect(manifestResponse.ok()).toBeTruthy();
+  const manifest = await manifestResponse.json();
+  const source = manifest['app.js'];
+  expect(source).toMatch(/^\.\/dist\/app\.[a-f0-9]{12}\.js$/);
+
+  const appResponse = await page.request.get(source.replace(/^\.\//, '/'));
+  expect(appResponse.ok()).toBeTruthy();
+  return appResponse.text();
+}
+
 async function assertInteractiveChart(page, canvasSelector) {
   const canvas = page.locator(canvasSelector);
   await expect(canvas).toBeVisible();
@@ -28,21 +40,20 @@ async function assertInteractiveChart(page, canvasSelector) {
 
 test.describe('Firefox-safe charts', () => {
   test('home chart supports hover, click pin and keyboard', async ({ page }) => {
-    await page.goto('?preview');
-    await expect(page.locator('#weather-app')).toBeVisible({ timeout: 15000 });
+    await page.goto('?preview', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('#weather-app')).toBeVisible({ timeout: 10000 });
     await assertInteractiveChart(page, '#home-chart');
   });
 
   test('details chart supports hover and click', async ({ page }) => {
-    await page.goto('?preview#details');
-    await expect(page.locator('#page-details')).toBeVisible({ timeout: 15000 });
+    await page.goto('?preview#details', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('#page-details')).toBeVisible({ timeout: 10000 });
     await assertInteractiveChart(page, '#detail-chart');
   });
 
   test('history chart is wired to the common interaction layer', async ({ page }) => {
-    await page.goto('?preview');
-    const source = await page.locator('script[src^="app.js"]').getAttribute('src');
-    const js = await (await page.request.get(source || 'app.js')).text();
+    await page.goto('?preview', { waitUntil: 'domcontentloaded' });
+    const js = await loadBuiltAppSource(page);
     expect(js).toContain("registerChartInteraction(canvas");
     expect(js).toContain("const canvas = $('#history-chart')");
   });
@@ -51,8 +62,8 @@ test.describe('Firefox-safe charts', () => {
 
 test.describe('Mobile authentication recovery UX', () => {
   test('guest access does not focus the city search after one tap', async ({ page }) => {
-    await page.goto('./');
-    await expect(page.locator('#guest-login')).toBeVisible({ timeout: 15000 });
+    await page.goto('./', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('#guest-login')).toBeVisible({ timeout: 10000 });
     await page.locator('#guest-login').click();
     await expect(page.locator('#location-view')).toHaveClass(/active/, { timeout: 5000 });
     await page.waitForTimeout(250);
@@ -62,9 +73,8 @@ test.describe('Mobile authentication recovery UX', () => {
 
 
   test('cache reset path cannot block on serviceWorker.ready', async ({ page }) => {
-    await page.goto('./');
-    const source = await page.locator('script[src^="app.js"]').getAttribute('src');
-    const js = await (await page.request.get(source || 'app.js')).text();
+    await page.goto('./', { waitUntil: 'domcontentloaded' });
+    const js = await loadBuiltAppSource(page);
     const start = js.indexOf('const PRESERVED_LOCAL_KEYS_ON_CACHE_RESET');
     const end = js.indexOf('function updatePwaSettingsStatus()', start);
     expect(start).toBeGreaterThan(-1);
@@ -108,10 +118,10 @@ test.describe('Mobile authentication recovery UX', () => {
       await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ ok: true, trustedDeviceRevoked: true }) });
     });
 
-    await page.goto('./');
-    await expect(page.locator('#guest-login')).toBeVisible({ timeout: 15000 });
+    await page.goto('./', { waitUntil: 'domcontentloaded' });
+    await expect(page.locator('#guest-login')).toBeVisible({ timeout: 10000 });
     await expect(page.locator('#weather-app')).toBeHidden();
-    await expect.poll(() => logoutCalls).toBeGreaterThan(0);
+    await expect.poll(() => logoutCalls, { timeout: 5000 }).toBeGreaterThan(0);
     const localSession = await page.evaluate(() => localStorage.getItem('meteonexa_v3_session'));
     expect(localSession).toBeNull();
   });

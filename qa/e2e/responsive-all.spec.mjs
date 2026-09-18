@@ -15,26 +15,42 @@ async function noHorizontalOverflow(page, selector) {
   });
 }
 
+async function activatePageWithoutActionabilityWait(page, name) {
+  return page.evaluate(pageName => {
+    const trigger = document.querySelector(`[data-page="${pageName}"]`);
+    if (!trigger) return false;
+    trigger.click();
+    return true;
+  }, name);
+}
+
 test.describe('responsive regression matrix', () => {
   for (const [width,height] of viewports) {
     test(`pages and dialogs fit ${width}x${height}`, async ({ page }) => {
       await page.setViewportSize({width,height});
-      await page.goto('?preview');
-      await expect(page.locator('#weather-app')).toBeVisible({timeout:15000});
+      await page.goto('?preview', { waitUntil: 'domcontentloaded' });
+      await expect(page.locator('#weather-app')).toBeVisible({timeout:10000});
+
       for (const name of pages) {
-        await page.locator(`[data-page="${name}"]`).first().click().catch(()=>{});
         const current=page.locator(`#page-${name}`);
-        if (await current.count()) {
-          await expect(current).toBeVisible();
-          expect(await noHorizontalOverflow(page, `#page-${name}`)).toBeTruthy();
-        }
+        if (!(await current.count())) continue;
+
+        // This suite validates layout, not pointer actionability. A normal
+        // locator.click() on a hidden mobile-nav trigger can wait the full test
+        // timeout before catch(), multiplying into minutes across the matrix.
+        // DOM click executes the same application handler immediately while we
+        // still fail if the navigation contract itself is missing.
+        expect(await activatePageWithoutActionabilityWait(page, name), `missing [data-page="${name}"] trigger`).toBeTruthy();
+        await expect(current).toBeVisible({ timeout: 3000 });
+        expect(await noHorizontalOverflow(page, `#page-${name}`)).toBeTruthy();
       }
+
       for (const id of dialogs) {
         const dlg=page.locator(`#${id}`);
         if (!(await dlg.count())) continue;
-        await page.evaluate(id => { const el=document.getElementById(id); if(el && !el.open) el.showModal?.(); }, id);
+        await page.evaluate(dialogId => { const el=document.getElementById(dialogId); if(el && !el.open) el.showModal?.(); }, id);
         if (await dlg.isVisible()) expect(await noHorizontalOverflow(page, `#${id}`)).toBeTruthy();
-        await page.evaluate(id => { const el=document.getElementById(id); if(el?.open) el.close?.(); }, id);
+        await page.evaluate(dialogId => { const el=document.getElementById(dialogId); if(el?.open) el.close?.(); }, id);
       }
     });
   }
