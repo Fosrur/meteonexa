@@ -46,6 +46,21 @@ def source_markdown_files() -> list[str]:
 
 project_markdown = source_markdown_files()
 
+# Browser CI may be expressed either as one command installing both engines or
+# as a matrix that runs one isolated job per engine. Both contracts provide the
+# required Chromium + Firefox coverage; the split form is preferred because a
+# slow/failing browser no longer serially blocks the other one.
+browser_ci_monolithic = (
+    'chromium firefox' in workflow
+    and 'npm run test:e2e' in workflow
+)
+browser_ci_matrix = (
+    bool(re.search(r'browser:\s*\[\s*chromium\s*,\s*firefox\s*\]', workflow))
+    and 'matrix.browser' in workflow
+    and 'npx playwright install --with-deps "${{ matrix.browser }}"' in workflow
+    and 'npm run test:e2e -- --project="${{ matrix.browser }}"' in workflow
+)
+
 checks = {
     'single consolidated Markdown source of truth': project_markdown == ['METEONEXA-20.1-RC2.md'],
     'schema 28 is the current contract': 'schema **28**' in md or 'schema 28' in md,
@@ -64,7 +79,7 @@ checks = {
     'composer lock is present and non-empty': bool(composer_lock.get('packages-dev')),
     'CI and Docker build use npm ci without npm install fallback': workflow.count('npm ci') >= 2 and 'npm ci --ignore-scripts --no-audit --no-fund' in dockerfile and 'npm install ' not in dockerfile,
     'Playwright lock is exact': qa_pkgs.get('node_modules/@playwright/test', {}).get('version') == '1.55.0' and qa_pkgs.get('node_modules/playwright', {}).get('version') == '1.55.0',
-    'browser CI is Chromium + Firefox': 'chromium firefox' in workflow and 'npm run test:e2e' in workflow,
+    'browser CI covers Chromium + Firefox': browser_ci_monolithic or browser_ci_matrix,
     'MySQL CI is real 8.4': 'image: mysql:8.4' in workflow and 'qa/mysql_full_integration.php' in workflow,
     'security CI includes Semgrep and Trivy': 'semgrep/semgrep:1.169.0' in workflow and workflow.count('aquasecurity/trivy-action@v0.36.0') >= 2,
     'production env template exposes legal identity': all(re.search(rf'^{re.escape(k)}=', env, re.M) for k in ['METEONEXA_PRIVACY_CONTACT_EMAIL','METEONEXA_LEGAL_CONTROLLER_NAME','METEONEXA_LEGAL_CONTROLLER_ADDRESS','METEONEXA_DPO_STATUS','METEONEXA_DPO_EMAIL','METEONEXA_LEGAL_SITE_URL']),
