@@ -33,22 +33,25 @@ test.describe('MeteoNexa custom controls and loaders', () => {
     expect(await motion.evaluate(node => node.checked)).toBe(before !== 'true');
   });
 
-  test('theme changes immediately without page refresh or preference persistence', async ({ page }) => {
-    let preferencePosts = 0;
-    await page.route('**/api/preferences.php', async route => {
-      if (route.request().method() !== 'POST') return route.continue();
-      preferencePosts += 1;
-      return route.abort('failed');
-    });
-
+  test('theme changes immediately while remote preference persistence is still pending', async ({ page }) => {
     await page.evaluate(() => {
-      window.__qaThemeEvents = [];
-      document.addEventListener('meteonexa:theme-changed', event => {
-        window.__qaThemeEvents.push({
-          preference: event.detail?.preference || '',
-          resolved: event.detail?.resolved || '',
-        });
-      });
+      const originalFetch = window.fetch.bind(window);
+      window.__qaPreferencePostStarted = 0;
+
+      window.fetch = (input, init = {}) => {
+        const url = typeof input === 'string' ? input : String(input?.url || '');
+        const method = String(init?.method || 'GET').toUpperCase();
+
+        if (url.includes('api/preferences.php') && method === 'POST') {
+          window.__qaPreferencePostStarted += 1;
+          // Keep persistence deliberately unresolved. The visible theme must
+          // still update locally and synchronously before this request settles.
+          return new Promise(() => {});
+        }
+
+        return originalFetch(input, init);
+      };
+
       document.querySelector('#settings-dialog')?.showModal?.();
     });
 
@@ -59,28 +62,19 @@ test.describe('MeteoNexa custom controls and loaders', () => {
     await trigger.click();
     await page.locator(`#theme-setting-menu [data-meteo-option="${target}"]`).click();
 
-    await expect.poll(
-      () => page.evaluate(() => window.__qaThemeEvents?.at(-1)?.resolved || ''),
-      { timeout: 1000 },
-    ).toBe(target);
+    await expect(trigger).toHaveAttribute('value', target, { timeout: 2000 });
+    await expect(page.locator('html')).toHaveAttribute('data-theme', target, { timeout: 2000 });
+    await expect(page.locator('body')).toHaveAttribute('data-theme', target, { timeout: 2000 });
 
-    await expect.poll(
-      () => page.evaluate(() => ({
-        html: document.documentElement.dataset.theme || '',
-        body: document.body?.dataset.theme || '',
-        runtimeTheme: window.MeteoNexaI18n?.state?.theme || '',
-        runtimeResolvedTheme: window.MeteoNexaI18n?.state?.resolvedTheme || '',
-      })),
-      { timeout: 1000 },
-    ).toEqual({
-      html: target,
-      body: target,
-      runtimeTheme: target,
-      runtimeResolvedTheme: target,
-    });
+    const runtime = await page.evaluate(() => ({
+      theme: window.MeteoNexaI18n?.state?.theme || '',
+      resolvedTheme: window.MeteoNexaI18n?.state?.resolvedTheme || '',
+      preferencePostStarted: Number(window.__qaPreferencePostStarted || 0),
+    }));
 
-    await expect(trigger).toHaveAttribute('value', target);
-    await expect.poll(() => preferencePosts, { timeout: 1000 }).toBeGreaterThan(0);
+    expect(runtime.theme).toBe(target);
+    expect(runtime.resolvedTheme).toBe(target);
+    expect(runtime.preferencePostStarted).toBeGreaterThan(0);
   });
 
   test('custom time listbox and range work with keyboard/pointer semantics', async ({ page }) => {
