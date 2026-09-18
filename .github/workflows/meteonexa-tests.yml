@@ -61,9 +61,6 @@ jobs:
           MYSQL_USER: meteonexa
           MYSQL_PASSWORD: meteonexa
         run: |
-          # MySQL 8.4 + binary logging requires this server-side switch for
-          # trigger creation by the non-SUPER application user. Tests continue
-          # to execute as MYSQL_USER; root is used only for this CI bootstrap.
           mysql --protocol=TCP -h127.0.0.1 -P3306 -uroot -prootpass -e "SET GLOBAL log_bin_trust_function_creators = 1"
           php qa/mysql_auth_integration.php
           php qa/mysql_full_integration.php
@@ -184,9 +181,14 @@ jobs:
           sudo rm -rf runtime-staging .env.staging || true
 
   browser-regression:
+    name: browser-regression (${{ matrix.browser }})
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
     needs: [release-gates, mysql-auth-regression, quality-security, backup-restore-drill, staging-compose]
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox]
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt-get update && sudo apt-get install -y php-cli php-sqlite3 php-curl php-gd
@@ -200,21 +202,21 @@ jobs:
           for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8088/?preview >/dev/null && exit 0; sleep 1; done
           cat "$RUNNER_TEMP/meteonexa/php-server.log"; exit 1
       - run: python3 qa/http_smoke.py http://127.0.0.1:8088/
-      - name: Install Playwright browsers
+      - name: Install Playwright browser
         working-directory: qa
         run: |
           npm ci --no-audit --no-fund
-          npx playwright install --with-deps chromium firefox
+          npx playwright install --with-deps "${{ matrix.browser }}"
       - name: Chromium and Firefox E2E
         working-directory: qa
         env:
           METEONEXA_TEST_BASE_URL: http://127.0.0.1:8088/
-        run: npm run test:e2e
+        run: npm run test:e2e -- --project="${{ matrix.browser }}"
       - name: Upload browser report on failure
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: meteonexa-playwright-report
+          name: meteonexa-playwright-${{ matrix.browser }}-report
           path: qa/playwright-report/
           if-no-files-found: ignore
 
