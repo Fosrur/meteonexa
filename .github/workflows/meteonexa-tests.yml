@@ -28,6 +28,10 @@ jobs:
           test -f package-lock.json
           test -f qa/package-lock.json
           test -f composer.lock
+      - name: Rebuild deterministic production assets
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run build:production
       - name: Current release and regression suite
         run: bash qa/run-all.sh
 

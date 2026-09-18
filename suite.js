@@ -6,7 +6,7 @@
     const SERVICES = window.MeteoNexaServices;
     if (!SERVICES) throw new Error('METEONEXA_SERVICES_NOT_LOADED');
     const APP_RUNTIME = SERVICES.require('runtimeApi').get();
-    const { showToast, withLoader, loadWeather, syncEnhancedSelect, updateThreshold, appLocale, temperature, t } = APP_RUNTIME;
+    const { showToast, withLoader, loadWeather, syncEnhancedSelect, updateThreshold, appLocale, temperature, t, weatherMeta } = APP_RUNTIME;
     const state = APP_RUNTIME.getState();
     const SECURITY = SERVICES.get('security');
     if (!SECURITY)
@@ -938,7 +938,7 @@
     } = SERVICES.require('suiteAssistant').create({
         API, KEYS, addDays, apiMessage, calculateRouteCore, clamp, currentLocale, environmentPeaks,
         geocodeCity, isGuest, loadEnvironment, loader, localTime, locationLabel, modelConfidence, n, nearestTimeIndex,
-        nowcastBase, nowcastReliability, q, qa, safe, snapshot, stabilityScore, state, suite, tempText, toast, ui, temperature
+        nowcastBase, nowcastReliability, q, qa, safe, snapshot, stabilityScore, state, suite, tempText, toast, ui, temperature, weatherMeta
     });
 
     async function configureBackgroundChecks() {

@@ -151,6 +151,7 @@ const {
     requestSafeBackgroundSync: (...args) => requestSafeBackgroundSync(...args),
     showToast: (...args) => showToast(...args),
     initializeEnhancedSelects: (...args) => initializeEnhancedSelects(...args),
+    syncEnhancedSelect: (...args) => syncEnhancedSelect(...args),
     applySettings: (...args) => applySettings(...args),
     withLoader: (...args) => withLoader(...args),
     updateProfileUI: (...args) => updateProfileUI(...args),
@@ -718,7 +719,8 @@ const {
     normalizeLocation: (...args) => normalizeLocation(...args),
     syncFavoriteUI: (...args) => syncFavoriteUI(...args),
     renderFavorites: (...args) => renderFavorites(...args),
-    updateSelectedLocationUI: (...args) => updateSelectedLocationUI(...args)
+    updateSelectedLocationUI: (...args) => updateSelectedLocationUI(...args),
+    meteonexaText: (...args) => meteonexaText(...args)
 });
 const {
     setAuthStep, stopAuthResendTimer, startAuthResendTimer, refreshAuthServerStatus,
@@ -2693,12 +2695,15 @@ const {
     drawHomeChart, drawDetailChart, drawAllDetailCharts, initializeWeatherFX, resizeWeatherFX,
     updateWeatherAtmosphere, drawMotionChart, drawTrendCharts, initializeChartObservers,
     lonLatToWorld, worldToLonLat, radarTileUrl, analyzeRadarMotion, renderRadarMotion,
-    syncRadarVectorLayer, selectRadarLocation, performRadarCitySearch, useGpsFromRadar, setRadarMode,
+    syncRadarVectorLayer, removeRadarVectorLayer, selectRadarLocation, performRadarCitySearch, useGpsFromRadar, setRadarMode,
     renderRadarMap, drawForecastRadarLayer, ensureRadar, setRadarFrame, stopRadarAnimation,
     toggleRadarAnimation, stepRadar, zoomRadar
 } = SERVICES.require('visualization').create({
-    state, $, $$, clamp, appLocale, capitalize, meteonexaText, escapeHTML, temperature, unitLabel,
-    formatClock, currentHourlyIndex, t, currentResolvedCondition, localSeriesIndex, drawHistoryChart
+    state, CONFIG, STORAGE, $, $$, clamp, appLocale, capitalize, meteonexaText, escapeHTML, temperature, convertTemp, unitLabel,
+    formatClock, windDirection, currentHourlyIndex, t, currentResolvedCondition, isUiFeatureVisible, intelligenceLocationKey,
+    localSeriesIndex, drawHistoryChart, saveJSON, debounce, normalizeLocation, withLoader, addRecent, updateSelectedLocationUI,
+    fullLocationLabel, loadWeather, renderAll, searchCities, getCurrentLocationData, locationErrorMessage, persistLocalSettings,
+    fetchJSON, sleep, formatLocationLocalTime, showToast, drawRadarBaseMap, loadRadarBaseData, loadRadarAdminData
 });
 async function loadRadarBaseData() {
     if (state.radar.baseData)
@@ -4541,6 +4546,8 @@ RUNTIME_API.publish({
     t,
     average,
     renderAll,
+    ensureRadar,
+    removeRadarVectorLayer,
     formatClock,
     weatherMeta,
     weatherArt

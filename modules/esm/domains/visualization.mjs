@@ -6,10 +6,13 @@ function factory(window, deps, provided) {
     provided.visualization = Object.freeze({
         create(context) {
             const {
-                state, $, $$, clamp, appLocale, capitalize, meteonexaText,
-                escapeHTML, temperature, unitLabel, formatClock,
-                currentHourlyIndex, t, currentResolvedCondition,
-                localSeriesIndex, drawHistoryChart
+                state, CONFIG, STORAGE, $, $$, clamp, appLocale, capitalize, meteonexaText,
+                escapeHTML, temperature, convertTemp, unitLabel, formatClock, windDirection,
+                currentHourlyIndex, t, currentResolvedCondition, isUiFeatureVisible, intelligenceLocationKey,
+                localSeriesIndex, drawHistoryChart, saveJSON, debounce, normalizeLocation, withLoader, addRecent,
+                updateSelectedLocationUI, fullLocationLabel, loadWeather, renderAll, searchCities, getCurrentLocationData,
+                locationErrorMessage, persistLocalSettings, fetchJSON, sleep, formatLocationLocalTime, showToast,
+                drawRadarBaseMap, loadRadarBaseData, loadRadarAdminData
             } = context;
             if (!state || typeof $ !== 'function' || typeof $$ !== 'function') {
                 throw new Error('METEONEXA_VISUALIZATION_CONTEXT_INVALID');
@@ -1027,7 +1030,7 @@ function factory(window, deps, provided) {
             isUiFeatureVisible, intelligenceLocationKey, escapeHTML
         });
         const {
-            syncRadarVectorLayer, selectRadarLocation, performRadarCitySearch, useGpsFromRadar, setRadarMode,
+            syncRadarVectorLayer, removeRadarVectorLayer, selectRadarLocation, performRadarCitySearch, useGpsFromRadar, setRadarMode,
             renderRadarMap, drawForecastRadarLayer, ensureRadar, setRadarFrame, stopRadarAnimation,
             toggleRadarAnimation, stepRadar, zoomRadar
         } = deps.radarController.create({
@@ -1054,7 +1057,7 @@ function factory(window, deps, provided) {
                 drawTrendCharts,
                 initializeChartObservers,
                 lonLatToWorld, worldToLonLat, radarTileUrl, analyzeRadarMotion, renderRadarMotion,
-                syncRadarVectorLayer, selectRadarLocation, performRadarCitySearch, useGpsFromRadar, setRadarMode,
+                syncRadarVectorLayer, removeRadarVectorLayer, selectRadarLocation, performRadarCitySearch, useGpsFromRadar, setRadarMode,
                 renderRadarMap, drawForecastRadarLayer, ensureRadar, setRadarFrame, stopRadarAnimation,
                 toggleRadarAnimation, stepRadar, zoomRadar
             });

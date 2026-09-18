@@ -57,7 +57,7 @@ export function install(services, host = globalThis) {
                             return;
                         }
                         button.disabled = true;
-                        label.textContent = meteonexaText('auth.resend.countdown', { seconds: authResendSeconds });
+                        label.textContent = t('auth.resend.countdown', { seconds: authResendSeconds });
                         authResendSeconds -= 1;
                     };
                     tick();
@@ -141,7 +141,7 @@ export function install(services, host = globalThis) {
         
                 function openAuthDialog(type) {
                     if (type === 'sms') {
-                        showToast("" + meteonexaText("auth.openauthdialog.sms_unavailable"), "" + meteonexaText("auth.sms_sign_isnt_available_yet_use_email_continue"), 'info');
+                        showToast("" + t("auth.openauthdialog.sms_unavailable"), "" + t("auth.sms_sign_isnt_available_yet_use_email_continue"), 'info');
                         return;
                     }
                     $('#auth-dialog-icon').innerHTML = '<svg><use href="#i-mail"/></svg>';
@@ -166,8 +166,8 @@ export function install(services, host = globalThis) {
                     let trusted = null;
                     try {
                         trusted = await withLoader(
-                            meteonexaText('auth.trusted.checking.title'),
-                            meteonexaText('auth.trusted.checking.copy'),
+                            t('auth.trusted.checking.title'),
+                            t('auth.trusted.checking.copy'),
                             () => apiRequest('api/auth/trusted-check.php', { action: 'trusted-reentry' }, { timeout: 5500, notifyAuthRequired: false }),
                             280
                         );
@@ -175,8 +175,8 @@ export function install(services, host = globalThis) {
                         console.warn('TRUSTED_DEVICE_PRECHECK_FAILED', error);
                     }
                     if (trusted?.authenticated === true && trusted?.trusted === true) {
-                        await startLocalSession({ type: 'email', name: trusted.displayName || meteonexaText('app.name'), verified: true, serverVerified: true });
-                        showToast(meteonexaText('auth.trusted.reentry.title'), meteonexaText('auth.trusted.reentry.copy'), 'success');
+                        await startLocalSession({ type: 'email', name: trusted.displayName || t('app.name'), verified: true, serverVerified: true });
+                        showToast(t('auth.trusted.reentry.title'), t('auth.trusted.reentry.copy'), 'success');
                         return;
                     }
                     openAuthDialog('email');
@@ -186,12 +186,12 @@ export function install(services, host = globalThis) {
                     clearFieldError('auth-primary');
                     if (!validEmail(email)) {
                         setFieldError('auth-primary', t("auth.enter_valid_email_address"));
-                        showToast("" + meteonexaText("auth.requestemailcode.invalid_email"), "" + meteonexaText("auth.check_email_address_entered"), 'error');
+                        showToast("" + t("auth.requestemailcode.invalid_email"), "" + t("auth.check_email_address_entered"), 'error');
                         return;
                     }
                     try {
                         let trustedReentry = false;
-                        await withLoader(resend ? "" + meteonexaText("auth.requestemailcode.new_code") : "" + meteonexaText("auth.requestemailcode.sending_code"), "" + meteonexaText("auth.requestemailcode.sending_verification_email"), async () => {
+                        await withLoader(resend ? "" + t("auth.requestemailcode.new_code") : "" + t("auth.requestemailcode.sending_code"), "" + t("auth.requestemailcode.sending_verification_email"), async () => {
                             const result = await apiRequest('api/auth/request-code.php', { email, language: state.settings.language });
                             if (result.authenticated === true && result.trustedDevice === true) {
                                 trustedReentry = true;
@@ -205,10 +205,10 @@ export function install(services, host = globalThis) {
                             startAuthResendTimer(Number(result.resendAfter || 60));
                             setTimeout(() => $('#auth-code').focus(), 100);
                         }, 420);
-                        showToast("" + meteonexaText(trustedReentry ? 'auth.requestemailcode.email_verified' : 'auth.requestemailcode.code_sent'), "" + meteonexaText(trustedReentry ? 'auth.requestemailcode.secure_access_completed' : 'auth.also_check_spam_folder_code_expires_10_minutes'), 'success');
+                        showToast("" + t(trustedReentry ? 'auth.requestemailcode.email_verified' : 'auth.requestemailcode.code_sent'), "" + t(trustedReentry ? 'auth.requestemailcode.secure_access_completed' : 'auth.also_check_spam_folder_code_expires_10_minutes'), 'success');
                     }
                     catch (error) {
-                        showToast("" + meteonexaText("auth.requestemailcode.send_failed"), error.message, 'error', 5200);
+                        showToast("" + t("auth.requestemailcode.send_failed"), error.message, 'error', 5200);
                     }
                 }
                 async function verifyEmailCode() {
@@ -217,19 +217,19 @@ export function install(services, host = globalThis) {
                     clearFieldError('auth-code');
                     if (!/^\d{6}$/.test(code)) {
                         setFieldError('auth-code', t("auth.enter_6_digits_received_by_email"));
-                        showToast("" + meteonexaText("auth.verifyemailcode.incomplete_code"), "" + meteonexaText("auth.code_must_contain_6_digits"), 'error');
+                        showToast("" + t("auth.verifyemailcode.incomplete_code"), "" + t("auth.code_must_contain_6_digits"), 'error');
                         return;
                     }
                     try {
-                        const result = await withLoader("" + meteonexaText("auth.verifyemailcode.verify_code"), "" + meteonexaText("auth.checking_one_time_code"), () => apiRequest('api/auth/verify-code.php', { email, code, language: state.settings.language }), 420);
+                        const result = await withLoader("" + t("auth.verifyemailcode.verify_code"), "" + t("auth.checking_one_time_code"), () => apiRequest('api/auth/verify-code.php', { email, code, language: state.settings.language }), 420);
                         stopAuthResendTimer();
                             $('#auth-dialog').close();
                         await startLocalSession({ type: 'email', name: result.displayName || email.split('@')[0], email: result.email || email, verified: true, serverVerified: true });
-                        showToast("" + meteonexaText("auth.requestemailcode.email_verified"), "" + meteonexaText("auth.requestemailcode.secure_access_completed"), 'success');
+                        showToast("" + t("auth.requestemailcode.email_verified"), "" + t("auth.requestemailcode.secure_access_completed"), 'success');
                     }
                     catch (error) {
-                        setFieldError('auth-code', error.message || "" + meteonexaText("auth.code_invalid_has_expired"));
-                        showToast("" + meteonexaText("auth.verifyemailcode.verification_failed"), error.message || "" + meteonexaText("auth.request_new_code_try_again"), 'error');
+                        setFieldError('auth-code', error.message || "" + t("auth.code_invalid_has_expired"));
+                        showToast("" + t("auth.verifyemailcode.verification_failed"), error.message || "" + t("auth.request_new_code_try_again"), 'error');
                     }
                 }
         

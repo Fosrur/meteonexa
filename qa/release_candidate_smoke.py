@@ -72,7 +72,7 @@ if 'ensureRadar, setRadarFrame, stopRadarAnimation' not in app:
     fail('app.js does not bind radar runtime functions from visualization')
 
 sw = text('sw.js')
-for marker in ('CRITICAL_SHELL', 'OPTIONAL_SHELL', 'WARM_OPTIONAL_SHELL', "cache: immutableAssetRequest(url) ? 'force-cache' : 'reload'", "SHELL_REVISION = 'rc2-stabilization-01-lifecycle-guest'"):
+for marker in ('CRITICAL_SHELL', 'OPTIONAL_SHELL', 'WARM_OPTIONAL_SHELL', "cache: immutableAssetRequest(url) ? 'force-cache' : 'reload'", "SHELL_REVISION = 'rc2-stabilization-02-ci-esm'"):
     if marker not in sw:
         fail(f'service worker performance contract missing: {marker}')
 install_match = re.search(r"addEventListener\('install'.{0,500}", sw, re.S)

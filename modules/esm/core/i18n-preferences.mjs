@@ -4,6 +4,7 @@ export function create(deps) {
     const requestSafeBackgroundSync = (...args) => deps.requestSafeBackgroundSync(...args);
     const showToast = (...args) => deps.showToast(...args);
     const initializeEnhancedSelects = (...args) => deps.initializeEnhancedSelects(...args);
+    const syncEnhancedSelect = (...args) => deps.syncEnhancedSelect(...args);
     const applySettings = (...args) => deps.applySettings(...args);
     const withLoader = (...args) => deps.withLoader(...args);
     const updateProfileUI = (...args) => deps.updateProfileUI(...args);
@@ -420,7 +421,7 @@ export function create(deps) {
             broadcastRealtimeUpdate('preferences-updated', { localOnly: true, updatedAt: Date.now() });
             if (showConfirmation)
                 showToast(t("preferences.saveremotepreferences.settings_updated"), t("preferences.preferences_saved_device_will_synchronized_as_soon_as"), 'success');
-            console.warn(meteonexaText("preferences.preferences_saved_locally_server_sync_postponed"), error);
+            console.warn(t("preferences.preferences_saved_locally_server_sync_postponed"), error);
             return {
                 ok: true,
                 storage: 'local',
@@ -481,7 +482,7 @@ export function create(deps) {
             }
             catch (error) {
                 if (force)
-                    console.warn(meteonexaText("preferences.synchronizeremotepreferences.preference_sync_unavailable"), error);
+                    console.warn(t("preferences.synchronizeremotepreferences.preference_sync_unavailable"), error);
                 return false;
             }
             finally {
@@ -600,7 +601,7 @@ export function create(deps) {
                 rebuildLanguageOptions();
                 applySettings();
                 translateDOM(document);
-                console.warn(meteonexaText('log.language.local'), error);
+                console.warn(t('log.language.local'), error);
             }
         }, 350);
     }

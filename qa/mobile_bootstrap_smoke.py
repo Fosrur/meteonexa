@@ -54,7 +54,7 @@ ok('legacy 3-model' not in advanced and '5-model suite' not in advanced,'advance
 sw=text('sw.js')
 for lang in ('it','en','fr','es','de'):
     ok(f"'./assets/i18n/{lang}.json'" in sw,f'service worker does not precache static {lang} catalog')
-ok("SHELL_REVISION = 'rc2-stabilization-01-lifecycle-guest'" in sw,'service worker shell revision is not the current 20.1 P2 final ESM-services revision')
+ok("SHELL_REVISION = 'rc2-stabilization-02-ci-esm'" in sw,'service worker shell revision is not the current 20.1 P2 final ESM-services revision')
 
 css=text('suite.css')
 ok('.nav-link.button-loading' in css and 'pointer-events:auto!important' in css,'navigation fail-safe CSS missing')

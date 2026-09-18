@@ -1,12 +1,12 @@
 export const serviceNames = Object.freeze(['suiteIntegrations']);
-export const dependencies = Object.freeze(['runtimeApi','security','suiteSupport','suite','advanced','auth','controls','guestAccess','uiVisibility','loader','datePicker']);
+export const dependencies = Object.freeze(['runtimeApi','security','suiteSupport','suite','advanced','auth','controls','guestAccess','uiVisibility','loader','datePicker','tooltips']);
 
 function factory(window, deps, provided) {
     const CONFIG = window.METEONEXA_CONFIG;
     if (!CONFIG) throw new Error('METEONEXA_CONFIG_NOT_LOADED');
     const APP_RUNTIME = deps.runtimeApi.get();
     const meteonexaText = window.meteonexaText;
-    const { showToast, withLoader, loadWeather, syncEnhancedSelect, updateThreshold, appLocale, temperature, t } = APP_RUNTIME;
+    const { showToast, withLoader, loadWeather, syncEnhancedSelect, updateThreshold, appLocale, temperature, t, ensureRadar, removeRadarVectorLayer } = APP_RUNTIME;
     const state = APP_RUNTIME.getState();
     const SECURITY = deps.security;
     if (!SECURITY) throw new Error('METEONEXA_SECURITY_NOT_LOADED');
@@ -49,6 +49,13 @@ function factory(window, deps, provided) {
         if (!q('#suite-netatmo-panel')) {
             q('#page-devices .devices-grid')?.insertAdjacentHTML('afterend', "" + "<article id=\"suite-netatmo-panel\" class=\"glass-panel suite-netatmo-panel suite-service-panel\"><div class=\"panel-title\"><div><span class=\"section-kicker\">" + safe(meteonexaText('protocol.netatmo_oauth')) + "</span><h2>" + safe(meteonexaText('netatmo.panel.title')) + "</h2></div><span id=\"suite-netatmo-status\" class=\"soft-badge\">" + safe(meteonexaText("suite.ensureui.checking")) + "</span></div><div id=\"suite-netatmo-content\" class=\"suite-netatmo-content\"><div class=\"advanced-empty\">" + safe(meteonexaText('netatmo.checking')) + "</div></div><div class=\"suite-actions\"><button id=\"suite-netatmo-connect\" class=\"button primary-button\" type=\"button\">" + safe(meteonexaText('netatmo.connect')) + "</button><button id=\"suite-netatmo-refresh\" class=\"button outline-button\" type=\"button\">" + safe(meteonexaText("suite.ensureui.refresh_data")) + "</button><button id=\"suite-netatmo-disconnect\" class=\"button text-button\" type=\"button\">" + safe(meteonexaText('netatmo.disconnect')) + "</button></div></article>");
         }
+    }
+    function removeLightningLayers(map) {
+        if (!map) return;
+        for (const layerId of ['suite-lightning-halo', 'suite-lightning-layer']) {
+            try { if (map.getLayer(layerId)) map.removeLayer(layerId); } catch { }
+        }
+        try { if (map.getSource('suite-lightning-source')) map.removeSource('suite-lightning-source'); } catch { }
     }
     function imageFrom(url) { return new Promise((resolve, reject) => { const img = new Image(); img.decoding = 'async'; img.onload = () => resolve(img); img.onerror = () => reject(new Error(meteonexaText("suite.imagefrom.radar_tile_unreadable"))); img.src = url; }); }
     async function showLiveLightning() {
@@ -183,7 +190,7 @@ function factory(window, deps, provided) {
         if (!frame) return;
         const renderToken = ++suite.archiveRenderToken;
         updateArchiveControls(targetIndex);
-        try { hideUiTooltip?.({ immediate: true }); } catch { }
+        try { deps.tooltips?.hideUiTooltip?.({ immediate: true }); } catch { }
         setText('#suite-archive-time', localTime(frame.time));
         let overlayUrl = frame.imageUrl;
         try { overlayUrl = await transparentArchiveImage(frame); } catch { }
@@ -205,7 +212,7 @@ function factory(window, deps, provided) {
                     ? [Number(liveCenter.lng), Number(liveCenter.lat)]
                     : frameCenter;
                 const liveZoom = Number(liveMap?.getZoom?.());
-                suite.archiveMap = new maplibregl.Map({
+                suite.archiveMap = new window.maplibregl.Map({
                     container: mapRoot,
                     style: CONFIG.OPENFREEMAP_STYLE,
                     center,

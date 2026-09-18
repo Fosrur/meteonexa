@@ -1111,6 +1111,7 @@ export function install(services, host = globalThis) {
         
                 return Object.freeze({
                     syncRadarVectorLayer,
+                    removeRadarVectorLayer,
                     selectRadarLocation,
                     performRadarCitySearch,
                     useGpsFromRadar,

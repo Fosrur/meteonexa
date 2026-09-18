@@ -38,6 +38,7 @@ export function install(services, host = globalThis) {
                 const syncFavoriteUI = (...args) => deps.syncFavoriteUI(...args);
                 const renderFavorites = (...args) => deps.renderFavorites(...args);
                 const updateSelectedLocationUI = (...args) => deps.updateSelectedLocationUI(...args);
+                const meteonexaText = (...args) => deps.meteonexaText(...args);
                 // Account-scoped synchronization. The server remains authoritative
                 // and every request still requires the device-bound HttpOnly session + proof.
                 const accountSyncState = { loaded: false, loading: false, pushTimer: 0, activityProfiles: {} };

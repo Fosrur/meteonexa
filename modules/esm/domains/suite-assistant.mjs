@@ -7,7 +7,7 @@ function factory(window, deps, provided) {
             const {
                 API, KEYS, addDays, apiMessage, calculateRouteCore, clamp, currentLocale, environmentPeaks,
                 geocodeCity, isGuest, loadEnvironment, loader, localTime, locationLabel, modelConfidence, n, nearestTimeIndex,
-                nowcastBase, nowcastReliability, q, qa, safe, snapshot, stabilityScore, state, suite, tempText, toast, ui, temperature
+                nowcastBase, nowcastReliability, q, qa, safe, snapshot, stabilityScore, state, suite, tempText, toast, ui, temperature, weatherMeta
             } = context;
             if (!state || !suite || typeof q !== 'function' || typeof ui !== 'function') throw new Error('METEONEXA_SUITE_ASSISTANT_CONTEXT_INVALID');
 
