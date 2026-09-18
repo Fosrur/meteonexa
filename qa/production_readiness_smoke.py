@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from pathlib import Path
-import json, re, sys
+import json, re, subprocess, sys
 
 ROOT = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else Path(__file__).resolve().parents[1]
 read = lambda rel: (ROOT / rel).read_text(encoding='utf-8')
@@ -16,8 +16,38 @@ composer_lock = json.loads(read('composer.lock'))
 root_pkgs = root_lock.get('packages', {})
 qa_pkgs = qa_lock.get('packages', {})
 
+
+def source_markdown_files() -> list[str]:
+    """Return Markdown files belonging to the source tree, not installed deps.
+
+    CI intentionally runs npm/composer installs before the release smoke. Their
+    dependency READMEs must never turn the one-authoritative-project-document
+    contract red. Prefer the Git index; keep a package/archive fallback for
+    release bundles that are tested without a .git directory.
+    """
+    try:
+        result = subprocess.run(
+            ['git', '-C', str(ROOT), 'ls-files', '*.md'],
+            check=True,
+            text=True,
+            capture_output=True,
+        )
+        return sorted(line.strip() for line in result.stdout.splitlines() if line.strip())
+    except (OSError, subprocess.CalledProcessError):
+        ignored = {'.git', 'node_modules', 'vendor', '.cache', '.build'}
+        files = []
+        for path in ROOT.rglob('*.md'):
+            relative = path.relative_to(ROOT)
+            if any(part in ignored for part in relative.parts):
+                continue
+            files.append(relative.as_posix())
+        return sorted(files)
+
+
+project_markdown = source_markdown_files()
+
 checks = {
-    'single consolidated Markdown source of truth': len(list(ROOT.rglob('*.md'))) == 1,
+    'single consolidated Markdown source of truth': project_markdown == ['METEONEXA-20.1-RC2.md'],
     'schema 28 is the current contract': 'schema **28**' in md or 'schema 28' in md,
     'runtime bind mount is explicit and staging-parameterized': compose.count('${METEONEXA_RUNTIME_DIR:-./runtime}:/var/lib/meteonexa') >= 2,
     'staging can isolate all fixed container names': all(x in compose for x in ['METEONEXA_DB_CONTAINER_NAME', 'METEONEXA_WEB_CONTAINER_NAME', 'METEONEXA_WORKER_CONTAINER_NAME']),
@@ -46,5 +76,7 @@ for name, ok in checks.items():
     if not ok: failed.append(name)
 if failed:
     print('Production readiness static smoke FAILED: ' + ', '.join(failed), file=sys.stderr)
+    if 'single consolidated Markdown source of truth' in failed:
+        print('Tracked/source Markdown files: ' + ', '.join(project_markdown), file=sys.stderr)
     raise SystemExit(1)
 print('Production readiness static smoke PASS')
