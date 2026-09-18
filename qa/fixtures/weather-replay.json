@@ -1,0 +1,122 @@
+{
+  "version": "20.1",
+  "radar": {
+    "moving_cell": {
+      "size": 16,
+      "frames": [
+        {
+          "time": 900,
+          "blocks": [
+            [
+              7,
+              7,
+              0.85
+            ]
+          ]
+        },
+        {
+          "time": 600,
+          "blocks": [
+            [
+              6,
+              7,
+              0.78
+            ]
+          ]
+        },
+        {
+          "time": 300,
+          "blocks": [
+            [
+              5,
+              7,
+              0.7
+            ]
+          ]
+        }
+      ]
+    },
+    "two_cells": {
+      "size": 16,
+      "frames": [
+        {
+          "time": 900,
+          "blocks": [
+            [
+              5,
+              5,
+              0.8
+            ],
+            [
+              11,
+              10,
+              0.72
+            ]
+          ]
+        },
+        {
+          "time": 600,
+          "blocks": [
+            [
+              4,
+              5,
+              0.75
+            ],
+            [
+              12,
+              10,
+              0.68
+            ]
+          ]
+        },
+        {
+          "time": 300,
+          "blocks": [
+            [
+              3,
+              5,
+              0.7
+            ],
+            [
+              13,
+              10,
+              0.65
+            ]
+          ]
+        }
+      ]
+    }
+  },
+  "binary": [
+    {
+      "outcome": "tp",
+      "confidence": 80,
+      "observed": 1
+    },
+    {
+      "outcome": "tp",
+      "confidence": 75,
+      "observed": 1
+    },
+    {
+      "outcome": "fp",
+      "confidence": 70,
+      "observed": 0
+    },
+    {
+      "outcome": "fn",
+      "confidence": 20,
+      "observed": 1
+    },
+    {
+      "outcome": "tn",
+      "confidence": 15,
+      "observed": 0
+    },
+    {
+      "outcome": "tn",
+      "confidence": 10,
+      "observed": 0
+    }
+  ]
+}

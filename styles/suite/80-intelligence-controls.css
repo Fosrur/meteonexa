@@ -1,0 +1,445 @@
+/* MeteoNexa — Smart Weather Intelligence */
+.smart-intelligence-panel{margin-bottom:18px;padding:22px;overflow:hidden}.smart-intelligence-layout{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center}.smart-intelligence-summary{display:flex;gap:14px;align-items:flex-start}.smart-status-icon{width:46px;height:46px;border-radius:16px;display:grid;place-items:center;background:var(--panel-soft,rgba(255,255,255,.08));flex:0 0 auto}.smart-status-icon svg{width:24px;height:24px}.smart-intelligence-summary strong{display:block;font-size:1.08rem;margin-bottom:5px}.smart-intelligence-summary p{margin:0;opacity:.78;line-height:1.5}.smart-score{text-align:center;min-width:90px}.smart-score small{display:block;opacity:.68}.smart-score strong{font-size:1.75rem}.smart-event-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin-top:16px}.smart-event-card{padding:13px 14px;border:1px solid var(--border-color,rgba(255,255,255,.1));border-radius:14px;background:rgba(255,255,255,.035)}.smart-event-card strong{display:flex;align-items:center;justify-content:space-between;gap:8px}.smart-event-card p{font-size:.86rem;margin:6px 0 0;opacity:.75}.smart-event-card[data-severity="red"]{box-shadow:inset 3px 0 0 #e34b4b}.smart-event-card[data-severity="orange"]{box-shadow:inset 3px 0 0 #e69a35}.smart-event-card[data-severity="yellow"]{box-shadow:inset 3px 0 0 #d7bd3d}.smart-source-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.smart-source-grid span{font-size:.78rem;padding:6px 9px;border-radius:999px;background:rgba(255,255,255,.055);border:1px solid var(--border-color,rgba(255,255,255,.08))}.smart-demo-note{display:flex;gap:8px;align-items:center;font-size:.82rem;opacity:.78;margin-top:14px}.smart-demo-note svg{width:16px;height:16px;flex:0 0 auto}.smart-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}.smart-alert-preferences{margin-top:18px;padding:16px;border:1px solid var(--border-color,rgba(255,255,255,.1));border-radius:16px}.smart-alert-toggle-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.smart-alert-toggle-grid label,.smart-quiet-toggle{display:flex;align-items:center;gap:8px;padding:9px 10px;border-radius:11px;background:rgba(255,255,255,.035)}.smart-alert-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}.smart-alert-options label{display:flex;flex-direction:column;gap:6px;font-size:.8rem}.smart-alert-options input,.smart-alert-options select{min-height:38px;border-radius:10px}.smart-alert-options .smart-quiet-toggle{flex-direction:row;align-self:end;min-height:38px}.smart-mode-demo{opacity:.88}@media(max-width:760px){.smart-intelligence-layout{grid-template-columns:1fr}.smart-score{text-align:left}.smart-actions{flex-direction:column}.smart-actions .button{width:100%}.smart-alert-toggle-grid{grid-template-columns:1fr}.smart-alert-options{grid-template-columns:1fr 1fr}}
+
+/* MeteoNexa Verified Trust — custom, non-native form controls */
+.meteo-select-control{position:relative;min-width:0;width:100%}
+.meteo-select-trigger{width:100%;min-height:44px;padding:10px 13px;display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid rgba(154,190,225,.22);border-radius:13px;background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.025));color:var(--text,#eef7ff);font:700 .82rem Manrope,sans-serif;text-align:left;cursor:pointer;transition:border-color .18s ease,box-shadow .18s ease,background .18s ease,transform .18s ease}
+.meteo-select-trigger:hover,.meteo-select-control.open .meteo-select-trigger{border-color:rgba(77,202,255,.58);background:rgba(45,150,232,.1);box-shadow:0 0 0 3px rgba(45,171,255,.08)}
+.meteo-select-trigger:focus-visible{outline:2px solid rgba(80,215,255,.9);outline-offset:2px}
+.meteo-select-trigger svg{width:16px;height:16px;flex:0 0 auto;transition:transform .18s ease}.meteo-select-control.open .meteo-select-trigger svg{transform:rotate(180deg)}
+.meteo-select-value{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meteo-select-menu{position:absolute;z-index:5100;left:0;right:0;top:calc(100% + 7px);max-height:min(310px,48vh);padding:6px;overflow:auto;border:1px solid rgba(98,184,255,.26);border-radius:14px;background:rgba(5,23,49,.98);box-shadow:0 24px 70px rgba(0,0,0,.45);backdrop-filter:blur(18px)}
+[data-choice-position="top"]+.meteo-select-menu,.meteo-select-trigger[data-choice-position="top"]~.meteo-select-menu{top:auto;bottom:calc(100% + 7px)}
+.meteo-select-menu[hidden]{display:none!important}
+.meteo-select-option{width:100%;min-height:38px;padding:8px 10px;border-radius:9px;display:flex;align-items:center;color:#d9eaff;background:transparent;text-align:left;font:700 .78rem Manrope,sans-serif;cursor:pointer}
+.meteo-select-option:hover,.meteo-select-option:focus-visible{background:rgba(65,179,255,.13);outline:none}.meteo-select-option[aria-selected="true"]{background:rgba(42,184,255,.17);color:#7fdcff}
+
+.meteo-switch{width:48px;min-width:48px;height:30px;padding:0;border:1px solid rgba(151,190,224,.22);border-radius:999px;background:rgba(24,43,67,.92);cursor:pointer;transition:.2s ease;display:grid;place-items:center}
+.meteo-switch-track{position:relative;width:42px;height:24px;border-radius:999px;background:#25364a;transition:.2s;display:block}.meteo-switch-track i{position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#afbdd0;transition:.2s;box-shadow:0 3px 8px rgba(0,0,0,.3)}
+.meteo-switch[aria-checked="true"]{border-color:rgba(84,225,192,.45);box-shadow:0 0 0 3px rgba(43,208,172,.07)}.meteo-switch[aria-checked="true"] .meteo-switch-track{background:linear-gradient(90deg,#20c8a7,#6d74ed)}.meteo-switch[aria-checked="true"] .meteo-switch-track i{left:21px;background:#fff}
+.meteo-switch:focus-visible{outline:2px solid rgba(80,215,255,.9);outline-offset:3px}
+.notification-pref>.meteo-switch{flex:0 0 auto}
+
+.smart-alert-toggle-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+.smart-event-toggle{min-height:48px;padding:10px 12px;border:1px solid rgba(144,185,220,.15);border-radius:13px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(255,255,255,.035);color:var(--text,#edf7ff);font:750 .78rem Manrope,sans-serif;text-align:left;cursor:pointer;transition:.18s ease}
+.smart-event-toggle:hover{background:rgba(61,169,246,.09);border-color:rgba(95,194,255,.28)}.smart-event-toggle[aria-checked="true"]{background:linear-gradient(145deg,rgba(38,190,155,.12),rgba(63,112,229,.10));border-color:rgba(75,218,181,.34);box-shadow:inset 3px 0 0 rgba(69,222,178,.8)}
+.smart-event-state{width:20px;height:20px;border-radius:7px;border:1px solid rgba(151,190,224,.28);display:grid;place-items:center;flex:0 0 auto;background:rgba(255,255,255,.025)}.smart-event-toggle[aria-checked="true"] .smart-event-state{background:linear-gradient(145deg,#26c9a5,#5d77f2);border-color:transparent}.smart-event-toggle[aria-checked="true"] .smart-event-state::after{content:"✓";font-size:.7rem;color:#fff;font-style:normal;font-weight:900}
+.smart-alert-options>div{display:flex;flex-direction:column;gap:6px;font-size:.8rem}.smart-alert-options .smart-quiet-toggle{flex-direction:row;align-self:end;min-height:44px;justify-content:space-between}.smart-alert-options .meteo-select-trigger{min-height:44px}.smart-alert-options .meteo-select-menu{z-index:5300}
+
+.meteo-range{position:relative;width:100%;min-height:28px;display:flex;align-items:center;cursor:pointer;touch-action:none;outline:none}
+.meteo-range-track{position:relative;width:100%;height:8px;border-radius:999px;background:rgba(112,144,178,.2);box-shadow:inset 0 1px 2px rgba(0,0,0,.28)}
+.meteo-range-fill{position:absolute;left:0;top:0;bottom:0;width:var(--meteo-range-pct,0%);border-radius:inherit;background:linear-gradient(90deg,#2ac6d8,#337fff,#7a67ef)}
+.meteo-range-thumb{position:absolute;top:50%;left:var(--meteo-range-pct,0%);width:20px;height:20px;border:3px solid #dff7ff;border-radius:50%;background:#2788ef;box-shadow:0 5px 14px rgba(0,0,0,.32),0 0 0 4px rgba(50,158,255,.13);transform:translate(-50%,-50%);transition:box-shadow .15s ease}
+.meteo-range:hover .meteo-range-thumb,.meteo-range:focus-visible .meteo-range-thumb{box-shadow:0 5px 14px rgba(0,0,0,.32),0 0 0 6px rgba(52,200,255,.18)}
+.threshold-row .meteo-range{grid-column:1/-1;margin-top:4px}.radar-timeline .meteo-range{min-height:24px}.radar-opacity .meteo-range{min-width:75px;flex:1}
+
+/* Assistant source clarity: AI and local answers must never look identical. */
+.assistant-header-actions{gap:8px!important;flex-wrap:wrap;justify-content:flex-end}
+.assistant-mode-control{display:inline-flex;padding:3px;border:1px solid rgba(117,182,226,.18);border-radius:12px;background:rgba(255,255,255,.035)}
+.assistant-mode-button{min-height:30px;padding:6px 10px;border-radius:9px;background:transparent;color:#7f99b8;font:800 .7rem Manrope,sans-serif;cursor:pointer}.assistant-mode-button[aria-pressed="true"]{background:linear-gradient(135deg,rgba(37,196,199,.2),rgba(100,92,239,.25));color:#dffaff;box-shadow:inset 0 0 0 1px rgba(91,220,226,.2)}
+.assistant-provider-pill{min-height:32px;padding:6px 9px;border:1px solid rgba(89,193,255,.18);border-radius:11px;background:rgba(46,145,230,.08);color:#79d8ff;font:800 .65rem Manrope,sans-serif;white-space:nowrap}.assistant-provider-pill:disabled{opacity:1;cursor:default}
+.assistant-message-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.assistant-source-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 7px;border-radius:999px;font-size:.62rem;font-weight:850;letter-spacing:.02em}.assistant-source-badge.ai{background:rgba(59,203,204,.12);color:#77ebdf;border:1px solid rgba(75,220,211,.2)}.assistant-source-badge.local{background:rgba(132,150,181,.1);color:#9db2cc;border:1px solid rgba(144,164,193,.16)}
+.assistant-model-note{font-size:.6rem;color:#758da9;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* Button-level progress accompanies the existing global loader. */
+button.button-loading{position:relative!important;pointer-events:none!important;opacity:.86!important}
+button.button-loading>svg,button.button-loading>span:not(.button-loader-dot){opacity:.38!important}
+button.button-loading::after{content:"";position:absolute;width:18px;height:18px;left:50%;top:50%;margin:-9px 0 0 -9px;border:2px solid rgba(255,255,255,.28);border-top-color:#e9fbff;border-radius:50%;animation:meteoButtonSpin .72s linear infinite}
+@keyframes meteoButtonSpin{to{transform:rotate(360deg)}}
+
+@media(max-width:760px){.smart-alert-toggle-grid{grid-template-columns:1fr 1fr!important}.assistant-header-actions{max-width:62%}.assistant-provider-pill{display:none}.assistant-mode-button{padding:6px 8px}.meteo-select-menu{max-height:42vh}}
+@media(max-width:620px){.smart-alert-toggle-grid{grid-template-columns:1fr!important}.assistant-mode-control{order:1}.assistant-dialog-close{order:2}.assistant-header-actions{max-width:none}.smart-alert-options{grid-template-columns:1fr!important}}
+
+/* Verified Trust — hourly mobile cards: the third metric no longer inherits the narrow toggle column. */
+@media(max-width:720px){
+  .hourly-table-row:not(.header){
+    grid-template-columns:repeat(6,minmax(0,1fr))!important;
+    align-items:center!important;
+    overflow:hidden!important;
+  }
+  .hourly-time{grid-column:1/2!important;grid-row:1!important;min-width:0!important;align-self:center!important}
+  .hourly-table-row .condition-cell{grid-column:2/6!important;grid-row:1!important;min-width:0!important}
+  .hourly-row-toggle{grid-column:6/7!important;grid-row:1!important;width:38px!important;height:38px!important;justify-self:end!important}
+  .hourly-primary-value{grid-row:2!important;min-width:0!important;width:100%!important;padding:10px 8px!important;text-align:left!important;overflow:hidden!important}
+  .hourly-primary-value:nth-of-type(2){grid-column:1/3!important}
+  .hourly-primary-value:nth-of-type(3){grid-column:3/5!important}
+  .hourly-primary-value:nth-of-type(4){grid-column:5/7!important}
+  .hourly-primary-value b{max-width:100%!important;white-space:normal!important;overflow-wrap:anywhere!important;word-break:normal!important;font-size:.78rem!important}
+  .hourly-primary-value small{max-width:100%!important;white-space:normal!important;line-height:1.2!important}
+  .hourly-row-details{grid-column:1/-1!important;grid-row:3!important;margin-top:2px!important}
+}
+@media(max-width:370px){
+  .hourly-primary-value:nth-of-type(2){grid-column:1/4!important}
+  .hourly-primary-value:nth-of-type(3){grid-column:4/7!important}
+  .hourly-primary-value:nth-of-type(4){grid-column:1/7!important;grid-row:3!important}
+  .hourly-row-details{grid-row:4!important;grid-template-columns:1fr!important}
+}
+
+/* Verified Trust — Smart Intelligence: readable event severity and source availability on phones/tablets. */
+.smart-event-grid{gap:14px!important}
+.smart-event-card{min-width:0!important;padding:15px 16px!important}
+.smart-event-card>strong{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:start!important;gap:12px!important}
+.smart-event-card>strong>span{min-width:0!important;line-height:1.35!important;overflow-wrap:anywhere!important}
+.smart-event-card>strong>small{align-self:start!important;padding:5px 8px!important;border:1px solid rgba(255,255,255,.09)!important;border-radius:999px!important;background:rgba(255,255,255,.045)!important;white-space:nowrap!important;font-size:.69rem!important;line-height:1!important}
+.smart-event-card p{margin-top:9px!important;line-height:1.5!important}
+.smart-source-grid{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(175px,1fr))!important;gap:10px!important;margin-top:16px!important}
+.smart-source-grid span{min-width:0!important;width:100%!important;padding:8px 10px!important;line-height:1.35!important;overflow-wrap:anywhere!important;text-align:center!important}
+.smart-demo-note{margin-top:16px!important;padding:11px 12px!important;border:1px solid rgba(105,181,255,.11)!important;border-radius:12px!important;background:rgba(255,255,255,.025)!important;line-height:1.45!important}
+@media(max-width:760px){
+  .smart-intelligence-panel{padding:18px!important}
+  .smart-intelligence-panel .intelligence-panel-title{display:grid!important;grid-template-columns:1fr!important;gap:11px!important}
+  .smart-intelligence-panel .intelligence-panel-title .confidence-badge{justify-self:start!important;margin:0!important}
+  .smart-intelligence-layout{gap:20px!important}
+  .smart-event-grid{grid-template-columns:1fr!important;gap:13px!important;margin-top:18px!important}
+  .smart-source-grid{grid-template-columns:1fr!important;gap:9px!important}
+  .smart-source-grid span{text-align:left!important;padding:9px 11px!important}
+  .smart-actions{gap:9px!important;margin-top:18px!important}
+}
+@media(min-width:761px) and (max-width:1024px){
+  .smart-source-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+
+/* MeteoNexa Verified Trust — Settings modal responsive regression fix.
+   Custom controls keep a bounded column on desktop and stack before the
+   copy becomes unreadable. No native select/checkbox control is reintroduced. */
+.settings-dialog{width:min(720px,calc(100vw - 32px))!important}
+.settings-dialog .dialog-body{overflow-x:hidden!important}
+.settings-dialog .settings-list{margin-top:0!important}
+.settings-dialog .setting-row:not(.setting-action-row){
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(210px,42%)!important;
+  align-items:center!important;
+  gap:22px!important;
+  min-height:76px!important;
+  padding:12px 0!important;
+}
+.settings-dialog .setting-row:not(.setting-action-row)>span{
+  min-width:0!important;
+  width:auto!important;
+  overflow-wrap:anywhere!important;
+}
+.settings-dialog .setting-row:not(.setting-action-row)>span strong,
+.settings-dialog .setting-row:not(.setting-action-row)>span small{
+  max-width:100%!important;
+  overflow-wrap:anywhere!important;
+}
+.settings-dialog .meteo-select-control,
+.settings-dialog .settings-language-picker{
+  width:100%!important;
+  max-width:280px!important;
+  min-width:0!important;
+  justify-self:end!important;
+  flex:none!important;
+}
+.settings-dialog .meteo-select-trigger,
+.settings-dialog .settings-language-button{width:100%!important;min-width:0!important}
+.settings-dialog .toggle-setting .meteo-switch{justify-self:end!important}
+.settings-dialog .setting-action-row{
+  grid-template-columns:44px minmax(0,1fr) auto 20px!important;
+  gap:12px!important;
+  min-height:72px!important;
+  padding:11px 8px!important;
+}
+.settings-dialog .setting-action-copy{min-width:0!important}
+.settings-dialog .setting-action-copy strong,
+.settings-dialog .setting-action-copy small{overflow-wrap:anywhere!important}
+
+@media (max-width:700px){
+  .settings-dialog{width:calc(100vw - 18px)!important;max-width:calc(100vw - 18px)!important}
+  .settings-dialog .dialog-body{padding-inline:16px!important}
+  .settings-dialog .setting-row:not(.setting-action-row){
+    grid-template-columns:1fr!important;
+    align-items:stretch!important;
+    gap:8px!important;
+    min-height:0!important;
+    padding:13px 0!important;
+  }
+  .settings-dialog .meteo-select-control,
+  .settings-dialog .settings-language-picker{
+    width:100%!important;
+    max-width:none!important;
+    justify-self:stretch!important;
+  }
+  .settings-dialog .toggle-setting{
+    grid-template-columns:minmax(0,1fr) auto!important;
+    align-items:center!important;
+  }
+  .settings-dialog .toggle-setting .meteo-switch{grid-column:2!important;grid-row:1!important;align-self:center!important}
+  .settings-dialog .setting-action-row{
+    grid-template-columns:40px minmax(0,1fr) 18px!important;
+    gap:10px!important;
+    padding:11px 4px!important;
+  }
+  .settings-dialog .setting-action-meta{display:none!important}
+  .settings-dialog-footer{grid-template-columns:minmax(0,1fr) 108px!important}
+}
+
+@media (max-width:520px){
+  .settings-dialog .dialog-header{padding-inline:14px!important}
+  .settings-dialog .dialog-body{padding:14px!important}
+  .settings-dialog .setting-row strong{font-size:.86rem!important}
+  .settings-dialog .setting-row small{font-size:.7rem!important;line-height:1.35!important}
+  .settings-dialog-footer{display:grid!important;grid-template-columns:1fr!important;gap:8px!important}
+  .settings-dialog-footer .button{width:100%!important;min-width:0!important}
+  .settings-dialog-footer .settings-privacy-button{justify-content:center!important;text-align:center!important}
+  .settings-dialog-footer .settings-privacy-button span{white-space:normal!important;text-overflow:clip!important}
+}
+
+/* Verified Trust — authenticated QA shortcut inside Settings. */
+.settings-dialog a.setting-action-row{text-decoration:none}
+
+/* Verified Trust — dated Intelligence outlook and event windows */
+.smart-day-outlook{margin-top:16px}.smart-day-outlook-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:10px}.smart-day-outlook-head strong{font-size:.92rem}.smart-day-outlook-head small{font-size:.75rem;opacity:.66;text-align:right}.smart-day-outlook-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.smart-day-card{min-width:0;padding:11px 12px;border-radius:14px;border:1px solid var(--border-color,rgba(255,255,255,.1));background:rgba(255,255,255,.035);display:grid;gap:4px}.smart-day-card strong{text-transform:capitalize;font-size:.84rem}.smart-day-card>span{font-weight:700;line-height:1.25;overflow-wrap:anywhere}.smart-day-card small{font-size:.72rem;opacity:.72;line-height:1.4}.smart-day-card[data-weather-level="storm"]{box-shadow:inset 3px 0 0 #e34b4b}.smart-day-card[data-weather-level="rain"]{box-shadow:inset 3px 0 0 #4e8fe8}.smart-event-when{display:inline-flex;margin-top:8px;padding:4px 8px;border-radius:999px;background:rgba(255,255,255,.06);border:1px solid var(--border-color,rgba(255,255,255,.08));font-size:.74rem;font-weight:700;opacity:.88;text-transform:capitalize}.smart-event-card .smart-event-when+p{margin-top:7px}@media(max-width:920px){.smart-day-outlook-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:560px){.smart-day-outlook-head{display:grid;align-items:start}.smart-day-outlook-head small{text-align:left}.smart-day-outlook-grid{grid-template-columns:1fr}}
+.proactive-local-list{margin:0;padding-left:18px;color:var(--muted);display:grid;gap:5px;line-height:1.45}.proactive-local-list li::marker{color:var(--accent)}
+
+/* MeteoNexa Verified Trust — Intelligence Quality Lab / consensus / multi-location */
+.intelligence-quality{display:grid;gap:18px;margin:18px 0}.intelq-quality-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.intelq-consensus-main{font-size:1.05rem;line-height:1.55}.intelq-consensus-main strong{display:block;font-size:1.35rem;margin-bottom:6px}.intelq-model-votes,.intelq-role-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.intelq-model-votes span,.intelq-role-chips button,.intelq-source-row,.intelq-skill-row,.intelq-change-box,.intelq-cell-box,.intelq-decision-card,.intelq-location-row{border:1px solid var(--border-soft,rgba(255,255,255,.12));background:rgba(255,255,255,.035);border-radius:16px;padding:10px 12px}.intelq-model-votes span.is-yes{border-color:rgba(72,220,170,.35)}.intelq-model-votes span.is-no{opacity:.64}.intelq-source-list{display:grid;gap:8px}.intelq-source-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center}.intelq-source-row small{display:block;opacity:.72;margin-top:3px}.intelq-skill-table{display:grid;gap:8px}.intelq-skill-row{display:grid;grid-template-columns:90px minmax(0,1fr) auto;gap:8px;align-items:center}.intelq-decision-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.intelq-decision-card strong,.intelq-location-row strong{display:block}.intelq-decision-card small,.intelq-location-row small{opacity:.75}.intelq-location-form{display:grid;grid-template-columns:minmax(180px,1fr) minmax(260px,2fr) auto;gap:10px;align-items:center}.intelq-location-form input{width:100%;min-height:44px;border-radius:14px;border:1px solid var(--border-soft,rgba(255,255,255,.12));background:rgba(255,255,255,.04);color:inherit;padding:0 12px}.intelq-role-chips{margin:0}.intelq-role-chips button{color:inherit;cursor:pointer}.intelq-role-chips button.is-active{border-color:rgba(72,220,170,.55);background:rgba(72,220,170,.12)}.intelq-location-list{display:grid;gap:8px;margin-top:14px}.intelq-location-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center}.intelq-location-row .button{min-height:38px;padding:8px 12px}.intelq-metric-good{font-weight:800}.intelq-empty{opacity:.72;padding:8px 0}.intelq-history-note{font-size:.86rem;opacity:.72;margin-top:8px}
+@media(max-width:900px){.intelq-quality-grid{grid-template-columns:1fr}.intelq-decision-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.intelq-location-form{grid-template-columns:1fr}.intelq-location-form .button{width:100%}}
+@media(max-width:560px){.intelq-decision-grid{grid-template-columns:1fr}.intelq-skill-row{grid-template-columns:74px minmax(0,1fr)}.intelq-skill-row span:last-child{grid-column:1/-1}.intelq-location-row{grid-template-columns:1fr 1fr}.intelq-location-row>div:first-child{grid-column:1/-1}.intelq-location-row .button{width:100%}}
+
+/* MeteoNexa Verified Trust — Intelligence cards aligned to the app design system. */
+#page-intelligence .intelligence-quality{
+  display:grid;gap:20px;margin:20px 0;min-width:0
+}
+#page-intelligence .intelligence-quality>.glass-panel,
+#page-intelligence .intelq-quality-grid>.glass-panel{
+  min-width:0;padding:26px;align-self:start
+}
+#page-intelligence .intelligence-quality .panel-title{
+  align-items:flex-start;min-width:0
+}
+#page-intelligence .intelligence-quality .panel-title>div{
+  min-width:0;max-width:920px
+}
+#page-intelligence .intelligence-quality .panel-title h2,
+#page-intelligence .intelligence-quality .panel-title h3{
+  margin:5px 0 0;font:800 clamp(1.05rem,1.7vw,1.45rem)/1.18 Manrope,sans-serif;letter-spacing:-.035em;overflow-wrap:anywhere
+}
+#page-intelligence .intelligence-quality .panel-title p{
+  margin:10px 0 0;color:var(--muted);font-size:.82rem;line-height:1.6;overflow-wrap:anywhere
+}
+#page-intelligence .consensus-quality-panel{
+  background:radial-gradient(circle at 88% 0,rgba(98,100,255,.14),transparent 34%),radial-gradient(circle at 12% 100%,rgba(59,221,191,.08),transparent 34%),linear-gradient(145deg,rgba(8,30,58,.92),rgba(5,18,40,.88))!important
+}
+#page-intelligence .intelq-consensus-main{
+  position:relative;z-index:2;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"title note" "summary note";gap:7px 18px;align-items:center;margin-top:24px;padding:18px 20px;border:1px solid var(--line);border-radius:18px;background:var(--surface-faint)
+}
+#page-intelligence .intelq-consensus-main>strong{grid-area:title;margin:0;font-size:1.15rem;line-height:1.35;overflow-wrap:anywhere}
+#page-intelligence .intelq-consensus-main>span{grid-area:summary;color:var(--text-soft);font-size:.84rem;line-height:1.5;overflow-wrap:anywhere}
+#page-intelligence .intelq-consensus-main>.intelq-history-note{grid-area:note;max-width:330px;margin:0;padding:10px 12px;border-radius:12px;background:rgba(68,205,185,.07);color:var(--muted);text-align:right;line-height:1.45}
+#page-intelligence .intelq-model-votes{position:relative;z-index:2;display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:10px;margin-top:14px}
+#page-intelligence .intelq-model-votes span{min-width:0;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;padding:12px 13px;border-radius:14px;background:var(--surface-faint);overflow:hidden}
+#page-intelligence .intelq-model-votes span strong{min-width:0;font-size:.88rem;line-height:1.25;overflow-wrap:anywhere}
+#page-intelligence .intelq-model-votes .intelq-vote-state{color:var(--text-soft);font-size:.8rem;white-space:nowrap}
+#page-intelligence .intelq-model-votes span.is-yes{border-color:rgba(70,218,173,.35);box-shadow:inset 0 0 0 1px rgba(70,218,173,.04)}
+#page-intelligence .intelq-model-votes span.is-no{opacity:.7}
+#page-intelligence .intelq-quality-grid{
+  display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:20px;align-items:start
+}
+#page-intelligence #intelq-skill-panel,#page-intelligence #intelq-change-panel{grid-column:span 6}
+#page-intelligence #intelq-explain-panel{grid-column:1/-1;width:100%}
+#page-intelligence #intelq-cell-panel{grid-column:1/-1;width:100%}
+#page-intelligence .intelq-empty{
+  margin-top:18px;padding:18px;border:1px dashed var(--line);border-radius:16px;background:var(--surface-faint);color:var(--muted);line-height:1.55;overflow-wrap:anywhere
+}
+#page-intelligence .intelq-skill-table{display:grid;gap:9px;margin-top:18px}
+#page-intelligence .intelq-skill-row{
+  min-width:0;display:grid;grid-template-columns:minmax(90px,.7fr) minmax(130px,1.2fr) auto;gap:10px;align-items:center;padding:12px 13px;border-radius:14px;background:var(--surface-faint)
+}
+#page-intelligence .intelq-skill-row>*{min-width:0;overflow-wrap:anywhere}
+#page-intelligence .intelq-metric-good{padding:5px 8px;border-radius:999px;background:rgba(69,220,173,.08);color:#79e7bb;white-space:nowrap}
+#page-intelligence .intelq-change-box,#page-intelligence .intelq-run-compare,#page-intelligence .intelq-cell-box{
+  margin-top:18px;padding:16px;border:1px solid var(--line);border-radius:16px;background:var(--surface-faint)
+}
+#page-intelligence .intelq-change-box p,#page-intelligence .intelq-run-compare p,#page-intelligence .intelq-cell-box p{margin:7px 0 0;color:var(--text-soft);line-height:1.55;overflow-wrap:anywhere}
+#page-intelligence .intelq-run-compare{border-color:rgba(89,180,255,.18)}
+#page-intelligence .intelq-source-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:18px}
+#page-intelligence .intelq-source-row{
+  min-width:0;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 14px;border-radius:14px;background:var(--surface-faint)
+}
+#page-intelligence .intelq-source-row>div{min-width:0}
+#page-intelligence .intelq-source-row strong,#page-intelligence .intelq-source-row small{display:block;overflow-wrap:anywhere}
+#page-intelligence .intelq-source-row small{margin-top:4px;color:var(--muted);line-height:1.45}
+#page-intelligence .intelq-source-row>span{max-width:180px;text-align:right;color:var(--text-soft);overflow-wrap:anywhere}
+#page-intelligence .intelq-decision-grid{
+  position:relative;z-index:2;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin-top:20px
+}
+#page-intelligence .intelq-decision-card{
+  min-width:0;min-height:116px;display:flex;flex-direction:column;justify-content:space-between;gap:8px;padding:15px 16px;border:1px solid var(--line);border-radius:16px;background:radial-gradient(circle at 100% 0,rgba(94,104,255,.08),transparent 34%),var(--surface-faint)
+}
+#page-intelligence .intelq-decision-card strong{font-size:.94rem}
+#page-intelligence .intelq-decision-card span{color:var(--text-soft);font-size:.84rem;line-height:1.45;overflow-wrap:anywhere}
+#page-intelligence .intelq-decision-card small{color:var(--muted)}
+#page-intelligence .intelq-location-form{margin-top:20px}
+
+/* Verified Trust — Forecast model comparison: compact responsive cards, no orphan last card. */
+#page-intelligence .model-comparison-panel{padding:26px!important}
+#page-intelligence .model-comparison{
+  display:grid!important;grid-template-columns:repeat(auto-fit,minmax(255px,1fr))!important;gap:14px!important;margin-top:20px!important;align-items:stretch
+}
+#page-intelligence .model-comparison .model-card{
+  min-width:0;display:flex;flex-direction:column;padding:17px!important;border-radius:18px!important;background:radial-gradient(circle at 100% 0,rgba(85,110,255,.09),transparent 34%),var(--surface-faint)!important
+}
+#page-intelligence .model-comparison .model-card:last-child{grid-column:auto!important}
+#page-intelligence .model-comparison .ensemble-model-card{
+  grid-column:1/-1!important;display:grid;grid-template-columns:minmax(230px,1.1fr) minmax(260px,1fr);grid-template-areas:"head metrics" "copy metrics" "rain metrics";gap:10px 20px;align-items:center;border-color:rgba(77,220,194,.22)!important
+}
+#page-intelligence .ensemble-model-card .model-card-head{grid-area:head}
+#page-intelligence .ensemble-model-card .ensemble-weight-copy{grid-area:copy;color:var(--muted);font-size:.78rem;line-height:1.5;overflow-wrap:anywhere}
+#page-intelligence .ensemble-model-card .model-metrics{grid-area:metrics;margin-top:0!important}
+#page-intelligence .ensemble-model-card .model-rain-time{grid-area:rain;margin-top:0!important}
+#page-intelligence .model-sparkline{height:86px!important;margin-top:14px!important}
+#page-intelligence .model-metrics{margin-top:12px!important}
+#page-intelligence .model-rain-time{margin-top:auto!important;padding-top:12px}
+
+/* Verified Trust — Advanced model grid: same visual rhythm as Intelligence cards. */
+#page-advanced .advanced-model-panel{padding:26px}
+#page-advanced .advanced-model-grid{
+  display:grid!important;grid-template-columns:repeat(auto-fit,minmax(270px,1fr))!important;gap:14px!important;margin-top:18px!important;align-items:stretch
+}
+#page-advanced .advanced-model-card{
+  min-width:0;display:flex;flex-direction:column;padding:17px!important;border-radius:18px!important;background:radial-gradient(circle at 100% 0,rgba(85,110,255,.09),transparent 34%),var(--surface-faint)!important
+}
+#page-advanced .advanced-model-card:last-child{grid-column:auto!important}
+#page-advanced .advanced-model-card .model-chart{height:86px;margin-top:14px}
+#page-advanced .advanced-model-card .model-values{margin-top:12px}
+#page-advanced .advanced-model-card>p{margin-top:auto;padding-top:12px;overflow-wrap:anywhere}
+
+@media(max-width:1180px){
+  #page-intelligence .intelq-model-votes{grid-template-columns:repeat(3,minmax(0,1fr))}
+  #page-intelligence #intelq-skill-panel,#page-intelligence #intelq-change-panel,#page-intelligence #intelq-explain-panel,#page-intelligence #intelq-cell-panel{grid-column:1/-1}
+}
+@media(max-width:1050px){
+  #page-intelligence .intelq-decision-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #page-intelligence .intelq-source-list{grid-template-columns:1fr}
+}
+@media(max-width:760px){
+  #page-intelligence .intelligence-quality>.glass-panel,#page-intelligence .intelq-quality-grid>.glass-panel,#page-intelligence .model-comparison-panel,#page-advanced .advanced-model-panel{padding:18px!important}
+  #page-intelligence .intelq-consensus-main{grid-template-columns:1fr;grid-template-areas:"title" "summary" "note";padding:15px}
+  #page-intelligence .intelq-consensus-main>.intelq-history-note{max-width:none;text-align:left}
+  #page-intelligence .intelq-model-votes{grid-template-columns:1fr 1fr}
+  #page-intelligence .intelq-source-row{grid-template-columns:1fr}
+  #page-intelligence .intelq-source-row>span{max-width:none;text-align:left}
+  #page-intelligence .intelq-skill-row{grid-template-columns:1fr 1fr}
+  #page-intelligence .intelq-skill-row>*:last-child{grid-column:1/-1;justify-self:start}
+  #page-intelligence .model-comparison{grid-template-columns:1fr!important}
+  #page-intelligence .model-comparison .ensemble-model-card{grid-template-columns:1fr;grid-template-areas:"head" "copy" "metrics" "rain"}
+  #page-advanced .advanced-model-grid{grid-template-columns:1fr!important}
+}
+@media(max-width:620px){
+  #page-intelligence .intelq-model-votes{grid-template-columns:1fr}
+  #page-intelligence .intelq-model-votes span{justify-content:flex-start;flex-wrap:wrap}
+  #page-intelligence .intelq-skill-row{grid-template-columns:1fr}
+  #page-intelligence .intelq-skill-row>*:last-child{grid-column:auto}
+  #page-intelligence .intelq-decision-grid{grid-template-columns:1fr}
+}
+
+
+/* Verified Trust — Assistant header: only the AI/Local selector and close action remain.
+   Controls share one visual height; provider/model identity is shown only on AI messages. */
+#assistant-dialog .assistant-header-actions{
+  display:flex!important;align-items:center!important;gap:10px!important;flex-wrap:nowrap!important;justify-content:flex-end!important
+}
+#assistant-dialog .assistant-mode-control{
+  display:inline-grid!important;grid-template-columns:auto auto!important;align-items:stretch!important;height:50px!important;padding:4px!important;
+  border:1px solid rgba(117,182,226,.2)!important;border-radius:16px!important;background:rgba(255,255,255,.035)!important
+}
+#assistant-dialog .assistant-mode-button{
+  min-height:42px!important;height:42px!important;min-width:54px!important;padding:0 14px!important;border-radius:12px!important;
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;white-space:nowrap!important
+}
+#assistant-dialog .assistant-mode-button[data-assistant-mode-choice="local"]{min-width:78px!important}
+#assistant-dialog .assistant-dialog-close{
+  width:50px!important;height:50px!important;min-width:50px!important;min-height:50px!important;flex:0 0 50px!important;border-radius:16px!important
+}
+#assistant-dialog .assistant-provider-pill{display:none!important}
+#assistant-dialog .assistant-message-meta .assistant-source-badge.local{display:none!important}
+@media(max-width:620px){
+  #assistant-dialog .assistant-panel-title{align-items:flex-start!important}
+  #assistant-dialog .assistant-header-actions{width:100%!important;margin-top:8px!important;justify-content:flex-end!important}
+  #assistant-dialog .assistant-mode-control{margin-left:auto!important}
+}
+@media(max-width:390px){
+  #assistant-dialog .assistant-mode-button{min-width:48px!important;padding:0 10px!important}
+  #assistant-dialog .assistant-mode-button[data-assistant-mode-choice="local"]{min-width:70px!important}
+}
+
+/* Verified Trust — Adaptive ensemble card: no horizontal squeeze or overlapping metrics. */
+#page-intelligence .model-comparison .ensemble-model-card{
+  grid-column:1/-1!important;display:grid!important;
+  grid-template-columns:minmax(0,1.15fr) minmax(310px,.85fr)!important;
+  grid-template-areas:"head metrics" "copy metrics" "rain metrics"!important;
+  align-items:start!important;gap:12px 22px!important;overflow:hidden!important
+}
+#page-intelligence .ensemble-model-card .model-card-head{grid-area:head!important;min-width:0!important}
+#page-intelligence .ensemble-model-card .ensemble-weight-copy{grid-area:copy!important;min-width:0!important;margin-top:0!important}
+#page-intelligence .ensemble-model-card .model-metrics{
+  grid-area:metrics!important;align-self:stretch!important;margin:0!important;display:grid!important;
+  grid-template-columns:repeat(3,minmax(92px,1fr))!important;gap:10px!important;min-width:0!important
+}
+#page-intelligence .ensemble-model-card .model-metrics>div{min-width:0!important}
+#page-intelligence .ensemble-model-card .model-metrics small,#page-intelligence .ensemble-model-card .model-metrics strong{overflow-wrap:anywhere!important}
+#page-intelligence .ensemble-model-card .model-rain-time{grid-area:rain!important;margin:0!important;padding-top:4px!important;min-width:0!important}
+@media(max-width:980px){
+  #page-intelligence .model-comparison .ensemble-model-card{
+    grid-template-columns:1fr!important;grid-template-areas:"head" "copy" "metrics" "rain"!important
+  }
+}
+@media(max-width:560px){
+  #page-intelligence .ensemble-model-card .model-card-head{grid-template-columns:42px minmax(0,1fr)!important}
+  #page-intelligence .ensemble-model-card .model-condition{grid-column:1/-1!important;max-width:none!important;justify-self:stretch!important;text-align:left!important}
+  #page-intelligence .ensemble-model-card .model-metrics{grid-template-columns:1fr!important}
+}
+
+/* Intelligence visual alignment + Reliability/Nowcast/Confidence */
+#page-intelligence .intelq-quality-grid>.glass-panel>.panel-title,
+#page-intelligence .verified-feature-grid>.glass-panel>.panel-title,
+#page-intelligence .personal-feature-grid>.glass-panel>.panel-title{margin:0 0 22px!important;align-items:flex-start;min-width:0}
+#page-intelligence .intelq-quality-grid>.glass-panel>.panel-title p,
+#page-intelligence .verified-feature-grid>.glass-panel>.panel-title p,
+#page-intelligence .personal-feature-grid>.glass-panel>.panel-title p{margin-top:10px;line-height:1.55}
+#page-intelligence .verified-feature-grid,#page-intelligence .personal-feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;align-items:stretch;width:100%;min-width:0}
+#page-intelligence .verified-feature-grid>.glass-panel,#page-intelligence .personal-feature-grid>.glass-panel{box-sizing:border-box;min-width:0;width:100%;height:100%;padding:24px;display:flex;flex-direction:column;background:radial-gradient(circle at 92% 0,rgba(70,181,231,.07),transparent 34%),var(--surface-panel,rgba(6,26,51,.9))}
+#page-intelligence #verified-reliability-content,#page-intelligence #verified-nowcast-content,#page-intelligence #personal-confidence-content{flex:1;min-width:0}
+#page-intelligence .verified-kpi-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#page-intelligence .verified-kpi-grid>div,#page-intelligence .verified-nowcast-hero,#page-intelligence .verified-motion-grid>span,#page-intelligence .personal-confidence-factor,#page-intelligence .personal-threshold-grid label{min-width:0;padding:14px;border:1px solid var(--line);border-radius:16px;background:rgba(125,170,210,.055)}
+#page-intelligence .verified-kpi-grid small,#page-intelligence .verified-nowcast-hero small{display:block;color:var(--muted);font-size:.7rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+#page-intelligence .verified-kpi-grid strong{display:block;margin-top:5px;font-size:1.1rem;line-height:1.25;overflow-wrap:anywhere}
+#page-intelligence .verified-kpi-grid span{display:block;margin-top:5px;color:var(--muted);font-size:.76rem;line-height:1.45;overflow-wrap:anywhere}
+#page-intelligence .verified-reliability-foot{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line);color:var(--muted);font-size:.76rem}
+#page-intelligence .verified-nowcast-hero{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+#page-intelligence .verified-nowcast-hero strong{display:block;margin-top:6px;font-size:1.55rem;line-height:1.1;overflow-wrap:anywhere}
+#page-intelligence .verified-nowcast-hero span{display:block;margin-top:6px;color:var(--muted);font-size:.78rem}
+#page-intelligence .verified-motion-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+#page-intelligence .verified-motion-grid>span{display:flex;justify-content:space-between;gap:12px;color:var(--muted);font-size:.78rem;overflow-wrap:anywhere}
+#page-intelligence .verified-motion-grid b{color:var(--text)}
+#page-intelligence .verified-source-chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+#page-intelligence .verified-source-chips span{padding:7px 10px;border:1px solid var(--line);border-radius:999px;background:rgba(78,214,199,.07);font-size:.72rem;font-weight:750}
+#page-intelligence .personal-confidence-hero{display:grid;grid-template-columns:auto minmax(0,1fr);gap:18px;align-items:center;padding:16px;border:1px solid var(--line);border-radius:18px;background:rgba(125,170,210,.055)}
+#page-intelligence .personal-confidence-ring{--score:0;width:92px;height:92px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--accent) calc(var(--score)*1%),rgba(100,149,190,.15) 0);position:relative}
+#page-intelligence .personal-confidence-ring:after{content:"";position:absolute;inset:8px;border-radius:50%;background:#0a1d37}
+#page-intelligence .personal-confidence-ring>div{position:relative;z-index:1;text-align:center}.personal-confidence-ring strong{display:block;font-size:1.45rem}.personal-confidence-ring small{color:var(--muted)}
+#page-intelligence .personal-confidence-copy p{margin:7px 0 0;color:var(--muted);font-size:.78rem;line-height:1.45}
+#page-intelligence .personal-confidence-factors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
+#page-intelligence .personal-confidence-factor{display:grid;gap:4px}.personal-confidence-factor small,.personal-confidence-factor span{color:var(--muted);font-size:.7rem}.personal-confidence-factor strong{font-size:.95rem}
+#page-intelligence .personal-activity-chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+#page-intelligence .personal-activity-chips button{border:1px solid var(--line);background:rgba(125,170,210,.055);color:inherit;border-radius:999px;padding:8px 11px;font:800 .74rem/1 Manrope,sans-serif;cursor:pointer}
+#page-intelligence .personal-activity-chips button.is-active{border-color:rgba(79,216,200,.55);background:rgba(79,216,200,.12)}
+#page-intelligence .personal-threshold-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#page-intelligence .personal-threshold-grid label{display:grid;grid-template-columns:minmax(0,1fr) 88px;gap:10px;align-items:center}.personal-threshold-grid label>span{font-size:.75rem}.personal-threshold-grid input{width:100%;min-width:0;height:38px;border:1px solid var(--line);border-radius:10px;background:rgba(2,17,36,.5);color:inherit;padding:0 8px;text-align:right}
+#page-intelligence .personal-activity-actions{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-top:14px}.personal-activity-actions small{color:var(--muted);font-size:.7rem;line-height:1.4}
+
+#page-route .route-departure-comparison-panel{grid-column:1/-1;width:100%;min-width:0;padding:24px;box-sizing:border-box}
+#page-route .route-departure-comparison-panel>.panel-title{margin-bottom:18px}
+#page-route .route-departure-comparison{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px}
+#page-route .route-departure-option{min-width:0;padding:13px;border:1px solid var(--line);border-radius:15px;background:rgba(125,170,210,.055);display:grid;gap:8px;color:inherit;text-align:left;cursor:pointer;transition:.18s ease}
+#page-route .route-departure-option:hover,#page-route .route-departure-option:focus-visible{border-color:rgba(79,216,200,.5);transform:translateY(-1px)}
+#page-route .route-departure-option.is-best{border-color:rgba(79,216,200,.58);box-shadow:inset 0 0 0 1px rgba(79,216,200,.08)}
+#page-route .route-departure-option.is-selected{background:rgba(79,216,200,.1)}
+#page-route .route-departure-option-head{display:flex;justify-content:space-between;gap:8px;align-items:center}.route-departure-option-head span{font-size:.62rem;font-weight:900;letter-spacing:.06em;color:var(--accent)}
+#page-route .route-departure-riskbar{height:7px;border-radius:999px;background:rgba(110,150,190,.14);overflow:hidden}.route-departure-riskbar i{display:block;height:100%;width:calc(var(--risk)*1%);background:linear-gradient(90deg,var(--accent),#f0bf55,#ef6b78)}
+#page-route .route-departure-option small{color:var(--muted);font-size:.7rem}
+@media(max-width:980px){#page-intelligence .verified-feature-grid,#page-intelligence .personal-feature-grid{grid-template-columns:1fr}}
+@media(max-width:620px){#page-intelligence .verified-kpi-grid,#page-intelligence .verified-nowcast-hero,#page-intelligence .verified-motion-grid,#page-intelligence .personal-confidence-factors,#page-intelligence .personal-threshold-grid{grid-template-columns:1fr}#page-intelligence .personal-confidence-hero{grid-template-columns:1fr;text-align:center}.personal-confidence-ring{justify-self:center}.personal-activity-actions{align-items:stretch;flex-direction:column}.personal-activity-actions .button{width:100%}#page-route .route-departure-comparison{grid-template-columns:1fr 1fr}}
+@media(max-width:420px){#page-route .route-departure-comparison{grid-template-columns:1fr}}
+

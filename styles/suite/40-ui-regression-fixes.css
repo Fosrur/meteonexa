@@ -1,0 +1,204 @@
+/* UI regression fixes */
+#guest-login{display:flex!important;align-items:center!important;justify-content:center!important;gap:12px!important;padding-inline:18px!important}
+#guest-login>span{flex:1;text-align:center}
+#guest-login>svg{order:2!important;margin-left:0!important;width:17px!important;height:17px!important;flex:0 0 17px!important}
+
+.hero-facts>span{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:8px!important;overflow:hidden!important}
+.hero-facts>span>svg{flex:0 0 17px!important;width:17px!important;height:17px!important}
+.hero-facts .hero-fact-label{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important}
+.hero-facts>span>b{margin-left:auto!important;flex:0 0 auto!important;white-space:nowrap!important}
+.hero-facts>.hero-high-low{justify-content:center!important}
+.hero-facts>.hero-high-low>b{margin-left:0!important}
+
+.nav-link[data-page="intelligence"]>svg{width:24px!important;height:24px!important;min-width:24px!important;transform:scale(1.08)!important;transform-origin:center!important}
+.app-shell:not(.sidebar-collapsed) .nav-link[data-page="intelligence"]>svg{width:25px!important;height:25px!important;min-width:25px!important}
+
+#page-route>.route-form-panel{margin-bottom:20px!important}
+#page-route>.route-empty-state,#page-route>.route-results{margin-top:0!important}
+
+@media(max-width:760px){
+  #guest-login{padding-inline:15px!important}
+  .hero-facts>span{gap:6px!important;font-size:.76rem!important}
+  .hero-facts>span>svg{width:15px!important;height:15px!important;flex-basis:15px!important}
+  #page-route>.route-form-panel{margin-bottom:14px!important}
+}
+
+/* hero facts leggibili e uniformi */
+.hero-facts{
+  grid-template-columns:repeat(4,minmax(138px,1fr))!important;
+  max-width:920px!important;
+  align-items:stretch!important;
+}
+.hero-facts>span{
+  display:grid!important;
+  grid-template-columns:20px minmax(0,1fr)!important;
+  grid-template-rows:auto auto!important;
+  align-content:center!important;
+  align-items:center!important;
+  column-gap:10px!important;
+  row-gap:6px!important;
+  min-height:82px!important;
+  padding:12px 14px!important;
+  overflow:hidden!important;
+  white-space:normal!important;
+}
+.hero-facts>span>svg{
+  grid-column:1!important;
+  grid-row:1!important;
+  width:20px!important;
+  height:20px!important;
+  min-width:20px!important;
+}
+.hero-facts .hero-fact-label{
+  grid-column:2!important;
+  grid-row:1!important;
+  min-width:0!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  white-space:normal!important;
+  line-height:1.15!important;
+  font-size:.86rem!important;
+}
+.hero-facts>span>b{
+  grid-column:1/-1!important;
+  grid-row:2!important;
+  width:100%!important;
+  margin:0!important;
+  overflow:visible!important;
+  text-align:center!important;
+  white-space:normal!important;
+  font-size:1rem!important;
+  line-height:1.2!important;
+}
+.hero-facts>.hero-high-low{
+  grid-template-columns:20px minmax(0,1fr)!important;
+  grid-template-rows:1fr!important;
+}
+.hero-facts>.hero-high-low>svg{
+  grid-column:1!important;
+  grid-row:1!important;
+}
+.hero-facts>.hero-high-low>b{
+  grid-column:2!important;
+  grid-row:1!important;
+  text-align:left!important;
+  white-space:nowrap!important;
+}
+
+@media(max-width:1100px){
+  .hero-facts{grid-template-columns:repeat(2,minmax(0,1fr))!important;max-width:620px!important}
+}
+@media(max-width:760px){
+  .hero-facts{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important;width:100%!important;max-width:none!important}
+  .hero-facts>span{display:grid!important;min-height:72px!important;padding:10px 11px!important;column-gap:8px!important;row-gap:4px!important;font-size:inherit!important}
+  .hero-facts>span>svg{width:17px!important;height:17px!important;min-width:17px!important}
+  .hero-facts .hero-fact-label{font-size:.75rem!important}
+  .hero-facts>span>b{font-size:.86rem!important}
+}
+@media(max-width:390px){
+  .hero-facts>span{min-height:68px!important;padding:9px!important}
+  .hero-facts .hero-fact-label{font-size:.7rem!important}
+  .hero-facts>span>b{font-size:.8rem!important}
+}
+
+/* Reset della label interna: non deve ereditare lo stile della card esterna. */
+.hero-facts .hero-fact-label{
+  display:block!important;
+  width:auto!important;
+  min-width:0!important;
+  min-height:0!important;
+  height:auto!important;
+  padding:0!important;
+  margin:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:rgba(231,244,255,.82)!important;
+}
+.hero-facts>.hero-high-low{
+  grid-template-columns:1fr!important;
+  grid-template-rows:auto auto!important;
+  justify-items:center!important;
+}
+.hero-facts>.hero-high-low>svg{
+  grid-column:1!important;
+  grid-row:1!important;
+}
+.hero-facts>.hero-high-low>b{
+  grid-column:1!important;
+  grid-row:2!important;
+  text-align:center!important;
+  white-space:nowrap!important;
+  font-size:.94rem!important;
+}
+
+/* sidebar typography and header control alignment */
+#sidebar .main-nav .nav-link{
+  font-family:inherit!important;
+  font-size:13px!important;
+  font-weight:650!important;
+  line-height:1.2!important;
+  letter-spacing:normal!important;
+}
+#sidebar .main-nav .nav-link>span{
+  min-width:0!important;
+  font:inherit!important;
+  line-height:inherit!important;
+  letter-spacing:inherit!important;
+}
+#sidebar .main-nav .nav-link>svg,
+#sidebar .main-nav .nav-link[data-page="intelligence"]>svg,
+#weather-app:not(.sidebar-collapsed) #sidebar .main-nav .nav-link[data-page="intelligence"]>svg{
+  width:20px!important;
+  height:20px!important;
+  min-width:20px!important;
+  flex:0 0 20px!important;
+  transform:none!important;
+}
+
+#weather-app .topbar{
+  align-items:center!important;
+}
+#weather-app .topbar-left,
+#weather-app .topbar-center,
+#weather-app .topbar-actions{
+  min-height:var(--header-control-h)!important;
+  height:var(--header-control-h)!important;
+  align-items:center!important;
+}
+#weather-app .topbar .menu-button,
+#weather-app .topbar .location-command,
+#weather-app .topbar form.command-search,
+#weather-app .topbar .topbar-actions .round-button,
+#weather-app .topbar .profile-button{
+  height:var(--header-control-h)!important;
+  min-height:var(--header-control-h)!important;
+  box-sizing:border-box!important;
+  margin-top:0!important;
+  margin-bottom:0!important;
+}
+#weather-app .topbar .command-search-shell{
+  height:var(--header-control-h)!important;
+  min-height:var(--header-control-h)!important;
+}
+#weather-app .topbar .menu-button,
+#weather-app .topbar .topbar-actions .round-button,
+#weather-app .topbar .profile-button{
+  width:var(--header-control-h)!important;
+  min-width:var(--header-control-h)!important;
+  max-width:var(--header-control-h)!important;
+  padding:0!important;
+  flex:0 0 var(--header-control-h)!important;
+  border-radius:var(--header-control-radius)!important;
+}
+#weather-app .topbar .topbar-actions{
+  gap:var(--header-control-gap)!important;
+  padding:0!important;
+}
+#weather-app .topbar .profile-button{
+  margin-left:0!important;
+}
+
+
+

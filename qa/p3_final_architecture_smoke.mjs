@@ -1,0 +1,24 @@
+#!/usr/bin/env node
+import fs from 'node:fs';
+const read = path => fs.readFileSync(new URL(`../${path}`, import.meta.url), 'utf8');
+const assert = (value, message) => { if (!value) throw new Error(`P3_FINAL:${message}`); console.log(`PASS ${message}`); };
+const app=read('app.js'), suite=read('suite.js'), bootstrap=read('modules/esm/bootstrap.mjs'), registry=read('modules/esm/core/service-registry.mjs');
+const appUtilities=read('modules/esm/domains/app-utilities.mjs'), suiteAssistant=read('modules/esm/domains/suite-assistant.mjs'), lifecycle=read('modules/esm/domains/app-lifecycle.mjs');
+const sw=read('sw.js'), readme=read('METEONEXA-20.1-RC2.md'), architecture=read('METEONEXA-20.1-RC2.md');
+const appLines=app.split(/\r?\n/).length-1, suiteLines=suite.split(/\r?\n/).length-1;
+assert(appLines <= 4700, `final app shell budget (${appLines})`);
+assert(suiteLines <= 1400, `final suite shell budget (${suiteLines})`);
+assert(app.includes("SERVICES.require('appUtilities').create"), 'app utilities are wired through service registry');
+assert(suite.includes("SERVICES.require('suiteAssistant').create"), 'suite assistant is wired through service registry');
+assert(bootstrap.includes("'modules/esm/domains/app-utilities.mjs'") && bootstrap.includes("'modules/esm/domains/suite-assistant.mjs'"), 'bootstrap installs final P3 services');
+assert(registry.includes("appUtilities: 'MeteoNexaAppUtilities'") && registry.includes("suiteAssistant: 'MeteoNexaSuiteAssistant'"), 'registry knows final P3 services');
+assert(appUtilities.includes("dependencies = Object.freeze(['feedback', 'metrics'])"), 'app utilities dependencies explicit');
+assert(/openShareChannel, updateThreshold,/.test(appUtilities), 'app utilities publishes updateThreshold');
+assert(/openShareChannel, updateThreshold,/.test(app), 'app shell binds updateThreshold from app utilities');
+for (const dep of ['ai','auth','copilot','guestAccess','intelligence','metrics','security']) assert(suiteAssistant.includes(`'${dep}'`), `suite assistant declares ${dep}`);
+assert(!suiteAssistant.includes('SERVICES.get('), 'suite assistant has no service-locator calls');
+assert(lifecycle.includes("dependencies = Object.freeze(['security'])") && !lifecycle.includes('SERVICES.get('), 'app lifecycle security dependency is explicit');
+assert(sw.includes("SHELL_REVISION = 'rc2-stabilization-01-lifecycle-guest'"), 'final P3 service-worker revision');
+assert(readme.includes('**Stato P3: COMPLETATO.**'), 'README marks P3 complete');
+assert(architecture.includes('**P3 status: COMPLETE.**'), 'architecture marks P3 complete');
+console.log(`P3 FINAL PASS (app ${appLines}, suite ${suiteLines})`);

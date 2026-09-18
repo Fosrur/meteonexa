@@ -1,0 +1,168 @@
+/* MeteoNexa — UX/readability hotfix: devices, Route, History, Advanced, Intelligence. */
+
+/* Devices/accesses: desktop dialogs should use the available canvas instead of
+   creating an unnecessary inner scrollbar. Small/short viewports keep the
+   existing safe scroll behaviour. */
+@media (min-width:901px) and (min-height:720px){
+  .devices-access-dialog{width:min(1120px,calc(100vw - 56px))!important;max-width:1120px!important;max-height:none!important;overflow:visible!important}
+  .devices-access-dialog>form.dialog-layout{max-height:none!important;height:auto!important;overflow:visible!important}
+  .devices-access-dialog .dialog-body{max-height:none!important;overflow:visible!important;padding-block:20px!important}
+  .devices-access-dialog .devices-access-section-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .devices-access-dialog .devices-history-disclosure .devices-access-section-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .devices-access-dialog .device-access-card{height:100%!important}
+}
+@media (min-width:901px) and (max-height:719px){
+  .devices-access-dialog{width:min(1040px,calc(100vw - 36px))!important;max-height:calc(100dvh - 24px)!important}
+  .devices-access-dialog .dialog-body{overflow:auto!important}
+}
+
+/* Route controls: date, time and travel mode share exactly the same visual
+   height. This matters especially in tablet landscape where mixed native/custom
+   controls otherwise jump by several pixels. */
+#page-route .route-datetime .meteo-date-trigger,
+#page-route .route-datetime .meteo-select-control,
+#page-route .route-datetime .meteo-select-trigger{
+  width:100%!important;height:52px!important;min-height:52px!important;max-height:52px!important;box-sizing:border-box!important
+}
+#page-route .route-datetime .meteo-select-trigger{display:flex!important;align-items:center!important;justify-content:space-between!important;padding:0 14px!important}
+#page-route .route-datetime .meteo-select-control{display:flex!important;align-items:stretch!important}
+@media (max-width:760px){
+  #page-route .route-datetime .meteo-date-trigger,
+  #page-route .route-datetime .meteo-select-control,
+  #page-route .route-datetime .meteo-select-trigger{height:50px!important;min-height:50px!important;max-height:50px!important}
+}
+
+/* History toolbar: two clear layers, location/quick ranges above and the active
+   period/actions below. No crowded 3-column legacy bar. */
+#page-history .history-toolbar-panel{display:grid!important;grid-template-columns:1fr!important;gap:18px!important;padding:24px!important;overflow:visible!important}
+#page-history .history-toolbar-head{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:18px!important;align-items:center!important;padding-bottom:18px!important;border-bottom:1px solid var(--line)!important}
+#page-history .history-location-card{padding:0!important}
+#page-history .history-quick-actions{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:8px!important;flex-wrap:wrap!important}
+#page-history .history-quick-label{color:var(--muted)!important;font-size:.69rem!important;font-weight:850!important;letter-spacing:.08em!important;text-transform:uppercase!important;margin-right:3px!important}
+#page-history .history-quick-actions button{height:38px!important;min-height:38px!important;padding:0 13px!important;border-radius:999px!important}
+#page-history .history-period-form{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:16px!important;align-items:end!important}
+#page-history .history-period-fields{display:grid!important;grid-template-columns:minmax(150px,1fr) 34px minmax(150px,1fr)!important;gap:10px!important;align-items:end!important;min-width:0!important}
+#page-history .history-period-arrow{width:34px;height:48px;display:grid;place-items:center;color:var(--muted);transform:rotate(-90deg)}
+#page-history .history-period-arrow svg{width:16px;height:16px}
+#page-history .history-date-field .meteo-date-trigger{width:100%!important;min-height:48px!important;height:48px!important}
+#page-history .history-period-actions{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:9px!important}
+#page-history .history-period-actions .button{height:48px!important;min-height:48px!important;white-space:nowrap!important}
+@media(max-width:980px){
+  #page-history .history-toolbar-head,#page-history .history-period-form{grid-template-columns:1fr!important}
+  #page-history .history-quick-actions{justify-content:flex-start!important}
+  #page-history .history-period-actions{justify-content:stretch!important;display:grid!important;grid-template-columns:2fr 1fr 1fr!important}
+  #page-history .history-period-actions .button{width:100%!important;min-width:0!important}
+}
+@media(max-width:560px){
+  #page-history .history-toolbar-panel{padding:18px!important}
+  #page-history .history-period-fields{grid-template-columns:1fr!important}
+  #page-history .history-period-arrow{display:none!important}
+  #page-history .history-period-actions{grid-template-columns:1fr!important}
+  #page-history .history-quick-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;width:100%!important}
+  #page-history .history-quick-label{grid-column:1/-1!important}
+  #page-history .history-quick-actions button{width:100%!important;padding-inline:8px!important}
+}
+
+/* Advanced nowcast: real 15-minute observations/forecast buckets, with a
+   relative rain bar and an explicit trend marker. This makes equal values
+   visually equal instead of looking like a decorative repeated timeline. */
+#page-advanced .advanced-nowcast-timeline{display:grid!important;grid-template-columns:repeat(8,minmax(72px,1fr))!important;gap:8px!important;margin-top:16px!important;overflow-x:auto!important;padding:2px 2px 7px!important;scroll-snap-type:x proximity!important}
+#page-advanced .advanced-nowcast-slot{min-width:72px!important;min-height:116px!important;padding:10px 8px!important;display:grid!important;grid-template-rows:auto 54px auto auto!important;gap:5px!important;align-items:end!important;text-align:center!important;border:1px solid var(--line)!important;border-radius:14px!important;background:var(--surface-faint)!important;scroll-snap-align:start!important}
+#page-advanced .advanced-nowcast-slot>small{color:var(--muted)!important;font-size:.66rem!important;font-weight:750!important}
+#page-advanced .advanced-nowcast-slot>.advanced-nowcast-bar{height:54px!important;display:flex!important;align-items:flex-end!important;justify-content:center!important}
+#page-advanced .advanced-nowcast-slot>.advanced-nowcast-bar i{display:block!important;width:10px!important;min-height:3px!important;height:calc(54px * var(--level,0))!important;border-radius:999px 999px 4px 4px!important;background:linear-gradient(180deg,#65dbff,#5a7fff)!important;box-shadow:0 0 14px rgba(87,178,255,.16)!important}
+#page-advanced .advanced-nowcast-slot strong{font-size:.76rem!important;line-height:1.15!important}
+#page-advanced .advanced-nowcast-slot em{font-style:normal!important;color:var(--muted)!important;font-size:.62rem!important}
+#page-advanced .advanced-nowcast-slot[data-trend="up"] em{color:#76e6d1!important}
+#page-advanced .advanced-nowcast-slot[data-trend="down"] em{color:#83b9ef!important}
+#page-advanced .advanced-official-note{margin-top:12px!important;padding:11px 13px!important;border:1px solid rgba(244,190,75,.34)!important;border-radius:13px!important;background:rgba(244,190,75,.07)!important;color:var(--text-soft)!important;font-size:.76rem!important;line-height:1.5!important}
+
+/* Advanced model cards: readable six-point forecast strips rather than tiny
+   compressed sparkline geometry. */
+#page-advanced .advanced-model-panel>.panel-title{margin-bottom:24px!important}
+#page-advanced .advanced-model-panel>.suite-model-summary{margin-top:0!important;margin-bottom:18px!important}
+#page-advanced .advanced-model-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important;align-items:stretch!important}
+#page-advanced .advanced-model-card{min-width:0!important;height:100%!important;display:flex!important;flex-direction:column!important;gap:14px!important}
+#page-advanced .model-chart-readable{height:auto!important;min-height:0!important;overflow:visible!important;padding:0!important;background:none!important}
+.model-hour-strip{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:7px!important;width:100%!important;min-width:0!important}
+.model-hour-point{min-width:0!important;padding:9px 7px!important;display:grid!important;grid-template-rows:auto auto 36px auto!important;gap:4px!important;align-items:end!important;text-align:center!important;border:1px solid var(--line)!important;border-radius:12px!important;background:rgba(116,166,210,.045)!important}
+.model-hour-point small{color:var(--muted)!important;font-size:.61rem!important;font-weight:800!important;white-space:nowrap!important}
+.model-hour-point strong{font-size:.82rem!important;line-height:1.15!important;white-space:nowrap!important}
+.model-hour-point>span{height:36px!important;display:flex!important;align-items:flex-end!important;justify-content:center!important}
+.model-hour-point>span i{display:block!important;width:8px!important;min-height:2px!important;height:calc(34px * var(--rain,0))!important;border-radius:999px 999px 3px 3px!important;background:linear-gradient(180deg,#5cd5ff,#6e7cff)!important}
+.model-hour-point em{font-style:normal!important;color:var(--muted)!important;font-size:.58rem!important;line-height:1.25!important;overflow-wrap:anywhere!important}
+@media(max-width:1180px){#page-advanced .advanced-model-grid{grid-template-columns:1fr!important}}
+@media(max-width:760px){.model-hour-strip{grid-template-columns:repeat(3,minmax(0,1fr))!important}.model-hour-point{grid-template-rows:auto auto 28px auto!important}.model-hour-point>span{height:28px!important}.model-hour-point>span i{height:calc(26px * var(--rain,0))!important}}
+@media(max-width:390px){.model-hour-strip{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+
+/* Intelligence model comparison: one card per readable lane. Ensemble keeps a
+   full-width featured position, individual models use two columns on desktop. */
+#page-intelligence .model-comparison{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important;align-items:stretch!important}
+#page-intelligence .model-comparison .model-card{min-width:0!important;height:100%!important;overflow:visible!important}
+#page-intelligence .model-comparison .ensemble-model-card{grid-column:1/-1!important}
+#page-intelligence .model-readable-chart{height:auto!important;min-height:0!important;margin-top:12px!important;overflow:visible!important;background:none!important}
+@media(max-width:980px){#page-intelligence .model-comparison{grid-template-columns:1fr!important}}
+
+/* Skill and changes must stay visually balanced in the shared two-column row. */
+#page-intelligence .intelq-quality-grid{align-items:stretch!important}
+#page-intelligence #intelq-skill-panel,#page-intelligence #intelq-change-panel{height:100%!important;min-height:360px!important;display:flex!important;flex-direction:column!important}
+#page-intelligence #intelq-skill-panel>.intelq-skill-table,#page-intelligence #intelq-change-panel>#intelq-change-content{flex:1 1 auto!important}
+@media(max-width:980px){#page-intelligence #intelq-skill-panel,#page-intelligence #intelq-change-panel{min-height:0!important}}
+
+/* Panels: clearer visual hierarchy and inputs that do not look like tiny
+   native number boxes. */
+#page-intelligence .personal-feature-grid{align-items:stretch!important}
+#page-intelligence .personal-feature-grid>.glass-panel{height:100%!important;min-height:420px!important}
+#page-intelligence .personal-confidence-panel{background:radial-gradient(circle at 12% 0,rgba(73,218,201,.10),transparent 34%),var(--surface-panel,rgba(6,26,51,.9))!important}
+#page-intelligence .personal-confidence-hero{grid-template-columns:118px minmax(0,1fr)!important;padding:18px!important;margin-bottom:14px!important}
+#page-intelligence .personal-confidence-ring{width:104px!important;height:104px!important}
+#page-intelligence .personal-confidence-factors{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important;margin-top:0!important}
+#page-intelligence .personal-confidence-factor{position:relative!important;padding:13px 14px 14px!important;overflow:hidden!important}
+#page-intelligence .personal-confidence-factor::after{content:"";position:absolute;left:14px;right:14px;bottom:8px;height:3px;border-radius:99px;background:linear-gradient(90deg,var(--accent) calc(var(--factor,0)*1%),rgba(124,166,204,.13) 0)}
+#page-intelligence .personal-confidence-factor strong{font-size:1rem!important}
+#page-intelligence .personal-activity-panel{background:radial-gradient(circle at 92% 0,rgba(95,116,255,.10),transparent 34%),var(--surface-panel,rgba(6,26,51,.9))!important}
+#page-intelligence .personal-activity-chips{margin-bottom:16px!important}
+#page-intelligence .personal-threshold-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+#page-intelligence .personal-threshold-field{display:grid!important;grid-template-columns:1fr!important;gap:7px!important;padding:12px!important}
+#page-intelligence .personal-threshold-field.is-wide{grid-column:1/-1!important}
+#page-intelligence .personal-threshold-field>span{font-size:.7rem!important;color:var(--muted)!important;font-weight:800!important}
+#page-intelligence .personal-threshold-input{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;height:46px!important;border:1px solid var(--line)!important;border-radius:12px!important;background:rgba(2,17,36,.42)!important;overflow:hidden!important}
+#page-intelligence .personal-threshold-input:focus-within{border-color:rgba(79,216,200,.6)!important;box-shadow:0 0 0 3px rgba(79,216,200,.08)!important}
+#page-intelligence .personal-threshold-input input{width:100%!important;height:100%!important;border:0!important;outline:0!important;background:transparent!important;color:var(--text)!important;padding:0 12px!important;font:800 .96rem/1 Manrope,sans-serif!important;text-align:left!important;min-width:0!important}
+#page-intelligence .personal-threshold-input em{padding-right:12px!important;color:var(--muted)!important;font:750 .68rem/1 Manrope,sans-serif!important;font-style:normal!important;white-space:nowrap!important}
+#page-intelligence .personal-activity-actions{margin-top:auto!important;padding-top:16px!important;border-top:1px solid var(--line)!important}
+@media(max-width:620px){#page-intelligence .personal-feature-grid>.glass-panel{min-height:0!important}#page-intelligence .personal-confidence-hero{grid-template-columns:1fr!important;text-align:center!important}#page-intelligence .personal-confidence-ring{justify-self:center!important}#page-intelligence .personal-confidence-factors,#page-intelligence .personal-threshold-grid{grid-template-columns:1fr!important}#page-intelligence .personal-threshold-field.is-wide{grid-column:auto!important}}
+#page-intelligence #intelq-skill-panel>#intelq-skill-content,
+#page-intelligence #intelq-change-panel>#intelq-change-content{flex:1 1 auto!important;min-height:0!important}
+#page-intelligence .model-comparison .ensemble-model-card{
+  display:grid!important;grid-template-columns:1fr!important;grid-template-areas:"head" "copy" "chart" "metrics" "rain"!important;gap:12px!important
+}
+#page-intelligence .ensemble-model-card .model-readable-chart{grid-area:chart!important}
+#page-intelligence .ensemble-model-card .model-metrics{grid-area:metrics!important;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important}
+@media(max-width:560px){#page-intelligence .ensemble-model-card .model-metrics{grid-template-columns:1fr!important}}
+#page-advanced .model-forecast-strip{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:7px!important;width:100%!important;min-width:0!important}
+#page-advanced .model-hour-cell{min-width:0!important;padding:9px 7px!important;display:grid!important;grid-template-rows:auto auto 36px auto!important;gap:4px!important;align-items:end!important;text-align:center!important;border:1px solid var(--line)!important;border-radius:12px!important;background:rgba(116,166,210,.045)!important}
+#page-advanced .model-hour-cell small{color:var(--muted)!important;font-size:.61rem!important;font-weight:800!important;white-space:nowrap!important}
+#page-advanced .model-hour-cell strong{font-size:.82rem!important;line-height:1.15!important;white-space:nowrap!important}
+#page-advanced .model-hour-rain{height:36px!important;display:flex!important;align-items:flex-end!important;justify-content:center!important}
+#page-advanced .model-hour-rain i{display:block!important;width:8px!important;min-height:2px!important;height:calc(34px * var(--rain,0))!important;border-radius:999px 999px 3px 3px!important;background:linear-gradient(180deg,#5cd5ff,#6e7cff)!important}
+#page-advanced .model-hour-cell em{font-style:normal!important;color:var(--muted)!important;font-size:.58rem!important;line-height:1.25!important;overflow-wrap:anywhere!important}
+@media(max-width:760px){#page-advanced .model-forecast-strip{grid-template-columns:repeat(3,minmax(0,1fr))!important}#page-advanced .model-hour-cell{grid-template-rows:auto auto 28px auto!important}#page-advanced .model-hour-rain{height:28px!important}#page-advanced .model-hour-rain i{height:calc(26px * var(--rain,0))!important}}
+@media(max-width:390px){#page-advanced .model-forecast-strip{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+
+/* in-panel preloaders. Async articles keep their own loading state so
+   the user never sees a frozen placeholder while a server pipeline/API call is running. */
+article.glass-panel{position:relative}
+.article-inline-preloader{position:absolute;z-index:24;inset:0;display:flex;align-items:center;justify-content:center;gap:11px;padding:18px;border-radius:inherit;background:rgba(5,23,46,.88);background:color-mix(in srgb,var(--surface-panel,rgba(5,23,46,.92)) 82%,transparent);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);color:var(--text);text-align:center}
+.article-inline-preloader[hidden]{display:none!important}
+.article-inline-preloader strong{font:800 .78rem/1.35 Manrope,sans-serif;letter-spacing:.01em}
+.article-inline-spinner{width:28px;height:28px;flex:0 0 auto;border-radius:50%;border:3px solid rgba(125,183,224,.18);border-top-color:var(--accent,#5ad9ca);animation:articlePreloaderSpin .8s linear infinite;box-shadow:0 0 18px rgba(90,217,202,.12)}
+article.is-panel-loading>*:not(.article-inline-preloader){pointer-events:none}
+@keyframes articlePreloaderSpin{to{transform:rotate(360deg)}}
+@media(max-width:560px){.article-inline-preloader{gap:9px;padding:14px}.article-inline-spinner{width:24px;height:24px}.article-inline-preloader strong{font-size:.72rem}}
+@media(prefers-reduced-motion:reduce){.article-inline-spinner{animation-duration:1.8s}}
+
+/* Navigation is never an operation button: fail-safe against stale/nested loader state. */
+.nav-link.button-loading,.mobile-nav-link.button-loading,[data-page].button-loading{pointer-events:auto!important;opacity:1!important}
+.nav-link.button-loading::after,.mobile-nav-link.button-loading::after,[data-page].button-loading::after{display:none!important}
+.nav-link.button-loading>svg,.nav-link.button-loading>span,.mobile-nav-link.button-loading>svg,.mobile-nav-link.button-loading>span,[data-page].button-loading>svg,[data-page].button-loading>span{opacity:1!important}

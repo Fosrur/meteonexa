@@ -1,0 +1,39 @@
+{
+  "name": "meteonexa",
+  "version": "20.1.0",
+  "private": true,
+  "description": "MeteoNexa maintenance and release toolchain",
+  "scripts": {
+    "check": "node tools/static-analysis.mjs",
+    "check:syntax": "node tools/static-analysis.mjs --syntax-only",
+    "lint:eslint": "eslint \"modules/esm/**/*.mjs\"",
+    "bundle:verify": "node tools/esbuild-verify.mjs",
+    "check:full": "npm run check && npm run check:graph && npm run check:services && npm run check:di && npm run check:shell && npm run check:final && npm run check:p4 && npm run check:p4:backend && npm run check:p4:css && npm run check:p4:i18n && npm run check:p4:build && npm run check:p5 && npm run check:i18n-copy && npm run check:rc && npm run lint:eslint && npm run bundle:verify",
+    "build:assets": "python3 tools/fingerprint_assets.py",
+    "build": "npm run check && npm run build:production",
+    "qa": "bash qa/run-all.sh",
+    "check:graph": "node qa/p3_dependency_graph_smoke.mjs",
+    "check:di": "node qa/p3_dependency_injection_smoke.mjs",
+    "check:shell": "node qa/p3_shell_decomposition_smoke.mjs",
+    "check:final": "node qa/p3_final_architecture_smoke.mjs",
+    "check:p4": "python3 qa/p4_platform_hardening_smoke.py .",
+    "check:p4:backend": "python3 qa/p4_backend_maintainability_smoke.py .",
+    "build:css": "python3 tools/build_css.py",
+    "check:p4:css": "python3 qa/p4_css_architecture_smoke.py .",
+    "build:esm": "node tools/esbuild-production.mjs",
+    "build:production": "npm run build:esm && METEONEXA_REQUIRE_ESBUILD=1 python3 tools/fingerprint_assets.py",
+    "check:p4:i18n": "python3 qa/p4_i18n_semantic_smoke.py .",
+    "check:p4:build": "python3 qa/p4_production_build_smoke.py .",
+    "check:p5": "python3 qa/p5_audit_performance_smoke.py .",
+    "check:rc": "python3 qa/release_candidate_smoke.py .",
+    "check:i18n-copy": "python3 qa/i18n_hardcoded_copy_smoke.py .",
+    "check:services": "node qa/esm_service_publication_smoke.mjs"
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "eslint": "10.10.0"
+  }
+}

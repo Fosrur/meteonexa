@@ -1,0 +1,32 @@
+# MeteoNexa runtime / deployment secrets
+api/storage/
+**/.app-secret
+**/database.json
+**/vapid.json
+**/*-wal
+**/*-shm
+**/*.lock
+
+# One-shot AI recovery payloads are deployment artifacts, never source-control secrets.
+api/install/ai-provider-provision.json
+api/install/ai-provider-bootstrap.json
+
+# QA artifacts
+qa/node_modules/
+qa/playwright-report/
+qa/test-results/
+
+# VPS/Docker runtime
+.env
+.installer-key
+runtime/
+
+# P2 JavaScript toolchain
+node_modules/
+.eslintcache
+.build/
+
+# Deployment-local state and backup drills
+/backups/
+/runtime-staging/
+/.env.staging

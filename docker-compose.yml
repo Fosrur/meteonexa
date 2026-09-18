@@ -1,0 +1,133 @@
+name: meteonexa
+
+services:
+  db:
+    image: mysql:8.4
+    container_name: ${METEONEXA_DB_CONTAINER_NAME:-meteonexa-db}
+    restart: unless-stopped
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - meteonexa_mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    networks:
+      - backend
+
+  web:
+    build:
+      context: .
+    container_name: ${METEONEXA_WEB_CONTAINER_NAME:-meteonexa-web}
+    restart: unless-stopped
+    environment: &meteonexa_env
+      METEONEXA_STORAGE_PATH: /var/lib/meteonexa
+      METEONEXA_DB_DRIVER: mysql
+      METEONEXA_DB_HOST: db
+      METEONEXA_DB_PORT: 3306
+      METEONEXA_DB_NAME: ${MYSQL_DATABASE}
+      METEONEXA_DB_USER: ${MYSQL_USER}
+      METEONEXA_DB_PASSWORD: ${MYSQL_PASSWORD}
+      METEONEXA_BASE_URL: ${METEONEXA_BASE_URL:-}
+      METEONEXA_NATIVE_MAIL_FALLBACK: "0"
+      METEONEXA_SMTP_HOST: ${METEONEXA_SMTP_HOST:-smtp-relay.brevo.com}
+      METEONEXA_SMTP_PORT: ${METEONEXA_SMTP_PORT:-587}
+      METEONEXA_SMTP_ENCRYPTION: ${METEONEXA_SMTP_ENCRYPTION:-tls}
+      METEONEXA_SMTP_USERNAME: ${METEONEXA_SMTP_USERNAME:-}
+      METEONEXA_SMTP_PASSWORD: ${METEONEXA_SMTP_PASSWORD:-}
+      METEONEXA_SMTP_FROM_EMAIL: ${METEONEXA_SMTP_FROM_EMAIL:-alerts@meteonexa.com}
+      METEONEXA_SMTP_FROM_NAME: ${METEONEXA_SMTP_FROM_NAME:-MeteoNexa}
+      METEONEXA_SMTP_TIMEOUT_SECONDS: ${METEONEXA_SMTP_TIMEOUT_SECONDS:-18}
+      METEONEXA_QA_ADMIN_EMAILS: ${METEONEXA_QA_ADMIN_EMAILS:-}
+      METEONEXA_BUG_REPORT_EMAIL: ${METEONEXA_BUG_REPORT_EMAIL:-}
+      METEONEXA_PRIVACY_CONTACT_EMAIL: ${METEONEXA_PRIVACY_CONTACT_EMAIL:-}
+      METEONEXA_LEGAL_CONTROLLER_NAME: ${METEONEXA_LEGAL_CONTROLLER_NAME:-}
+      METEONEXA_LEGAL_CONTROLLER_ADDRESS: ${METEONEXA_LEGAL_CONTROLLER_ADDRESS:-}
+      METEONEXA_DPO_STATUS: ${METEONEXA_DPO_STATUS:-not-appointed}
+      METEONEXA_DPO_EMAIL: ${METEONEXA_DPO_EMAIL:-}
+      METEONEXA_LEGAL_SITE_URL: ${METEONEXA_LEGAL_SITE_URL:-https://meteonexa.com/}
+      METEONEXA_PLAUSIBLE_ENABLED: ${METEONEXA_PLAUSIBLE_ENABLED:-1}
+      METEONEXA_PLAUSIBLE_DOMAIN: ${METEONEXA_PLAUSIBLE_DOMAIN:-meteonexa.com}
+      METEONEXA_WORKER_INTERVAL_SECONDS: ${METEONEXA_WORKER_INTERVAL_SECONDS:-180}
+      METEONEXA_PIPELINE_CRON_SECRET: ${METEONEXA_PIPELINE_CRON_SECRET:-}
+      METEONEXA_PUSH_CRON_SECRET: ${METEONEXA_PUSH_CRON_SECRET:-}
+      METEONEXA_VAPID_SUBJECT: ${METEONEXA_VAPID_SUBJECT:-https://meteonexa.com/}
+      METEONEXA_VERIFICATION_RETENTION_DAYS: ${METEONEXA_VERIFICATION_RETENTION_DAYS:-180}
+      METEONEXA_RUNTIME_METRICS_RETENTION_DAYS: ${METEONEXA_RUNTIME_METRICS_RETENTION_DAYS:-30}
+      METEONEXA_PRODUCT_METRICS_ENABLED: ${METEONEXA_PRODUCT_METRICS_ENABLED:-1}
+      METEONEXA_PRODUCT_METRICS_RETENTION_DAYS: ${METEONEXA_PRODUCT_METRICS_RETENTION_DAYS:-180}
+      METEONEXA_PRODUCT_METRICS_MAX_GLOBAL_HOUR: ${METEONEXA_PRODUCT_METRICS_MAX_GLOBAL_HOUR:-6000}
+      METEONEXA_MINIMUM_TRUST_SAMPLES: ${METEONEXA_MINIMUM_TRUST_SAMPLES:-20}
+      METEONEXA_PROVIDER_PARALLEL: ${METEONEXA_PROVIDER_PARALLEL:-1}
+      METEONEXA_PROVIDER_BUDGET_SECONDS: ${METEONEXA_PROVIDER_BUDGET_SECONDS:-9}
+      METEONEXA_PROVIDER_TIMEOUT_SECONDS: ${METEONEXA_PROVIDER_TIMEOUT_SECONDS:-8}
+      METEONEXA_RADAR3_MODE: ${METEONEXA_RADAR3_MODE:-active}
+      METEONEXA_XWEATHER_CLIENT_ID: ${METEONEXA_XWEATHER_CLIENT_ID:-}
+      METEONEXA_XWEATHER_CLIENT_SECRET: ${METEONEXA_XWEATHER_CLIENT_SECRET:-}
+      METEONEXA_METEOALARM_EDR_TOKEN: ${METEONEXA_METEOALARM_EDR_TOKEN:-}
+      METEONEXA_SYNOP_OBSERVATION_URL: ${METEONEXA_SYNOP_OBSERVATION_URL:-}
+      METEONEXA_ARPA_OBSERVATION_URL: ${METEONEXA_ARPA_OBSERVATION_URL:-}
+      METEONEXA_RADAR_FALLBACK_METADATA_URL: ${METEONEXA_RADAR_FALLBACK_METADATA_URL:-}
+      METEONEXA_RADAR_ALLOWED_HOSTS: ${METEONEXA_RADAR_ALLOWED_HOSTS:-}
+    user: "33:33"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=64m
+      - /var/run/apache2:rw,noexec,nosuid,nodev,size=8m,uid=33,gid=33
+      - /var/lock/apache2:rw,noexec,nosuid,nodev,size=8m,uid=33,gid=33
+    volumes:
+      - ${METEONEXA_RUNTIME_DIR:-./runtime}:/var/lib/meteonexa
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - backend
+      - proxy
+
+  worker:
+    build:
+      context: .
+    container_name: ${METEONEXA_WORKER_CONTAINER_NAME:-meteonexa-worker}
+    restart: unless-stopped
+    user: "33:33"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=64m
+    command: ["/usr/local/bin/meteonexa-worker-loop"]
+    environment: *meteonexa_env
+    volumes:
+      - ${METEONEXA_RUNTIME_DIR:-./runtime}:/var/lib/meteonexa
+    depends_on:
+      db:
+        condition: service_healthy
+      web:
+        condition: service_started
+    networks:
+      - backend
+
+volumes:
+  meteonexa_mysql:
+
+networks:
+  backend:
+  proxy:
+    external: true
