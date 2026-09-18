@@ -37,7 +37,10 @@ async function revealRestrictedPageForLayout(page, name) {
     document.querySelectorAll('section.page').forEach(section => {
       const active = section === target;
       section.hidden = !active;
-      section.classList.toggle('active', active);
+      // MeteoNexa's real page visibility contract is `.page.active-page`.
+      // `active` belongs to onboarding views and does not make an app page
+      // visible, so layout-only QA must mirror the actual app-page class.
+      section.classList.toggle('active-page', active);
     });
     return true;
   }, name);

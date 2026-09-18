@@ -35,14 +35,29 @@ async function assertInteractiveChart(page, canvasSelector) {
   await expect(tooltip).toBeVisible();
   await expect(tooltip).not.toHaveText('');
 
-  // Use the browser mouse directly. locator.click() may scroll the target by a
-  // fraction of a pixel; MeteoNexa intentionally dismisses chart tooltips on
-  // viewport scroll, so that Playwright actionability scroll is not part of the
-  // click-pin contract we want to validate here.
-  await page.mouse.click(
-    box.x + Math.round(box.width * 0.65),
-    box.y + Math.round(box.height * 0.45),
-  );
+  // Exercise the chart layer's real click handler directly. Playwright's
+  // locator/page mouse actions can introduce actionability scrolling and
+  // pointer/mousedown events; MeteoNexa deliberately dismisses chart tooltips
+  // on viewport movement/outside pointer-down. Those side effects are not part
+  // of the click-to-pin contract being asserted here.
+  const clickPoint = {
+    clientX: box.x + Math.round(box.width * 0.65),
+    clientY: box.y + Math.round(box.height * 0.45),
+  };
+  await hit.evaluate((layer, point) => {
+    layer.dispatchEvent(new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+      clientX: point.clientX,
+      clientY: point.clientY,
+      button: 0,
+    }));
+  }, clickPoint);
+
+  await expect.poll(
+    () => canvas.evaluate(node => Boolean(node._chartTooltipPinned)),
+    { timeout: 2000 },
+  ).toBeTruthy();
   await expect(tooltip).toBeVisible();
 
   await page.mouse.move(5, 5);
