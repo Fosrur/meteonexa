@@ -6,7 +6,7 @@ BACKUP_DIR="${1:-}"
 [ -n "$BACKUP_DIR" ] || { echo 'Uso: METEONEXA_RESTORE_CONFIRM=RESTORE docker/restore-production-backup.sh <backup-dir>' >&2; exit 2; }
 [ "${METEONEXA_RESTORE_CONFIRM:-}" = 'RESTORE' ] || { echo 'Restore distruttivo non autorizzato. Imposta METEONEXA_RESTORE_CONFIRM=RESTORE.' >&2; exit 2; }
 [ -f .env ] || { echo '.env mancante.' >&2; exit 2; }
-./docker/verify-backup-restore.sh "$BACKUP_DIR"
+bash ./docker/verify-backup-restore.sh "$BACKUP_DIR"
 
 # shellcheck disable=SC1091
 set -a; . ./.env; set +a

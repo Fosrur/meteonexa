@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-exec "$ROOT/docker/restore-production-backup.sh" "$@"
+exec bash "$ROOT/docker/restore-production-backup.sh" "$@"

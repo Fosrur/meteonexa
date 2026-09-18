@@ -8,15 +8,24 @@ RC2 chiude i due regressivi emersi dopo RC1: il servizio `advanced` resta immuta
 
 Contratto deployment RC2: **un solo `docker-compose.yml`** per produzione e staging; lo staging isola progetto, container e `${METEONEXA_RUNTIME_DIR}` tramite `docker/staging-up.sh`. Il runtime applicativo resta un host bind mount intenzionale (backup/restore trasparente sul VPS), mentre MySQL usa il named volume `meteonexa_mysql`. Il backup ufficiale è `mysql.sql.gz + runtime.tar.gz + metadata.txt + SHA256SUMS`; il restore usa lo stesso formato e il drill importa realmente il dump in MySQL 8.4 temporaneo verificando `schema_version=28`.
 
-Supply-chain RC2: `package-lock.json`, `qa/package-lock.json` e `composer.lock` sono obbligatori; CI **e Dockerfile** usano `npm ci`, Composer installa dal lock, e mantengono PHPStan, ESLint/esbuild, Semgrep, Trivy, MySQL 8.4 e Playwright Chromium+Firefox. La CI avvia inoltre lo staging con lo stesso compose della produzione ed esegue il backup+restore drill reale su MySQL 8.4.
+Supply-chain RC2: `package-lock.json`, `qa/package-lock.json` e `composer.lock` sono obbligatori; la CI usa `npm ci`, Composer installa dal lock, e mantiene PHPStan, ESLint/esbuild, Semgrep, Trivy, MySQL 8.4 e Playwright Chromium+Firefox.
 
 **GO production:** non è implicito nella sigla RC2. Il freeze 20.1 Final avviene solo dopo i gate live/staging, inclusi dati legali reali del titolare/DPO status; tali valori non devono essere inventati.
 
+
+### RC2 — remediation della prima CI GitHub reale
+
+La prima esecuzione GitHub Actions della RC2 ha validato l'avvio del workflow e ha evidenziato esclusivamente problemi di release engineering: permessi eseguibili degli script shell persi durante il passaggio ZIP/Windows/GitHub, metadato Composer `license` assente con `composer validate --strict`, e MySQL 8.4 che richiede `log_bin_trust_function_creators=1` per creare i trigger con l'utente applicativo quando il binary logging è attivo. RC2 corregge questi punti senza modificare il comportamento funzionale dell'applicazione.
+
+Il compose MySQL ufficiale abilita quindi `--log-bin-trust-function-creators=1`; la CI MySQL standalone abilita lo stesso flag dinamicamente come root prima dei test e continua ad eseguire i test applicativi con l'utente `meteonexa`. I workflow invocano inoltre gli script operativi tramite `bash`, così la CI non dipende dal bit eseguibile preservato dall'host Windows o dall'archivio ZIP. `composer.json` dichiara `license: proprietary`, coerente con un'applicazione closed-source e con la validazione Composer strict.
+
 ### Esito verifiche RC2 di questa build
 
-**PASS locale sul tree finale:** release audit, PHP/JS syntax, SQLite integrity/schema 28/47 tabelle, asset fingerprint contract, P0 security, P1 maintainability, P2 ESM/toolchain, P3 dependency graph/DI/shell, P4 platform/backend/CSS/i18n/production-build, P5 audit/performance, release-candidate smoke, auth/OTP/trusted-device contract, backup/restore contract, mobile/guest/private-browser, policy/privacy/i18n e SQL rewrite. I lock npm sono consumabili da `npm ci --dry-run`; il lock Composer ha content-hash coerente e versioni tool dirette esatte.
+**PASS locale sul tree finale:** release audit, PHP/JS syntax, SQLite integrity/schema 28/47 tabelle, asset fingerprint contract, P0 security, P1 maintainability, P2 ESM/toolchain, P3 dependency graph/DI/shell, P4 platform/backend/CSS/i18n/production-build, P5 audit/performance, release-candidate smoke, auth/OTP/trusted-device contract, backup/restore contract, mobile/guest/private-browser, policy/privacy/i18n e SQL rewrite. I contratti dei lock npm/Composer passano gli smoke test locali; l’installazione `npm ci`/`composer install` completa resta un gate CI perché questo ambiente di build non dispone di accesso package-registry affidabile. Il lock Composer mantiene content-hash e versioni tool dirette coerenti.
 
-**PENDING prima del GO:** esecuzione GitHub Actions su repository autorizzato (inclusi Composer install/validate, Semgrep e Trivy), MySQL 8.4 integration in CI, Playwright reale Chromium+Firefox, staging con SMTP/Push/worker e credenziali reali, restore drill Docker su un backup staging, security live TLS/header e compilazione dell'identità legale del titolare/DPO status. Questi gate non vengono marcati verdi solo perché esistono gli script.
+**Prima CI GitHub reale eseguita:** il workflow `MeteoNexa QA` è partito sul repository reale e ha raggiunto i job release, MySQL, quality/security, backup/restore e staging. Il primo run ha evidenziato quattro problemi di release engineering ora corretti in questa remediation: bit eseguibile shell perso nel passaggio Windows/Git, `license` Composer assente, creazione trigger MySQL 8.4 bloccata dal binary logging e dump `mysqldump` da utente applicativo reso indipendente dal privilegio globale PROCESS tramite `--no-tablespaces`.
+
+**PENDING prima del GO:** secondo run GitHub Actions dopo questa remediation, inclusi Composer install/validate, PHPStan, ESLint/esbuild, Semgrep, Trivy, MySQL 8.4, backup/restore drill e staging-compose; solo dopo il verde di questi job partirà Playwright reale Chromium+Firefox. Restano inoltre staging con SMTP/Push/worker e credenziali reali, security live TLS/header e compilazione dell'identità legale del titolare/DPO status. Questi gate non vengono marcati verdi solo perché esistono gli script.
 
 La build resta quindi **20.1 RC2 / code-complete per staging / NO-GO production finché i gate PENDING non sono tutti verdi**.
 
@@ -25,7 +34,7 @@ Questa sezione è la **source of truth operativa corrente** e prevale sulle note
 - Versione applicazione: **20.1 RC2**.
 - Schema database corrente: **28**.
 - Dominio canonico: **https://meteonexa.com/**. Le normali navigazioni HTML su `https://www.meteonexa.com/` vengono canonicalizzate con **308** verso il dominio senza `www`; API e Service Worker non vengono forzati cross-origin.
-- Runtime Docker: scelta ufficiale **host bind mount `./runtime:/var/lib/meteonexa`** per web e worker. È intenzionale per rendere backup/restore e ispezione operativa espliciti sul VPS. La directory deve essere esterna alla document root pubblica, ownership `33:33`, permessi minimi e inclusa nei backup. `docker/prepare-runtime.sh` applica il contratto `33:33 / 0770` senza ricorrere a permessi world-writable. Non è più richiesto il named volume `meteonexa_runtime`.
+- Runtime Docker: scelta ufficiale **host bind mount `./runtime:/var/lib/meteonexa`** per web e worker. È intenzionale per rendere backup/restore e ispezione operativa espliciti sul VPS. La directory deve essere esterna alla document root pubblica, ownership `33:33`, permessi minimi e inclusa nei backup. Non è più richiesto il named volume `meteonexa_runtime`.
 - Database Docker: MySQL resta nel named volume `meteonexa_mysql`.
 - Il servizio `advanced` rimane immutabile (`Object.freeze`): Suite estende il lifecycle esclusivamente tramite `registerLifecycleHook()`, senza monkey-patching di proprietà read-only.
 - Prima del freeze production sono obbligatori lockfile toolchain, CI security/quality, Chromium+Firefox, backup+restore test, verifica live TLS/header, identità legale/privacy e prove delle integrazioni che richiedono credenziali reali.
@@ -1834,7 +1843,7 @@ Playwright E2E è separato e richiede le dipendenze browser:
 
 ```bash
 cd qa
-npm ci --no-audit --no-fund
+npm install
 npx playwright install chromium firefox
 npm run test:e2e
 ```
@@ -2584,7 +2593,7 @@ Questa checklist è il percorso consigliato per provare e rilasciare la RC senza
 In un ambiente con accesso npm/Docker/MySQL:
 
 ```bash
-npm ci --ignore-scripts --no-audit --no-fund
+npm install
 npm run check:full
 npm run build:production
 bash qa/run-all.sh
@@ -2592,7 +2601,7 @@ bash qa/run-all.sh
 
 Eseguire inoltre la CI completa: MySQL 8.4 integration, PHPStan, PHP-CS-Fixer check, Semgrep, Trivy filesystem/image e Playwright Chromium + Firefox.
 
-> Nota RC2: i lockfile `package-lock.json`, `qa/package-lock.json` e `composer.lock` fanno parte del contratto di release e devono essere aggiornati solo intenzionalmente tramite la procedura documentata.
+> Nota: il repository usa versioni esatte di esbuild/ESLint ma non contiene ancora `package-lock.json`; appena il registry npm è raggiungibile, generare e committare il lockfile prima del rilascio definitivo è raccomandato.
 
 ## 3. Avvio RC
 

@@ -11,6 +11,8 @@ export METEONEXA_WEB_CONTAINER_NAME="${METEONEXA_WEB_CONTAINER_NAME:-meteonexa-s
 export METEONEXA_WORKER_CONTAINER_NAME="${METEONEXA_WORKER_CONTAINER_NAME:-meteonexa-staging-worker}"
 export METEONEXA_RUNTIME_DIR="${METEONEXA_RUNTIME_DIR:-./runtime-staging}"
 
-./docker/prepare-runtime.sh "$METEONEXA_RUNTIME_DIR"
+# Invoke through bash so Windows/ZIP imports cannot break staging merely by
+# dropping the executable bit from repository shell scripts.
+bash ./docker/prepare-runtime.sh "$METEONEXA_RUNTIME_DIR"
 docker compose --env-file "$ENV_FILE" up -d --build
 printf 'Staging avviato con compose di produzione: project=%s runtime=%s\n' "$COMPOSE_PROJECT_NAME" "$METEONEXA_RUNTIME_DIR"

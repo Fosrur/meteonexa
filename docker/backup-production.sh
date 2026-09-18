@@ -21,7 +21,7 @@ mkdir -p "$DEST"
 printf '%s\n' 'Backup MySQL consistente...'
 docker compose exec -T db sh -lc '
   export MYSQL_PWD="$MYSQL_PASSWORD"
-  exec mysqldump --user="$MYSQL_USER" --single-transaction --quick --routines --triggers --events --hex-blob --set-gtid-purged=OFF --databases "$MYSQL_DATABASE"
+  exec mysqldump --user="$MYSQL_USER" --single-transaction --quick --routines --triggers --events --hex-blob --no-tablespaces --set-gtid-purged=OFF --databases "$MYSQL_DATABASE"
 ' | gzip -9 > "$DEST/mysql.sql.gz"
 
 test -s "$DEST/mysql.sql.gz" || { echo 'ERRORE: dump MySQL vuoto.' >&2; exit 1; }

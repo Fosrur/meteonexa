@@ -23,8 +23,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Verify deterministic dependency manifests
+        run: |
+          test -f package-lock.json
+          test -f qa/package-lock.json
+          test -f composer.lock
       - name: Current release and regression suite
         run: bash qa/run-all.sh
+
   mysql-auth-regression:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -42,7 +48,7 @@ jobs:
           --health-interval=5s --health-timeout=5s --health-retries=20
     steps:
       - uses: actions/checkout@v4
-      - run: sudo apt-get update && sudo apt-get install -y php-cli php-mysql
+      - run: sudo apt-get update && sudo apt-get install -y php-cli php-mysql default-mysql-client
       - name: Real MySQL integration
         env:
           MYSQL_HOST: 127.0.0.1
@@ -51,8 +57,13 @@ jobs:
           MYSQL_USER: meteonexa
           MYSQL_PASSWORD: meteonexa
         run: |
+          # MySQL 8.4 + binary logging requires this server-side switch for
+          # trigger creation by the non-SUPER application user. Tests continue
+          # to execute as MYSQL_USER; root is used only for this CI bootstrap.
+          mysql --protocol=TCP -h127.0.0.1 -P3306 -uroot -prootpass -e "SET GLOBAL log_bin_trust_function_creators = 1"
           php qa/mysql_auth_integration.php
           php qa/mysql_full_integration.php
+
   quality-security:
     runs-on: ubuntu-latest
     timeout-minutes: 35
@@ -103,6 +114,7 @@ jobs:
           scanners: vuln,secret,misconfig
           ignore-unfixed: true
           exit-code: '1'
+
   backup-restore-drill:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -134,8 +146,8 @@ jobs:
           cat api/install/mysql-triggers.sql | docker compose exec -T db sh -lc 'export MYSQL_PWD="$MYSQL_PASSWORD"; exec mysql -u"$MYSQL_USER" "$MYSQL_DATABASE"'
       - name: Create official backup and execute real restore drill
         run: |
-          ./docker/backup-production.sh "$RUNNER_TEMP/meteonexa-backup"
-          ./docker/verify-backup-restore.sh "$RUNNER_TEMP/meteonexa-backup"
+          bash ./docker/backup-production.sh "$RUNNER_TEMP/meteonexa-backup"
+          bash ./docker/verify-backup-restore.sh "$RUNNER_TEMP/meteonexa-backup"
       - name: Cleanup
         if: always()
         run: docker compose down -v --remove-orphans || true
@@ -152,7 +164,7 @@ jobs:
           sed -i 's/CHANGE_ME_ROOT_DB_PASSWORD/ci_staging_root_7Hm5y0Q3/' .env.staging
           docker network inspect proxy >/dev/null 2>&1 || docker network create proxy
           sudo -n true
-          ./docker/staging-up.sh .env.staging
+          bash ./docker/staging-up.sh .env.staging
       - name: Verify hardened staging containers
         run: |
           docker compose --env-file .env.staging ps
