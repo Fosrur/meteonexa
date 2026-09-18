@@ -19,6 +19,7 @@ test.describe('MeteoNexa custom controls and loaders', () => {
 
   test('custom listbox and switch expose compatible value/checked state', async ({ page }) => {
     await page.evaluate(() => document.querySelector('#settings-dialog')?.showModal?.());
+
     const unit = page.locator('#temperature-unit');
     await unit.click();
     await page.locator('#temperature-unit-menu [data-meteo-option="fahrenheit"]').click();
@@ -36,7 +37,9 @@ test.describe('MeteoNexa custom controls and loaders', () => {
     await page.route('**/api/preferences.php', async route => {
       if (route.request().method() !== 'POST') return route.continue();
       const body = route.request().postDataJSON() || {};
-      await new Promise(resolve => setTimeout(resolve, 900));
+      // Deliberately slower than the local-theme assertions below. The test
+      // proves that the repaint is local-first and does not wait for persistence.
+      await new Promise(resolve => setTimeout(resolve, 2500));
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -49,26 +52,67 @@ test.describe('MeteoNexa custom controls and loaders', () => {
       });
     });
 
-    await page.evaluate(() => document.querySelector('#settings-dialog')?.showModal?.());
+    await page.evaluate(() => {
+      window.__qaThemeEvents = [];
+      document.addEventListener('meteonexa:theme-changed', event => {
+        window.__qaThemeEvents.push({
+          at: performance.now(),
+          preference: event.detail?.preference || '',
+          resolved: event.detail?.resolved || '',
+        });
+      });
+      document.querySelector('#settings-dialog')?.showModal?.();
+    });
+
     const before = await page.locator('body').getAttribute('data-theme');
     const target = before === 'light' ? 'dark' : 'light';
     const trigger = page.locator('#theme-setting');
 
     await trigger.click();
     await page.locator(`#theme-setting-menu [data-meteo-option="${target}"]`).click();
-    await expect(page.locator('body')).toHaveAttribute('data-theme', target, { timeout: 350 });
-    await expect(page.locator('html')).toHaveAttribute('data-theme', target, { timeout: 350 });
+
+    await expect.poll(
+      () => page.evaluate(() => window.__qaThemeEvents?.at(-1)?.resolved || ''),
+      { timeout: 1000 },
+    ).toBe(target);
+
+    await expect.poll(
+      () => page.evaluate(() => ({
+        html: document.documentElement.dataset.theme || '',
+        body: document.body?.dataset.theme || '',
+      })),
+      { timeout: 1000 },
+    ).toEqual({ html: target, body: target });
+
     await expect(trigger).toHaveAttribute('value', target);
   });
 
   test('custom time listbox and range work with keyboard/pointer semantics', async ({ page }) => {
-    await page.evaluate(() => document.querySelector('#notification-dialog')?.showModal?.());
+    await page.evaluate(() => {
+      const dialog = document.querySelector('#notification-dialog');
+      dialog?.showModal?.();
+
+      // Smart alerts are intentionally feature-gated for a guest preview.
+      // This is a component-semantics test, so expose only that existing
+      // section without changing the application's feature policy.
+      const smart = document.querySelector('.smart-alert-preferences');
+      if (smart) {
+        smart.hidden = false;
+        smart.removeAttribute('hidden');
+      }
+    });
+
     const start = page.locator('#smart-quiet-start');
+    await expect(start).toBeVisible({ timeout: 2000 });
     await start.click();
-    await page.locator('#smart-quiet-start-menu [data-meteo-option="22:30"]').click();
+    const option = page.locator('#smart-quiet-start-menu [data-meteo-option="22:30"]');
+    await expect(option).toBeVisible({ timeout: 2000 });
+    await option.click();
     expect(await start.evaluate(node => node.value)).toBe('22:30');
 
     const rain = page.locator('#threshold-rain');
+    await rain.scrollIntoViewIfNeeded();
+    await expect(rain).toBeVisible({ timeout: 2000 });
     const before = Number(await rain.getAttribute('aria-valuenow'));
     await rain.focus();
     await page.keyboard.press('ArrowRight');
@@ -92,12 +136,27 @@ test.describe('MeteoNexa custom controls and loaders', () => {
     });
 
     const button = page.locator('#qa-loader-button');
-    await button.click();
+
+    // Dispatch the real bubbling click event directly. This exercises
+    // MeteoNexa's document-level initiating-button capture and the button's
+    // own handler, without allowing the fixed sidebar geometry to intercept a
+    // synthetic pointer action created only for QA.
+    await button.evaluate(node => {
+      node.dispatchEvent(new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+        view: window,
+        button: 0,
+      }));
+    });
+
     await expect(button).toHaveClass(/button-loading/);
     await expect(button).toHaveAttribute('aria-busy', 'true');
     await expect(button).toBeDisabled();
     await expect(page.locator('#global-loader')).toBeVisible();
+
     await expect(button).not.toHaveClass(/button-loading/, { timeout: 2500 });
     await expect(button).not.toHaveAttribute('aria-busy', 'true');
+    await expect(button).toBeEnabled();
   });
 });
