@@ -21,26 +21,31 @@ Il compose MySQL ufficiale abilita quindi `--log-bin-trust-function-creators=1`;
 
 ### Esito verifiche RC2 di questa build
 
-**PASS locale sul tree corrente:** release audit, PHP/JS syntax, SQLite integrity/schema 28/47 tabelle, P0 security, P1 maintainability, P2 ESM/toolchain, P3 dependency graph/DI/shell, P4 platform/backend/CSS/i18n, P5 audit/performance, release-candidate smoke, auth/OTP/trusted-device contract, backup/restore contract, mobile/guest/private-browser, policy/privacy/i18n e SQL rewrite. Dopo le ultime correzioni ESM il production asset byte-contract deve essere rigenerato in CI con `npm ci && npm run build:production`; non viene marcato verde usando bundle fingerprintati precedenti.
+**GitHub Actions reale â€” run 20 / commit `f8d22fe9898d1f82626b8e1a2024a87da7043b3b` (19 settembre 2026): PASS completo sul trigger `push`.**
 
-**GitHub Actions reale — run 3:** i gate `release-gates`, dependency lock, suite regression completa, `mysql-auth-regression`, PHPStan e `backup-restore-drill` sono verdi. Il restore drill ha realmente creato il backup ufficiale, verificato checksum/runtime e importato il dump in MySQL 8.4 con `schema_version=28`. Il test MySQL applicativo reale passa con utente non-root e catena migration 16→28.
+- `release-gates`: PASS, incluso rebuild deterministico degli asset e suite regression;
+- `mysql-auth-regression`: PASS su MySQL 8.4;
+- `backup-restore-drill`: PASS con backup ufficiale e restore reale dello schema 28;
+- `staging-compose`: PASS con compose production-like hardened;
+- `quality-security`: PASS per PHPStan, ESLint, esbuild/production build, Semgrep, Trivy filesystem e Trivy immagine;
+- `browser-regression (chromium)`: PASS;
+- `browser-regression (firefox)`: PASS.
 
-**Remediation corrente:** `staging-compose` falliva perché `runtime-staging` (correttamente owner `33:33`, mode `0770`) entrava nel Docker build context e il runner non poteva attraversarlo. `runtime/`, `runtime-staging/`, `backups/` e `.env.staging` sono ora esclusi esplicitamente da `.dockerignore`, senza indebolire i permessi runtime. Il gate quality ha inoltre raggiunto ESLint: i browser globals leciti sono dichiarati esplicitamente nel flat config, mentre i veri riferimenti rimasti dal refactoring ESM sono stati convertiti in dipendenze/context espliciti (`meteonexaText/t`, `syncEnhancedSelect`, `weatherMeta`, radar lifecycle/layers, tooltips e dipendenze visualization). `eqeqeq` resta strict e consente esclusivamente il confronto nullish intenzionale. La shell del Service Worker è revisionata a `rc2-stabilization-02-ci-esm` per invalidare in modo esplicito la cache della RC2 precedente.
+**`live-production-security` non viene eseguito sui push:** il workflow lo abilita solo per `workflow_dispatch` o `schedule`. Il job esegue `python3 qa/live_security_check.py https://meteonexa.com/` e verifica il sito giÃ  pubblicato; non effettua alcun deploy.
 
-**PENDING prima del GO:** il prossimo run deve confermare staging-compose, ESLint/esbuild + production fingerprint build, Semgrep, Docker hardened image, Trivy filesystem/image e successivamente Playwright reale Chromium+Firefox. Restano inoltre il run manuale/schedulato del gate TLS/header live, staging con SMTP/Push/worker e credenziali reali, e compilazione dell'identità legale del titolare/DPO status. Questi gate non vengono marcati verdi solo perché esistono gli script.
+**Deployment:** il workflow `MeteoNexa QA` non contiene step SSH/SCP/rsync/deploy e non pubblica la RC sul VPS. Il rilascio production resta unâ€™operazione separata sul VPS, da eseguire solo dopo i gate GO, con backup/rollback disponibili.
 
-La build resta quindi **20.1 RC2 / code-complete per staging / NO-GO production finché i gate PENDING non sono tutti verdi**.
+**PENDING prima del GO production:**
 
-Questa sezione è la **source of truth operativa corrente** e prevale sulle note storiche 18.x/19.x/20.x conservate più sotto.
+- run manuale `workflow_dispatch` con `live-production-security` verde;
+- configurazione reale di `METEONEXA_LEGAL_CONTROLLER_NAME`, `METEONEXA_LEGAL_CONTROLLER_ADDRESS`, `METEONEXA_PRIVACY_CONTACT_EMAIL` e stato DPO/email se applicabile;
+- prove delle integrazioni che richiedono credenziali reali (SMTP/push/worker);
+- deploy della RC sul VPS con backup preventivo;
+- smoke test e controllo console/header/TLS post-deploy, piÃ¹ verifica rollback.
 
-- Versione applicazione: **20.1 RC2**.
-- Schema database corrente: **28**.
-- Dominio canonico: **https://meteonexa.com/**. Le normali navigazioni HTML su `https://www.meteonexa.com/` vengono canonicalizzate con **308** verso il dominio senza `www`; API e Service Worker non vengono forzati cross-origin.
-- Runtime Docker: scelta ufficiale **host bind mount `./runtime:/var/lib/meteonexa`** per web e worker. È intenzionale per rendere backup/restore e ispezione operativa espliciti sul VPS. La directory deve essere esterna alla document root pubblica, ownership `33:33`, permessi minimi e inclusa nei backup. Non è più richiesto il named volume `meteonexa_runtime`.
-- Database Docker: MySQL resta nel named volume `meteonexa_mysql`.
-- Il servizio `advanced` rimane immutabile (`Object.freeze`): Suite estende il lifecycle esclusivamente tramite `registerLifecycleHook()`, senza monkey-patching di proprietà read-only.
-- Prima del freeze production sono obbligatori lockfile toolchain, CI security/quality, Chromium+Firefox, backup+restore test, verifica live TLS/header, identità legale/privacy e prove delle integrazioni che richiedono credenziali reali.
+La build resta quindi **MeteoNexa 20.1 RC2: CI push completa verde, ma non ancora dichiarata GO/Final e non implicitamente deployata in produzione**.
 
+Questa sezione Ã¨ la **source of truth operativa corrente** e prevale sulle note storiche conservate piÃ¹ sotto.
 ### Stato stabilizzazione corrente
 
 - Corretto `ReferenceError: updateThreshold is not defined`.
