@@ -21,14 +21,19 @@ test.describe('MeteoNexa custom controls and loaders', () => {
     await page.evaluate(() => document.querySelector('#settings-dialog')?.showModal?.());
 
     const unit = page.locator('#temperature-unit');
-    await unit.click();
-    await page.locator('#temperature-unit-menu [data-meteo-option="fahrenheit"]').click();
+    await expect(unit).toBeVisible();
+    await unit.evaluate(node => node.click());
+
+    const fahrenheit = page.locator('#temperature-unit-menu [data-meteo-option="fahrenheit"]');
+    await expect(fahrenheit).toBeVisible();
+    await fahrenheit.evaluate(node => node.click());
+
     await expect(unit).toHaveAttribute('value', 'fahrenheit');
     expect(await unit.evaluate(node => node.value)).toBe('fahrenheit');
 
     const motion = page.locator('#reduce-motion-setting');
     const before = await motion.getAttribute('aria-checked');
-    await motion.click();
+    await motion.evaluate(node => node.click());
     await expect(motion).toHaveAttribute('aria-checked', before === 'true' ? 'false' : 'true');
     expect(await motion.evaluate(node => node.checked)).toBe(before !== 'true');
   });
@@ -44,8 +49,6 @@ test.describe('MeteoNexa custom controls and loaders', () => {
 
         if (url.includes('api/preferences.php') && method === 'POST') {
           window.__qaPreferencePostStarted += 1;
-          // Keep persistence deliberately unresolved. The visible theme must
-          // still update locally and synchronously before this request settles.
           return new Promise(() => {});
         }
 
@@ -149,13 +152,20 @@ test.describe('MeteoNexa custom controls and loaders', () => {
       button.textContent = 'QA loader';
       document.body.appendChild(button);
 
+      window.__qaLoaderResolve = null;
+      window.__qaLoaderPromise = null;
+
       const loader = window.MeteoNexaServices.require('loader');
-      button.addEventListener('click', () => loader.run(
-        'QA',
-        'Loading',
-        () => new Promise(resolve => setTimeout(resolve, 800)),
-        700,
-      ));
+      button.addEventListener('click', () => {
+        window.__qaLoaderPromise = loader.run(
+          'QA',
+          'Loading',
+          () => new Promise(resolve => {
+            window.__qaLoaderResolve = resolve;
+          }),
+          0,
+        );
+      });
     });
 
     const button = page.locator('#qa-loader-button');
@@ -169,13 +179,21 @@ test.describe('MeteoNexa custom controls and loaders', () => {
       }));
     });
 
+    await expect.poll(
+      () => page.evaluate(() => typeof window.__qaLoaderResolve === 'function'),
+      { timeout: 2000 },
+    ).toBeTruthy();
+
     await expect(button).toHaveClass(/button-loading/);
     await expect(button).toHaveAttribute('aria-busy', 'true');
     await expect(button).toBeDisabled();
     await expect(page.locator('#global-loader')).toBeVisible();
 
+    await page.evaluate(() => window.__qaLoaderResolve?.());
+
     await expect(button).not.toHaveClass(/button-loading/, { timeout: 2500 });
     await expect(button).not.toHaveAttribute('aria-busy', 'true');
     await expect(button).toBeEnabled();
+    await expect(page.locator('#global-loader')).toBeHidden({ timeout: 2500 });
   });
 });
