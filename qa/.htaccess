@@ -1,0 +1,16 @@
+Options -Indexes
+DirectoryIndex index.php
+
+# The web QA console is intentionally small. Source test runners and manifests
+# remain non-public even though they live in the same release directory.
+<FilesMatch "^(?!index\.php$|qa\.css$|qa\.js$).+">
+  Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+  Header always set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+  Header always set X-Robots-Tag "noindex, nofollow, noarchive"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "same-origin"
+</IfModule>

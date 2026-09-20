@@ -1,0 +1,25 @@
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^(?:storage|install)(?:/|$) - [F,L]
+</IfModule>
+
+# Helper/configuration code and server-side data are never public endpoints.
+<FilesMatch "^(config\.php|database\.php|bootstrap\.php|backend_i18n\.php|SmtpMailer\.php|http_helpers\.php|public_helpers\.php|auth_session\.php|web_push\.php|storage_helpers\.php|metadata_helpers\.php|archive_helpers\.php|helpers\.php)$">
+  Require all denied
+</FilesMatch>
+<FilesMatch "(^\.|\.(?:sqlite|sqlite3|db|env|ini|log|sql|bak|backup|tgz|tar|zip)$)">
+  Require all denied
+</FilesMatch>
+
+<IfModule mod_headers.c>
+  Header always unset X-Powered-By
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Permitted-Cross-Domain-Policies "none"
+  Header always set Origin-Agent-Cluster "?1"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "same-origin"
+  Header always set Cache-Control "no-store"
+  Header always set Content-Security-Policy "default-src 'none'; frame-ancestors 'none'; base-uri 'none'"
+</IfModule>

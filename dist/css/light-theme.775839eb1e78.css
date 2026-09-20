@@ -1,0 +1,404 @@
+/* MeteoNexa — coherent high-contrast light theme.
+   Loaded after all feature stylesheets so every module shares the same visual language. */
+
+html[data-theme="light"],
+body[data-theme="light"] {
+  color-scheme: light;
+  --bg: #eef4f9;
+  --bg-soft: #e6eef6;
+  --surface: rgba(255,255,255,.96);
+  --surface-strong: #ffffff;
+  --surface-faint: rgba(25,73,112,.055);
+  --line: rgba(45,82,113,.18);
+  --line-strong: rgba(24,105,166,.34);
+  --text: #14283d;
+  --text-soft: #334f69;
+  --muted: #60778e;
+  --primary: #0878bd;
+  --primary-2: #145fbd;
+  --cyan: #087f9c;
+  --green: #18845c;
+  --yellow: #a96700;
+  --orange: #b65413;
+  --red: #c3364c;
+  --purple: #6753c7;
+  --shadow-lg: 0 26px 70px rgba(31,63,91,.14);
+  --shadow-md: 0 14px 34px rgba(31,63,91,.10);
+  --light-panel: #ffffff;
+  --light-panel-soft: #f7fafc;
+  --light-panel-alt: #f1f6fa;
+  --light-border: #cedbe6;
+  --light-border-strong: #a9c4da;
+  --light-text: #14283d;
+  --light-text-soft: #3c566f;
+  --light-muted: #637a90;
+  --light-accent-bg: #e9f5fb;
+  background: var(--bg) !important;
+  color: var(--text) !important;
+}
+
+html[data-theme="light"] { background: #eef4f9 !important; }
+body[data-theme="light"] .ambient {
+  background:
+    radial-gradient(circle at 80% 0, rgba(64,158,211,.16), transparent 31%),
+    radial-gradient(circle at 8% 82%, rgba(70,177,164,.10), transparent 34%),
+    linear-gradient(145deg,#f7fafc 0%,#eef4f9 50%,#e8f0f6 100%) !important;
+}
+body[data-theme="light"] .ambient::before {
+  opacity: .48 !important;
+  background-image: linear-gradient(rgba(44,90,128,.065) 1px,transparent 1px),linear-gradient(90deg,rgba(44,90,128,.065) 1px,transparent 1px) !important;
+}
+body[data-theme="light"] .orb-one { background:#8bc9e8 !important; opacity:.18 !important; }
+body[data-theme="light"] .orb-two { background:#9edfd2 !important; opacity:.16 !important; }
+body[data-theme="light"] .orb-three { background:#c0b5ef !important; opacity:.12 !important; }
+
+/* App chrome */
+body[data-theme="light"] .sidebar {
+  background: linear-gradient(180deg,#fbfdff 0%,#f1f6fa 100%) !important;
+  border-right-color: var(--light-border) !important;
+  box-shadow: 14px 0 40px rgba(34,68,96,.08) !important;
+}
+body[data-theme="light"] .topbar {
+  background: rgba(248,251,253,.93) !important;
+  border-bottom-color: rgba(58,92,119,.14) !important;
+  box-shadow: 0 8px 28px rgba(37,67,92,.06) !important;
+  backdrop-filter: blur(22px) saturate(125%) !important;
+}
+body[data-theme="light"] .sidebar-brand,
+body[data-theme="light"] .topbar,
+body[data-theme="light"] .pages-wrap,
+body[data-theme="light"] .content-area { color: var(--light-text) !important; }
+body[data-theme="light"] .sidebar-credit,
+body[data-theme="light"] .top-location small,
+body[data-theme="light"] .topbar small { color: var(--light-muted) !important; }
+body[data-theme="light"] .nav-link,
+body[data-theme="light"] .mobile-nav-link,
+body[data-theme="light"] .sidebar-logout,
+body[data-theme="light"] .sidebar-install { color:#4b647b !important; }
+body[data-theme="light"] .nav-link:hover,
+body[data-theme="light"] .mobile-nav-link:hover,
+body[data-theme="light"] .sidebar-logout:hover,
+body[data-theme="light"] .sidebar-install:hover {
+  color:#14557e !important;
+  background:#edf6fb !important;
+}
+body[data-theme="light"] .nav-link.active,
+body[data-theme="light"] .mobile-nav-link.active {
+  color:#075f94 !important;
+  background:linear-gradient(135deg,#e4f3fb,#eef3ff) !important;
+  border-color:#a9cfe2 !important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.75) !important;
+}
+body[data-theme="light"] .mobile-nav {
+  background:rgba(250,252,254,.96) !important;
+  border-color:var(--light-border) !important;
+  box-shadow:0 -12px 32px rgba(35,65,91,.10) !important;
+}
+
+/* Primary surfaces: make sections and articles visually distinct. */
+body[data-theme="light"] :is(
+  .glass-panel,.radar-card,.page-heading,.hero-card,.now-panel,.hourly-panel,.forecast-panel,
+  .chart-preview-panel,.air-panel,.sun-panel,.thresholds-panel,.alert-events-panel,.alert-monitor-panel,
+  .radar-predictive-panel,.detail-chart-panel,.detail-motion-panel,.history-chart-panel,.history-table-panel,
+  .history-toolbar-panel,.impact-panel,.consensus-quality-panel,.model-accuracy-panel,.model-comparison-panel,
+  .nowcast-intelligence-panel,.smart-intelligence-panel,.proactive-ai-panel,.ai-briefing-panel,
+  .advanced-heading,.advanced-nowcast-panel,.advanced-confidence-panel,.advanced-model-panel,
+  .route-form-panel,.route-summary,.assistant-shell,.widget-gallery,.device-capabilities,
+  .route-departure-comparison-panel,.route-directions-panel,.route-intelligence-panel,.route-navigation-panel,
+  .suite-route-map-panel,.verified-nowcast-panel,.verified-reliability-panel,.personal-activity-panel,.personal-confidence-panel,
+  .bug-report-heading,.bug-report-panel
+) {
+  color:var(--light-text) !important;
+  background:linear-gradient(145deg,#ffffff 0%,#f8fbfd 100%) !important;
+  border-color:var(--light-border) !important;
+  box-shadow:0 16px 38px rgba(33,66,93,.09),inset 0 1px 0 rgba(255,255,255,.95) !important;
+}
+body[data-theme="light"] .pages-wrap article:not(.glass-panel) {
+  border-color:var(--light-border) !important;
+}
+body[data-theme="light"] :is(
+  .now-metric,.hour-card,.activity-card,.alerts-summary-card,.history-summary-card,.history-location-card,
+  .advanced-change-list article,.advanced-decision-list article,.advanced-model-card,
+  .device-capability-list article,.route-stop-card,.route-summary-metrics span,.route-stop-metrics span,
+  .widget-hours span,.day-detail-grid span,.privacy-fact,.notification-platform-guide,
+  .setting-row,.profile-action-row,.setting-action-row,.device-access-card,.accuracy-model-row,
+  .impact-card,.briefing-output,.briefing-settings,.consensus-model-row,.ensemble-model-card,
+  .hourly-table-row,.history-table tr,.bug-form-section,.bug-recording-panel
+) {
+  background:#f6f9fc !important;
+  border-color:#d6e1ea !important;
+  color:var(--light-text) !important;
+  box-shadow:none !important;
+}
+body[data-theme="light"] :is(.hour-card,.now-metric,.impact-card,.advanced-model-card,.route-stop-card,.device-access-card):hover {
+  background:#f0f7fb !important;
+  border-color:#b8cfdf !important;
+}
+
+/* Typography */
+body[data-theme="light"] :is(
+  .glass-panel,.page-heading,.advanced-heading,.advanced-nowcast-panel,.advanced-confidence-panel,
+  .advanced-model-panel,.route-form-panel,.route-summary,.assistant-shell,.app-dialog,.meteo-date-dialog
+) :is(h1,h2,h3,h4,strong,b,label) { color:var(--light-text) !important; }
+body[data-theme="light"] :is(
+  .glass-panel,.page-heading,.advanced-heading,.advanced-nowcast-panel,.advanced-confidence-panel,
+  .advanced-model-panel,.route-form-panel,.route-summary,.assistant-shell,.app-dialog,.meteo-date-dialog
+) :is(p,small) { color:var(--light-muted) !important; }
+body[data-theme="light"] .section-kicker { color:#1478a4 !important; }
+body[data-theme="light"] :is(.panel-link,.dialog-link,.text-button,a:not(.button)) { color:#086da8; }
+body[data-theme="light"] :is(.panel-link,.dialog-link,.text-button,a:not(.button)):hover { color:#064e79; }
+body[data-theme="light"] .soft-badge {
+  background:#eaf4fa !important;
+  border-color:#b8d3e4 !important;
+  color:#31627f !important;
+}
+body[data-theme="light"] .soft-badge.good { background:#e8f6ef !important;border-color:#b8dbc9 !important;color:#206647 !important; }
+body[data-theme="light"] .confidence-badge { background:#edf6f2 !important;border-color:#b9d9cc !important;color:#23694e !important; }
+
+/* Controls and forms */
+body[data-theme="light"] :is(input,textarea,select),
+body[data-theme="light"] :is(.command-search,.route-input-shell,.route-field>div,.meteo-time-control,.personal-threshold-input) {
+  color:#183650 !important;
+  background:#ffffff !important;
+  border-color:#b9cede !important;
+  box-shadow:inset 0 1px 2px rgba(34,67,93,.045) !important;
+}
+body[data-theme="light"] :is(input,textarea,select)::placeholder { color:#8295a7 !important; opacity:1; }
+body[data-theme="light"] :is(input,textarea,select):focus,
+body[data-theme="light"] :is(.command-search,.route-input-shell,.route-field>div):focus-within {
+  border-color:#4d9ac7 !important;
+  box-shadow:0 0 0 3px rgba(35,132,188,.13) !important;
+}
+body[data-theme="light"] .round-button,
+body[data-theme="light"] .outline-button,
+body[data-theme="light"] .ghost-button,
+body[data-theme="light"] .radar-heading-button,
+body[data-theme="light"] .history-period-arrow,
+body[data-theme="light"] .meteo-date-navigation button,
+body[data-theme="light"] .meteo-date-close,
+body[data-theme="light"] .dialog-close {
+  color:#31536d !important;
+  background:#f5f9fc !important;
+  border-color:#c7d7e4 !important;
+  box-shadow:none !important;
+}
+body[data-theme="light"] :is(.round-button,.outline-button,.ghost-button,.radar-heading-button,.history-period-arrow,.meteo-date-navigation button,.meteo-date-close,.dialog-close):hover {
+  color:#0c628f !important;
+  background:#eaf4fa !important;
+  border-color:#a9c9dc !important;
+}
+body[data-theme="light"] .primary-button { color:#fff !important; }
+body[data-theme="light"] .danger-button { color:#fff !important; }
+body[data-theme="light"] .toggle-setting>i { background:#c3d2df !important; border-color:#aebfce !important; }
+body[data-theme="light"] .toggle-setting input:checked+i { background:linear-gradient(90deg,#199b82,#4e68cb) !important; }
+body[data-theme="light"] .meteo-range-track { background:#dce7ef !important; }
+body[data-theme="light"] .meteo-range-fill { background:linear-gradient(90deg,#168fb5,#2670c7) !important; }
+body[data-theme="light"] .meteo-range-thumb { background:#fff !important;border-color:#2682b5 !important;box-shadow:0 3px 10px rgba(24,83,117,.18) !important; }
+
+/* Custom selects / dropdowns */
+body[data-theme="light"] :is(.meteo-select-trigger,.meteonexa-choices .choices__inner) {
+  color:#183650 !important;
+  background:#fff !important;
+  border-color:#b9cede !important;
+}
+body[data-theme="light"] :is(.meteo-select-menu,.meteonexa-choices .choices__list--dropdown,.meteonexa-choices .choices__list[aria-expanded],.settings-language-menu,.welcome-language-menu) {
+  color:#193a55 !important;
+  background:#fff !important;
+  border-color:#bccfdd !important;
+  box-shadow:0 18px 42px rgba(35,67,94,.16) !important;
+}
+body[data-theme="light"] :is(.meteo-select-option,.meteonexa-choices .choices__item--choice,.settings-language-option,.welcome-language-option) { color:#35536b !important; }
+body[data-theme="light"] :is(.meteo-select-option:hover,.meteo-select-option.is-selected,.meteonexa-choices .choices__item--choice.is-highlighted,.settings-language-option:hover,.settings-language-option.active,.welcome-language-option:hover,.welcome-language-option.active) {
+  color:#0d4f75 !important;
+  background:#eaf4fa !important;
+}
+
+/* Tables */
+body[data-theme="light"] :is(.hourly-table,.history-table) { color:#24435e !important; }
+body[data-theme="light"] :is(.hourly-table th,.history-table th) {
+  color:#49647b !important;
+  background:#edf3f7 !important;
+  border-color:#d2dee7 !important;
+}
+body[data-theme="light"] :is(.hourly-table td,.history-table td,.hourly-table-row) { border-color:#dbe4eb !important; }
+body[data-theme="light"] :is(.hourly-table tr:hover,.history-table tr:hover,.hourly-table-row:hover) { background:#eef6fa !important; }
+
+/* Dialogs, menus and overlays */
+body[data-theme="light"] dialog.app-dialog,
+body[data-theme="light"] dialog.app-dialog>form,
+body[data-theme="light"] :is(.assistant-dialog-shell,.meteo-date-shell,.confirm-dialog-layout) {
+  color:var(--light-text) !important;
+  background:linear-gradient(160deg,#ffffff,#f3f8fb) !important;
+  border-color:#c3d4e1 !important;
+  box-shadow:0 28px 80px rgba(29,54,78,.22) !important;
+}
+body[data-theme="light"] :is(.dialog-header,.dialog-footer,.assistant-form,.meteo-date-header,.meteo-date-footer) {
+  border-color:#d3e0e9 !important;
+  background:#f7fafc !important;
+}
+body[data-theme="light"] .global-loader { background:rgba(225,233,240,.72) !important; }
+body[data-theme="light"] .loader-card {
+  color:var(--light-text) !important;
+  background:linear-gradient(150deg,#fff,#f1f7fb) !important;
+  border-color:#bed3e2 !important;
+  box-shadow:0 24px 70px rgba(35,62,84,.20) !important;
+}
+body[data-theme="light"] .loader-progress { background:#dfe8ef !important; }
+body[data-theme="light"] .toast,
+body[data-theme="light"] .network-banner {
+  color:#173650 !important;
+  background:rgba(255,255,255,.97) !important;
+  border-color:#bfd3e1 !important;
+  box-shadow:0 14px 36px rgba(33,65,91,.15) !important;
+}
+body[data-theme="light"] .network-banner.offline { color:#81500d !important;border-color:#e0c18f !important;background:#fff9ef !important; }
+body[data-theme="light"] .cookie-card { background:#fff !important;border-color:#bdd1df !important;color:var(--light-text) !important;box-shadow:0 24px 70px rgba(33,62,86,.18) !important; }
+
+/* Radar and map controls retain map contrast while chrome becomes light. */
+body[data-theme="light"] :is(.radar-layer-panel,.radar-heading-actions,.radar-bottom-overlay,.radar-map-controls,.radar-time-row,.radar-info-cards article) {
+  color:#1a3b54 !important;
+  background:rgba(250,253,255,.95) !important;
+  border-color:#bfd3e0 !important;
+  box-shadow:0 10px 28px rgba(34,64,89,.12) !important;
+}
+body[data-theme="light"] :is(.radar-primary-layers button,.radar-secondary-layers button,.radar-more-layers summary) {
+  color:#36566e !important;
+  background:#f5f9fc !important;
+  border-color:#c9d8e3 !important;
+}
+body[data-theme="light"] :is(.radar-primary-layers button.active,.radar-secondary-layers button.active) {
+  color:#075f91 !important;
+  background:#e6f3f9 !important;
+  border-color:#9fc8dc !important;
+}
+body[data-theme="light"] .radar-dry-chip { color:#28654d !important;background:#eaf6f0 !important;border-color:#b6d9c8 !important; }
+
+/* Advanced / Intelligence */
+body[data-theme="light"] .advanced-secondary-grid>article,
+body[data-theme="light"] .advanced-model-card,
+body[data-theme="light"] .advanced-change-list article,
+body[data-theme="light"] .advanced-decision-list article {
+  background:#f6f9fc !important;
+  border-color:#d4e0e9 !important;
+  color:var(--light-text) !important;
+}
+body[data-theme="light"] :is(.advanced-change-list p,.advanced-decision-list small,.model-head small,.advanced-model-card>p,.advanced-confidence-copy p,.advanced-message) { color:#61788d !important; }
+body[data-theme="light"] .model-head em { color:#4c667d !important;background:#edf3f7 !important;border:1px solid #d4e0e8 !important; }
+body[data-theme="light"] .model-values span { background:#eef4f8 !important;border:1px solid #d8e3eb !important; }
+body[data-theme="light"] .model-values small { color:#647b90 !important; }
+body[data-theme="light"] .model-chart { border-color:#d7e2ea !important; }
+body[data-theme="light"] .route-stop-line span { background:#fff !important;color:#16745f !important;border-color:#7fc6b3 !important; }
+body[data-theme="light"] .route-stop-line::after { background:linear-gradient(#53aa96,rgba(83,170,150,.12)) !important; }
+body[data-theme="light"] .assistant-message>div,
+body[data-theme="light"] .assistant-message.user>div { background:#f3f8fb !important;border-color:#d1dee7 !important;color:#1b3850 !important; }
+body[data-theme="light"] .assistant-message.user>div { background:#eaf3fb !important; }
+body[data-theme="light"] .assistant-message p { color:#587189 !important; }
+body[data-theme="light"] .assistant-suggestions button { background:#f4f8fb !important;border-color:#c9d9e4 !important;color:#4d687f !important; }
+body[data-theme="light"] .assistant-suggestions button:hover { color:#0d638d !important;border-color:#9cc9dc !important;background:#eaf5fa !important; }
+body[data-theme="light"] .widget-preview {
+  color:#183650 !important;
+  background:radial-gradient(circle at 100% 0,rgba(95,160,214,.15),transparent 42%),linear-gradient(145deg,#ffffff,#edf5fa) !important;
+  border-color:#bfd3e1 !important;
+  box-shadow:0 18px 42px rgba(32,65,92,.12) !important;
+}
+body[data-theme="light"] .widget-preview :is(small,em) { color:#5d768c !important; }
+
+/* Suite modules */
+body[data-theme="light"] :is(
+  .accuracy-secondary,.accuracy-model-row,.consensus-model-row,.ensemble-model-card,.impact-card,
+  .history-location-card,.device-access-card,.devices-access-section-grid>article,.briefing-settings,
+  .briefing-output,.assistant-input-shell,.assistant-message-bubble,.assistant-suggestion-area,
+  .route-navigation-live,.intelq-location-form,.intelligence-personal-grid>article
+) {
+  background:#f5f9fb !important;
+  border-color:#d2dfe8 !important;
+  color:var(--light-text) !important;
+}
+body[data-theme="light"] :is(
+  .accuracy-model-row,.consensus-model-row,.ensemble-model-card,.impact-card,.device-access-card,
+  .devices-access-section-grid>article,.intelligence-personal-grid>article
+) :is(p,small) { color:#60788e !important; }
+body[data-theme="light"] :is(.impact-preference-chip,.intelq-role-chips button,.personal-activity-chips button,.ai-chip,.assistant-mode-button) {
+  color:#3c5a72 !important;
+  background:#f2f7fa !important;
+  border-color:#c9d8e3 !important;
+}
+body[data-theme="light"] :is(.impact-preference-chip.active,.impact-preference-chip.is-selected,.intelq-role-chips button.active,.personal-activity-chips button.active,.assistant-mode-button.active) {
+  color:#075f8d !important;
+  background:#e5f3f9 !important;
+  border-color:#9fc7db !important;
+}
+body[data-theme="light"] .assistant-provider-pill,
+body[data-theme="light"] .assistant-ai-badge,
+body[data-theme="light"] .assistant-model-note { display:none !important; }
+
+/* History / device management */
+body[data-theme="light"] .devices-history-disclosure,
+body[data-theme="light"] .history-quick-actions,
+body[data-theme="light"] .history-period-form {
+  background:#f5f9fb !important;
+  border-color:#d1dee7 !important;
+}
+body[data-theme="light"] .device-history-item,
+body[data-theme="light"] .device-access-card {
+  background:#f7fafc !important;
+  border-color:#d3dfe8 !important;
+}
+
+/* Bug report */
+body[data-theme="light"] .bug-dropzone {
+  color:#436077 !important;
+  background:#f5f9fc !important;
+  border-color:#b8cddd !important;
+}
+body[data-theme="light"] .bug-dropzone.is-dragover { background:#e8f5fa !important;border-color:#61a9c9 !important; }
+body[data-theme="light"] .bug-attachment-item,
+body[data-theme="light"] .bug-recording-preview { background:#eef4f8 !important;border-color:#cedce6 !important;color:#234159 !important; }
+
+/* Login/onboarding in light mode: keep dynamic weather scene, improve legibility of the form surface. */
+body[data-theme="light"] .welcome-stage { color:#143048 !important; }
+body[data-theme="light"] .welcome-story { color:#173650 !important; }
+body[data-theme="light"] .welcome-story::after { background:linear-gradient(transparent,rgba(75,128,166,.22),transparent) !important; }
+body[data-theme="light"] .phone-shell,
+body[data-theme="light"] .auth-panel,
+body[data-theme="light"] .onboarding-view {
+  color:#173650;
+}
+body[data-theme="light"] .phone-shell {
+  border-color:rgba(170,199,219,.8) !important;
+  box-shadow:0 28px 70px rgba(35,67,92,.20),0 0 0 4px rgba(224,235,243,.75) !important;
+}
+body[data-theme="light"] .auth-card,
+body[data-theme="light"] .guest-card {
+  background:rgba(255,255,255,.90) !important;
+  border-color:#bfd2e0 !important;
+  color:#173650 !important;
+  box-shadow:0 18px 45px rgba(32,62,87,.13) !important;
+  backdrop-filter:blur(20px) saturate(120%) !important;
+}
+body[data-theme="light"] .auth-card :is(p,small),
+body[data-theme="light"] .guest-card :is(p,small) { color:#5c7489 !important; }
+body[data-theme="light"] .welcome-language-button { background:rgba(255,255,255,.82) !important;border-color:#b9cedd !important;color:#24435b !important; }
+body[data-theme="light"] .login-version-badge { color:#46657d !important;background:rgba(255,255,255,.76) !important;border-color:rgba(163,190,209,.8) !important; }
+
+/* Status colours tuned for white surfaces. */
+body[data-theme="light"] :is(.status-good,.good,.is-yes) { color:#1d7450; }
+body[data-theme="light"] :is(.status-warning,.warning) { color:#95600d; }
+body[data-theme="light"] :is(.status-danger,.danger,.is-no) { color:#b43349; }
+body[data-theme="light"] .public-official-alert-card { background:#fff8ed !important;border-color:#e6c99c !important;color:#69491e !important; }
+body[data-theme="light"] .public-official-alert-card :is(h2,h3,strong) { color:#684217 !important; }
+body[data-theme="light"] .public-official-alert-card :is(p,small) { color:#7a5b34 !important; }
+
+/* Scrollbars */
+body[data-theme="light"] * { scrollbar-color:#b9cad7 #edf3f7; }
+body[data-theme="light"] *::-webkit-scrollbar-track { background:#edf3f7; }
+body[data-theme="light"] *::-webkit-scrollbar-thumb { background:#b9cad7;border:2px solid #edf3f7; }
+body[data-theme="light"] *::-webkit-scrollbar-thumb:hover { background:#9eb5c6; }
+
+/* Preserve white text on semantic/accent surfaces. */
+body[data-theme="light"] :is(.primary-button,.danger-button,.severity-red,.severity-orange,.severity-yellow) :is(span,strong,svg) { color:inherit !important; }
+
+@media (max-width: 760px) {
+  body[data-theme="light"] .topbar { background:rgba(250,252,254,.97) !important; }
+  body[data-theme="light"] :is(.glass-panel,.radar-card,.page-heading) { box-shadow:0 10px 26px rgba(33,66,93,.08) !important; }
+}

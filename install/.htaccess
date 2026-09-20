@@ -1,0 +1,4 @@
+Options -Indexes
+<FilesMatch "^(ENABLE_INSTALL|ENABLE_INSTALL\.example)$">
+  Require all denied
+</FilesMatch>

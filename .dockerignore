@@ -1,0 +1,30 @@
+.git
+.github
+.env
+.installer-key
+runtime
+api/storage/*
+!api/storage/.htaccess
+!api/storage/index.html
+qa/node_modules
+qa/playwright-report
+qa/test-results
+*.tgz
+*.tar
+*.zip
+
+# P2 JavaScript toolchain
+node_modules/
+.eslintcache
+.build/
+
+# P4 quality toolchain
+vendor/
+.cache/
+.php-cs-fixer.cache
+.phpstan.cache
+# Deployment-local state must not enter Docker build context
+runtime/
+runtime-staging/
+backups/
+.env.staging

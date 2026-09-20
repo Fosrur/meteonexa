@@ -1,0 +1,103 @@
+Options -Indexes
+DirectoryIndex index.php index.html
+
+<IfModule mod_mime.c>
+  AddType application/manifest+json .webmanifest
+  AddType image/svg+xml .svg
+</IfModule>
+
+# Browser navigations receive the same branded, translated HTTP error surface.
+# API endpoints remain JSON because api/ is excluded from the SPA/error rewrite.
+ErrorDocument 400 /api/public-error.php?code=400
+ErrorDocument 401 /api/public-error.php?code=401
+ErrorDocument 403 /api/public-error.php?code=403
+ErrorDocument 404 /api/public-error.php?code=404
+ErrorDocument 405 /api/public-error.php?code=405
+ErrorDocument 408 /api/public-error.php?code=408
+ErrorDocument 413 /api/public-error.php?code=413
+ErrorDocument 415 /api/public-error.php?code=415
+ErrorDocument 422 /api/public-error.php?code=422
+ErrorDocument 429 /api/public-error.php?code=429
+ErrorDocument 500 /api/public-error.php?code=500
+ErrorDocument 502 /api/public-error.php?code=502
+ErrorDocument 503 /api/public-error.php?code=503
+ErrorDocument 504 /api/public-error.php?code=504
+
+# Never serve deployment secrets, databases, logs, backups or source archives.
+<FilesMatch "(^\.|\.(?:sqlite|sqlite3|db|env|ini|log|sql|bak|backup|tgz|tar|zip)$)">
+  Require all denied
+</FilesMatch>
+
+<IfModule mod_mime.c>
+  AddType text/javascript .mjs
+</IfModule>
+
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|js|mjs|css|json|webmanifest)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+  <FilesMatch "^asset-manifest\.(?:js|json)$">
+    Header set Cache-Control "no-cache, must-revalidate, max-age=0"
+  </FilesMatch>
+  <FilesMatch "\.php$">
+    Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+  </FilesMatch>
+  <Files "vendor-asset.php">
+    Header set Cache-Control "public, max-age=86400, stale-while-revalidate=604800"
+  </Files>
+  <FilesMatch "\.(png|jpg|jpeg|gif|svg|webp|ico)$">
+    Header set Cache-Control "public, max-age=2592000, immutable"
+  </FilesMatch>
+  <Files "favicon.ico">
+    Header set Cache-Control "no-cache, must-revalidate, max-age=0"
+  </Files>
+  # Content-addressed assets may be cached for one year; a content change creates a new URL.
+  Header set Cache-Control "public, max-age=31536000, immutable" "expr=%{REQUEST_URI} =~ m#^/dist/#"
+
+  Header always set Service-Worker-Allowed "/" "expr=%{REQUEST_URI} == '/js/sw.js'"
+  Header always unset X-Powered-By
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Permitted-Cross-Domain-Policies "none"
+  Header always set Origin-Agent-Cluster "?1"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "geolocation=(self), display-capture=(self), camera=(), microphone=(), payment=(), usb=(), interest-cohort=()"
+  Header always set Cross-Origin-Opener-Policy "same-origin"
+  Header always set Cross-Origin-Resource-Policy "same-origin"
+  Header always set Strict-Transport-Security "max-age=31536000"
+  Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self'; script-src-attr 'none'; style-src 'self'; style-src-elem 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data: blob: https://gibs.earthdata.nasa.gov https://tiles.openfreemap.org; font-src 'self' data: https://tiles.openfreemap.org; connect-src 'self' data: https://api.open-meteo.com https://archive-api.open-meteo.com https://previous-runs-api.open-meteo.com https://ensemble-api.open-meteo.com https://air-quality-api.open-meteo.com https://marine-api.open-meteo.com https://geocoding-api.open-meteo.com https://tiles.openfreemap.org https://gibs.earthdata.nasa.gov; worker-src 'self' blob:; child-src 'self' blob:; manifest-src 'self'; media-src 'self' blob:; upgrade-insecure-requests"
+</IfModule>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  # Deployment maintenance mode. The flag lives on the shared runtime volume,
+  # so the currently running container switches to maintenance before replacement.
+  RewriteCond /var/lib/meteonexa/maintenance.flag -f
+  RewriteCond %{HTTP_ACCEPT} text/html [NC]
+  RewriteCond %{REQUEST_URI} !^/maintenance\.html$ [NC]
+  RewriteCond %{REQUEST_URI} !^/api/maintenance\.php$ [NC]
+  RewriteRule ^ api/maintenance.php [L,QSA]
+  # Canonical browser navigation: keep a single storage/session origin for the
+  # public UI. API/service-worker requests on the apex remain reachable so an older
+  # controlled page can update cleanly instead of being broken by a cross-origin
+  # redirect. Same-origin API validation is handled independently in bootstrap.
+  RewriteCond %{HTTP_HOST} ^meteonexa\.com$ [NC]
+  RewriteCond %{REQUEST_METHOD} ^(?:GET|HEAD)$ [NC]
+  RewriteCond %{HTTP_ACCEPT} text/html [NC]
+  RewriteRule ^ https://www.meteonexa.com%{REQUEST_URI} [R=308,L,NE]
+  # Source-control files are never public. /qa/ exposes only its protected web console;
+  # qa/.htaccess denies the CLI runners, manifests and regression sources.
+  RewriteRule ^\.github(?:/|$) - [F,L,NC]
+  # API typos/errors stay HTTP/JSON and never fall through to browser routes.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^api/ api/error.php?code=404 [L,QSA]
+  RewriteRule ^api/ - [L]
+  # MeteoNexa navigation uses hashes; unknown real paths are genuine 404s.
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^ api/public-error.php?code=404 [L,QSA]
+</IfModule>
+
+<FilesMatch "^(?:README|SECURITY|ARCHITECTURE)\.md$">
+  Require all denied
+</FilesMatch>

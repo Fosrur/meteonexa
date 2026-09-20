@@ -1,0 +1,19 @@
+{
+  "name": "meteonexa/meteonexa",
+  "description": "MeteoNexa backend quality toolchain",
+  "type": "project",
+  "license": "proprietary",
+  "require-dev": {
+    "friendsofphp/php-cs-fixer": "3.95.25",
+    "phpstan/phpstan": "2.2.13"
+  },
+  "scripts": {
+    "analyse": "phpstan analyse --no-progress --memory-limit=1G",
+    "format": "php-cs-fixer fix --config=.php-cs-fixer.dist.php",
+    "format:check": "php-cs-fixer fix --config=.php-cs-fixer.dist.php --dry-run --diff"
+  },
+  "config": {
+    "sort-packages": true,
+    "allow-plugins": {}
+  }
+}

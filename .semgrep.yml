@@ -1,0 +1,28 @@
+rules:
+  - id: meteonexa-php-eval
+    message: Dynamic PHP eval is forbidden in MeteoNexa runtime code.
+    severity: ERROR
+    languages: [php]
+    pattern: eval(...)
+  - id: meteonexa-php-shell-exec
+    message: Direct shell execution is forbidden in web runtime code.
+    severity: ERROR
+    languages: [php]
+    patterns:
+      - pattern-either:
+          - pattern: shell_exec(...)
+          - pattern: system(...)
+          - pattern: passthru(...)
+          - pattern: exec(...)
+  - id: meteonexa-js-eval
+    message: Dynamic JavaScript evaluation is forbidden.
+    severity: ERROR
+    languages: [javascript, typescript]
+    pattern-either:
+      - pattern: eval(...)
+      - pattern: new Function(...)
+  - id: meteonexa-php-unserialize
+    message: PHP unserialize must not be used on application-controlled data.
+    severity: WARNING
+    languages: [php]
+    pattern: unserialize(...)

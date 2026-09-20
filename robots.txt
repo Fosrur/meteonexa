@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /qa/
+Disallow: /install/
+Disallow: /diagnostics/
+Disallow: /api/vendor-asset.php
+
+Sitemap: https://www.meteonexa.com/sitemap.xml

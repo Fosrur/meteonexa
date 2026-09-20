@@ -1,0 +1,150 @@
+.intel-feature-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin-top:18px}.intel-panel{min-width:0}.intel-empty{padding:18px;border:1px dashed rgba(255,255,255,.12);border-radius:16px;opacity:.72}.intel-nowcast-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:18px}.intel-nowcast-summary>div{padding:12px;border-radius:14px;background:rgba(255,255,255,.045);display:flex;flex-direction:column;gap:4px}.intel-nowcast-summary small,.intel-confidence-meta,.intel-model-row small,.intel-twin-grid small{opacity:.7}.intel-nowcast-chart{height:130px;display:flex;align-items:flex-end;gap:4px;padding:12px 8px 4px;border-radius:16px;background:rgba(255,255,255,.025);overflow:hidden}.intel-nowcast-bar{flex:1;min-width:3px;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px}.intel-nowcast-bar i{width:100%;height:calc(var(--p)*1%);min-height:3px;border-radius:5px 5px 2px 2px;background:currentColor;opacity:.75}.intel-nowcast-bar small{font-size:9px;min-height:12px;opacity:.6}.intel-confidence-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.intel-confidence-head strong{font-size:28px}.intel-confidence-timeline{display:flex;gap:3px;align-items:end;height:132px;padding:10px 6px;border-radius:16px;background:rgba(255,255,255,.025)}.intel-confidence-hour{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:3px;min-width:4px}.intel-confidence-hour i{width:100%;height:calc(var(--score)*1%);min-height:5px;border-radius:5px;background:currentColor;opacity:.65}.intel-confidence-hour small{font-size:8px;min-height:10px;opacity:.6}.intel-confidence-hour b{font-size:9px;font-weight:600}.intel-confidence-meta{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;font-size:12px}.intel-twin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.intel-twin-grid article{padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.035)}.intel-twin-grid article>div{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:6px}.intel-twin-grid article[data-status="good"]{border-color:rgba(89,220,157,.35)}.intel-twin-grid article[data-status="caution"]{border-color:rgba(255,193,90,.35)}.intel-twin-grid article[data-status="avoid"]{border-color:rgba(255,112,112,.35)}.intel-model-row{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:13px 0;border-bottom:1px solid rgba(255,255,255,.07)}.intel-model-row:last-child{border-bottom:0}.intel-model-row>div{display:flex;flex-direction:column;gap:4px}.route-intelligence-badges{display:flex;align-items:center;gap:8px}.personal-activity-chips{flex-wrap:wrap}@media(max-width:900px){.intel-feature-grid{grid-template-columns:1fr}.intel-nowcast-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.intel-twin-grid{grid-template-columns:1fr}}@media(max-width:560px){.intel-nowcast-chart{gap:2px}.intel-nowcast-bar small{font-size:8px}.intel-confidence-hour b{display:none}.route-intelligence-badges{flex-direction:column;align-items:flex-end}}
+
+/* MeteoNexa — responsive/i18n hardening for Intelligence 2.0 articles. */
+.intel-panel .panel-title{align-items:flex-start;gap:12px}
+.intel-panel .panel-title>div{flex:1 1 auto;min-width:0}
+.intel-panel .panel-title h3,.intel-panel .panel-title p,.intel-model-row strong,.intel-model-row small{overflow-wrap:anywhere;word-break:normal}
+.intel-panel .soft-badge{flex:0 0 auto;max-width:100%;white-space:normal;text-align:center}
+.intel-nowcast-chart,.intel-confidence-timeline{width:100%;max-width:100%;box-sizing:border-box;overflow:hidden}
+.intel-model-row>div{min-width:0;flex:1 1 auto}
+.intel-model-row .soft-badge{align-self:flex-start}
+@media(max-width:720px){
+  .intel-feature-grid{gap:14px}
+  .intel-panel{padding:16px}
+  .intel-panel .panel-title{flex-direction:column;align-items:stretch}
+  .intel-panel .soft-badge{align-self:flex-start}
+  .intel-confidence-head{gap:10px;align-items:flex-start;flex-direction:column}
+  .intel-model-row{align-items:flex-start;flex-wrap:wrap;gap:8px}
+}
+@media(max-width:460px){
+  .intel-nowcast-summary{grid-template-columns:1fr}
+  .intel-twin-grid{grid-template-columns:1fr}
+  .intel-nowcast-chart{height:116px;padding-inline:4px}
+  .intel-confidence-timeline{height:120px;padding-inline:4px}
+  .intel-confidence-meta{flex-direction:column;gap:6px}
+}
+
+/* MeteoNexa — Intelligence 2.0 uses the same card/grid contract as
+   the existing Intelligence Quality articles. No separate visual island. */
+#page-intelligence .intel-feature-grid{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;
+  align-items:stretch;width:100%;min-width:0;margin:0
+}
+#page-intelligence .intel-feature-grid>.intel-panel{
+  box-sizing:border-box;min-width:0;width:100%;height:100%;
+  min-height:420px;padding:24px;display:flex;flex-direction:column;
+  background:radial-gradient(circle at 92% 0,rgba(70,181,231,.07),transparent 34%),var(--surface-panel,rgba(6,26,51,.9))
+}
+#page-intelligence .intel-feature-grid>.intel-panel:nth-child(2){
+  background:radial-gradient(circle at 12% 0,rgba(73,218,201,.09),transparent 34%),var(--surface-panel,rgba(6,26,51,.9))
+}
+#page-intelligence .intel-feature-grid>.intel-panel:nth-child(3){
+  background:radial-gradient(circle at 92% 0,rgba(95,116,255,.09),transparent 34%),var(--surface-panel,rgba(6,26,51,.9))
+}
+#page-intelligence .intel-feature-grid>.intel-panel:nth-child(4){
+  background:radial-gradient(circle at 12% 0,rgba(104,187,255,.08),transparent 34%),var(--surface-panel,rgba(6,26,51,.9))
+}
+#page-intelligence .intel-panel>.panel-title{
+  margin:0 0 22px!important;align-items:flex-start;min-width:0
+}
+#page-intelligence .intel-panel>.panel-title>div{min-width:0;max-width:920px}
+#page-intelligence .intel-panel>.panel-title p{margin-top:10px;line-height:1.55}
+#page-intelligence #intel-nowcast-content,
+#page-intelligence #intel-confidence-content,
+#page-intelligence #intel-twin-content,
+#page-intelligence #intel-ai-models-content{flex:1 1 auto;min-width:0;display:flex;flex-direction:column}
+#page-intelligence .intel-empty{
+  margin-top:0;padding:18px;border:1px dashed var(--line);border-radius:16px;
+  background:var(--surface-faint);color:var(--muted);line-height:1.55
+}
+#page-intelligence .intel-nowcast-summary{gap:10px;margin-bottom:14px}
+#page-intelligence .intel-nowcast-summary>div,
+#page-intelligence .intel-twin-grid article{
+  min-width:0;padding:13px 14px;border:1px solid var(--line);border-radius:16px;
+  background:var(--surface-faint)
+}
+#page-intelligence .intel-nowcast-summary small,
+#page-intelligence .intel-twin-grid small,
+#page-intelligence .intel-model-row small,
+#page-intelligence .intel-confidence-meta{color:var(--muted);opacity:1}
+#page-intelligence .intel-nowcast-chart,
+#page-intelligence .intel-confidence-timeline{
+  margin-top:auto;border:1px solid var(--line);background:var(--surface-faint)
+}
+#page-intelligence .intel-confidence-head{
+  min-width:0;padding:14px 15px;border:1px solid var(--line);border-radius:16px;
+  background:var(--surface-faint);margin-bottom:14px
+}
+#page-intelligence .intel-confidence-head strong{font-size:1.55rem;line-height:1.1}
+#page-intelligence .intel-confidence-meta{
+  margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:.76rem
+}
+#page-intelligence .intel-twin-grid{gap:10px;align-items:stretch}
+#page-intelligence .intel-twin-grid article{height:100%;box-sizing:border-box}
+#page-intelligence #intel-ai-models-content{gap:9px}
+#page-intelligence .intel-model-row{
+  min-width:0;padding:12px 13px;border:1px solid var(--line);border-radius:14px;
+  background:var(--surface-faint);margin:0
+}
+#page-intelligence .intel-model-row:last-child{border-bottom:1px solid var(--line)}
+#page-intelligence .intel-panel .soft-badge{align-self:flex-start}
+@media(max-width:980px){
+  #page-intelligence .intel-feature-grid{grid-template-columns:1fr}
+  #page-intelligence .intel-feature-grid>.intel-panel{min-height:0}
+}
+@media(max-width:620px){
+  #page-intelligence .intel-feature-grid{gap:14px}
+  #page-intelligence .intel-feature-grid>.intel-panel{padding:18px}
+  #page-intelligence .intel-panel>.panel-title{margin-bottom:18px!important}
+  #page-intelligence .intel-nowcast-summary{grid-template-columns:1fr 1fr}
+  #page-intelligence .intel-twin-grid{grid-template-columns:1fr}
+}
+@media(max-width:420px){
+  #page-intelligence .intel-nowcast-summary{grid-template-columns:1fr}
+  #page-intelligence .intel-confidence-head{align-items:flex-start;flex-direction:column}
+  #page-intelligence .intel-model-row{align-items:flex-start;flex-direction:column}
+}
+.trust-nowcast-meta,.trust-freshness-strip{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px;color:var(--muted);font-size:12px}.trust-freshness-strip{margin-top:10px}.trust-freshness-strip span,.trust-nowcast-meta{padding:8px 10px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.025)}@media(max-width:560px){.trust-freshness-strip{flex-direction:column}.trust-freshness-strip span{width:100%;box-sizing:border-box}}
+.trust-nowcast-meta{padding:0;border:0;background:transparent}.trust-nowcast-meta span{padding:7px 9px;border:1px solid var(--line);border-radius:11px;background:rgba(255,255,255,.025)}
+
+/* MeteoNexa — Nowcast 4.0 probabilistic extension, same article contract. */
+#page-intelligence .probnow-nowcast-summary>div{min-width:0}
+#page-intelligence .probnow-nowcast-summary strong{overflow-wrap:anywhere}
+#page-intelligence .probnow-nowcast-prob-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 12px}
+#page-intelligence .probnow-nowcast-prob-grid>div{min-width:0;padding:12px 13px;border:1px solid var(--line);border-radius:14px;background:var(--surface-faint);display:flex;flex-direction:column;gap:4px}
+#page-intelligence .probnow-nowcast-prob-grid small{color:var(--muted)}
+#page-intelligence .probnow-arrival-strip{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin:0 0 12px;padding:11px 12px;border:1px solid var(--line);border-radius:14px;background:var(--surface-faint)}
+#page-intelligence .probnow-arrival-strip>div{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:7px}
+#page-intelligence .probnow-arrival-strip span,#page-intelligence .probnow-nowcast-evidence span{padding:6px 8px;border:1px solid var(--line);border-radius:999px;background:rgba(255,255,255,.025);font-size:.72rem;color:var(--muted)}
+#page-intelligence .probnow-nowcast-evidence{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 12px}
+#page-intelligence .probnow-nowcast-bar{position:relative}
+#page-intelligence .probnow-nowcast-bar::before{content:"";position:absolute;left:18%;right:18%;bottom:calc(var(--lo)*1%);height:calc(var(--range)*1%);min-height:2px;border:1px solid currentColor;border-radius:4px;opacity:.3;pointer-events:none}
+#page-intelligence .probnow-nowcast-note{margin:10px 0 0;color:var(--muted);font-size:.76rem;line-height:1.45}
+@media(max-width:720px){
+  #page-intelligence .probnow-nowcast-prob-grid{grid-template-columns:1fr}
+  #page-intelligence .probnow-arrival-strip{flex-direction:column}
+  #page-intelligence .probnow-arrival-strip>div{justify-content:flex-start}
+}
+@media(max-width:460px){
+  #page-intelligence .probnow-nowcast-evidence{flex-direction:column;align-items:stretch}
+  #page-intelligence .probnow-nowcast-evidence span{border-radius:11px}
+}
+
+/* Public Local Accuracy / Trust: extension of the existing Accuracy article. */
+#page-intelligence .accuracy-public-trust{margin:6px 0 18px;padding:16px;border:1px solid var(--line);border-radius:18px;background:var(--surface-faint);min-width:0}
+#page-intelligence .accuracy-public-trust-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:14px}
+#page-intelligence .accuracy-public-trust-head>div{min-width:0}.accuracy-public-trust-head small{display:block;color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.08em}.accuracy-public-trust-head strong{display:block;margin-top:4px;font-size:1rem}.accuracy-public-trust-head p{margin:5px 0 0!important;color:var(--muted)!important;line-height:1.45!important;font-size:.78rem!important}
+#page-intelligence .accuracy-public-trust-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;min-width:0}.accuracy-public-card{min-width:0;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--surface-panel)}.accuracy-public-card small,.accuracy-public-card span,.accuracy-public-card em{display:block;color:var(--muted);font-style:normal}.accuracy-public-card small{font-size:.68rem}.accuracy-public-card strong{display:block;margin:5px 0 3px;font-size:1rem;overflow-wrap:anywhere}.accuracy-public-card span,.accuracy-public-card em{font-size:.69rem}.accuracy-public-card em{margin-top:5px}.accuracy-public-learning{grid-column:1/-1;padding:12px}.accuracy-public-learning p{margin:5px 0 0!important;color:var(--muted)!important}.accuracy-public-foot{margin-top:10px;color:var(--muted);font-size:.7rem;line-height:1.45}
+@media(max-width:720px){#page-intelligence .accuracy-public-trust-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:460px){#page-intelligence .accuracy-public-trust{padding:13px}.accuracy-public-trust-head{flex-direction:column}.accuracy-public-trust-grid{grid-template-columns:1fr!important}}
+
+.intelq-explain-condition{margin-top:14px;padding-top:12px;border-top:1px solid var(--border-soft,rgba(255,255,255,.1))}.intelq-explain-condition strong{display:block;margin-bottom:5px}.intelq-explain-condition p{margin:0;color:var(--muted);line-height:1.5}
+
+/* Sun & Cloud Window — deterministic daylight opportunity panel. */
+#page-intelligence #intel-sun-cloud-content{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:12px}
+#page-intelligence .suncloud-best{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:15px;border:1px solid var(--line);border-radius:16px;background:var(--surface-faint)}
+#page-intelligence .suncloud-best small,#page-intelligence .suncloud-metrics small,#page-intelligence .suncloud-list small{display:block;color:var(--muted)}
+#page-intelligence .suncloud-best strong{display:block;margin-top:5px;font-size:1rem}.suncloud-best>span{font-size:1.25rem;font-weight:750;white-space:nowrap}
+#page-intelligence .suncloud-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}.suncloud-metrics>div{padding:11px;border:1px solid var(--line);border-radius:13px;background:var(--surface-faint);min-width:0}.suncloud-metrics strong{display:block;margin-top:4px}
+#page-intelligence .suncloud-list{display:grid;gap:8px}.suncloud-list article{display:flex;justify-content:space-between;gap:12px;padding:11px 12px;border:1px solid var(--line);border-radius:13px;background:var(--surface-faint)}.suncloud-list time{font-weight:650}.suncloud-list article>div{text-align:right}.suncloud-note{margin:auto 0 0;color:var(--muted);font-size:.74rem;line-height:1.45}
+@media(max-width:620px){#page-intelligence .suncloud-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.suncloud-list article{flex-direction:column}.suncloud-list article>div{text-align:left}}

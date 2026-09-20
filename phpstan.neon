@@ -1,0 +1,11 @@
+parameters:
+    level: 3
+    paths:
+        - api/database
+        - install/InstallerException.php
+    scanFiles:
+        - api/storage_helpers.php
+        - api/backend_i18n.php
+        - api/email_templates.php
+    tmpDir: .cache/phpstan
+    reportUnmatchedIgnoredErrors: false
