@@ -24,7 +24,7 @@ def main():
         if not ok: failures.append(label)
     check('api/system/status.php',200,lambda b,c: json.loads(b).get('ok') is True,'health endpoint')
     check('api/ui-config.php',200,lambda b,c: isinstance(json.loads(b),dict) and json.loads(b).get('ok') is True,'public UI config')
-    check('privacy.html',200,lambda b,c: b'dist/privacy-context.' in b and b'.js' in b,'privacy page','text/html')
+    check('privacy.html',200,lambda b,c: b'dist/js/privacy-context.' in b and b'.js' in b,'privacy page','text/html')
     # Protected diagnostics must not expose an inert dashboard to anonymous users.
     check('diagnostics/',401,lambda b,c: b'error-card' in b and b'401' in b,'diagnostics requires authentication','text/html')
     check('api/public-error.php?code=403',403,lambda b,c: b'error-card' in b and b'403' in b,'branded 403 renderer','text/html')

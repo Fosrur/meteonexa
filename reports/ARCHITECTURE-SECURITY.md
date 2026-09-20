@@ -76,3 +76,9 @@ bash docker/maintenance-mode.sh off
 ## Current remediation status
 
 P0, P1 and P2 remediation remain closed. This restructuring adds an explicit repository-layout contract and deployment maintenance contract without changing weather-domain behavior or schema version. Remote GitHub CI, staging and live smoke remain the final external evidence required before naming the artifact `20.1 Final`.
+
+### Remote CI feedback — browser preflight
+
+The first GitHub Actions run on commit `486f342` validated release gates, MySQL integration, quality/security, backup/restore and staging. Both browser jobs then stopped **before Playwright** because `qa/http_smoke.py` still asserted the pre-restructure privacy asset path `dist/privacy-context.*`.
+
+The production privacy page was already correct and referenced `dist/js/privacy-context.*`; the smoke contract is now aligned with the structured `dist/js/` architecture. This was a QA-path mismatch, not a privacy/runtime regression.
