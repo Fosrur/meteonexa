@@ -102,6 +102,31 @@ function factory(window, deps, provided) {
                     window.clearTimeout(timer);
                 }
             }
+
+            async function geocodeCity(query) {
+                const term = String(query || '').trim();
+                if (term.length < 2)
+                    throw new Error(meteonexaText('locations.enter_at_least_two_characters'));
+                const params = new URLSearchParams({
+                    name: term,
+                    count: '1',
+                    language: String(state?.settings?.language || 'it').slice(0, 2),
+                    format: 'json'
+                });
+                const data = await fetchJson(`${CONFIG.GEOCODING_API}?${params}`, { timeout: 10000, credentials: 'omit' });
+                const result = Array.isArray(data?.results) ? data.results[0] : null;
+                const latitude = Number(result?.latitude), longitude = Number(result?.longitude);
+                if (!result || !Number.isFinite(latitude) || !Number.isFinite(longitude))
+                    throw new Error(meteonexaText('locations.searchcities.no_locations_found'));
+                return {
+                    name: String(result.name || term),
+                    admin1: String(result.admin1 || ''),
+                    country: String(result.country || ''),
+                    latitude,
+                    longitude,
+                    timezone: String(result.timezone || 'auto')
+                };
+            }
             function dateInput(date) {
                 const value = new Date(date);
                 const y = value.getFullYear(), m = String(value.getMonth() + 1).padStart(2, '0'), d = String(value.getDate()).padStart(2, '0');
@@ -173,7 +198,7 @@ function factory(window, deps, provided) {
                 a.href = url; a.download = `meteonexa-history-${history.start}-${history.end}.pdf`; a.click(); setTimeout(() => URL.revokeObjectURL(url), 0); return true;
             }
             return Object.freeze({ BUILD, API, KEYS, q, qa, n, clamp, safe, currentLocale, mean, deviation, localDate, localTime, tempText,
-                localizedLocationPart, locationLabel, locationKey, ui, apiMessage, toast, loader, deviceId, isGuest, fetchJson, dateInput,
+                localizedLocationPart, locationLabel, locationKey, ui, apiMessage, toast, loader, deviceId, isGuest, fetchJson, geocodeCity, dateInput,
                 addDays, setDateField, nearestTimeIndex, bearing, directionName, haversine, exportHistoryPdf });
         }
     });

@@ -14,7 +14,7 @@
     const {
         BUILD, API, KEYS, q, qa, n, clamp, safe, currentLocale, mean, deviation, localDate, localTime, tempText,
         localizedLocationPart, locationLabel, locationKey, ui, apiMessage, toast, loader, deviceId, isGuest, fetchJson,
-        dateInput, addDays, setDateField, nearestTimeIndex, bearing, directionName, haversine, exportHistoryPdf
+        geocodeCity, dateInput, addDays, setDateField, nearestTimeIndex, bearing, directionName, haversine, exportHistoryPdf
     } = SERVICES.require('suiteSupport').create({
         CONFIG, SERVICES, SECURITY, state, appLocale, temperature, t, showToast, withLoader, meteonexaText
     });

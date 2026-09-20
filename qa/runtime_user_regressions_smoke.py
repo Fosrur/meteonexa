@@ -3,10 +3,12 @@ from pathlib import Path
 import sys
 R=Path(__file__).resolve().parents[1]
 def t(p): return (R/p).read_text(encoding="utf-8")
-app=t("js/app.js"); nav=t("modules/esm/domains/navigation.mjs"); account=t("modules/esm/domains/account.mjs"); assistant=t("modules/esm/domains/suite-assistant.mjs"); suite=t("js/suite.js"); suite_css=t("css/suite.css"); advanced=t("js/advanced.js"); integ=t("modules/esm/domains/suite-integrations.mjs"); ht=t(".htaccess"); html=t("index.html"); e2e=t("qa/e2e/ui-controls.spec.mjs"); charts=t("qa/e2e/charts.spec.mjs"); workflow=t(".github/workflows/meteonexa-tests.yml"); helper=t("qa/e2e/test-helpers.mjs")
+app=t("js/app.js"); nav=t("modules/esm/domains/navigation.mjs"); account=t("modules/esm/domains/account.mjs"); assistant=t("modules/esm/domains/suite-assistant.mjs"); support=t("modules/esm/domains/suite-support.mjs"); suite=t("js/suite.js"); suite_css=t("css/suite.css"); advanced=t("js/advanced.js"); integ=t("modules/esm/domains/suite-integrations.mjs"); ht=t(".htaccess"); html=t("index.html"); e2e=t("qa/e2e/ui-controls.spec.mjs"); charts=t("qa/e2e/charts.spec.mjs"); workflow=t(".github/workflows/meteonexa-tests.yml"); helper=t("qa/e2e/test-helpers.mjs")
 checks={
  "guest local assistant visible": "'feature.assistant': { guest: true, authenticated: true }" in app and "featureKey === 'feature.assistant' && mode === 'guest'" in nav,
  "guest assistant opens local": 'button.hidden = guest' in assistant and "if (guest) setAssistantMode('local', false)" in assistant,
+ "suite geocoder dependency defined": "async function geocodeCity(query)" in support and "CONFIG.GEOCODING_API" in support and "fetchJson, geocodeCity, dateInput" in support,
+ "suite geocoder dependency wired": "geocodeCity, dateInput" in suite and "geocodeCity, isGuest, loadEnvironment" in suite,
  "assistant center has delegated binding": "closest?.('#assistant-center-button')" in suite and "cloneAndBind('#assistant-center-button'" not in suite,
  "assistant controls delegated": "closest?.('#assistant-close')" in suite and "closest?.('#assistant-clear')" in suite and "closest?.('[data-assistant-question]')" in suite and "addEventListener('submit'" in suite and "cloneAndBind('#assistant-close'" not in suite,
  "guest AI hidden wins over dialog display rules": '#assistant-dialog .assistant-mode-button[hidden]{display:none!important}' in suite_css,
