@@ -21,7 +21,7 @@ checks={
  "live security uses www": 'qa/live_security_check.py https://www.meteonexa.com/' in workflow,
  "scheduled QA cannot cancel push QA": 'group: meteonexa-qa-${{ github.event_name }}-${{ github.ref }}' in workflow,
  "browser regression rebuilds production assets": 'Build production frontend for browser regression' in workflow and 'npm run build:production' in workflow,
- "browser E2E waits for full app and ESM readiness": "__meteonexaAppReady" in helper and "__meteonexaEsmReady" in helper and "meteonexa:esm-bootstrap-ready" in helper,
+ "browser E2E preserves app-ready and adds Assistant interactive-ready": "__meteonexaQaReady" in helper and "__meteonexaInteractiveReady" in helper and "meteonexa:interactive-ready" in helper and "waitForMeteoNexaInteractiveReady" in helper,
  "radar layers browser-clicked": 'await control.click({ trial: true });' in e2e and 'await control.click();' in e2e and 'await expect(control).toHaveClass(/active/);' in e2e,
  "built chart assertion is minification-safe": "chart-interaction-layer" in charts and "function registerChartInteraction(canvas, meta)" not in charts,
  "readme name": (R/'readme.md').is_file() and not (R/'reade.md').exists(),
