@@ -85,22 +85,18 @@ The production privacy page was already correct and referenced `dist/js/privacy-
 
 ## Automatic GitHub → VPS production delivery
 
-Production delivery is now split into two workflows so the deploy can never deadlock against its own CI gate:
+Production delivery is now a separate workflow, `.github/workflows/deploy-production.yml`, triggered by `workflow_run` only after **MeteoNexa QA** has completed successfully for a push to `main`. Keeping CD separate from QA is intentional: `docker/deploy-production.sh` verifies that the QA workflow for the exact SHA is already completed/successful, avoiding a circular "current workflow is still in progress" gate.
 
-1. `MeteoNexa QA` runs on the pushed `main` commit and must complete successfully, including Chromium and Firefox.
-2. `.github/workflows/deploy-production.yml` starts only from a successful `workflow_run` of `MeteoNexa QA` for a `push` on `main`.
-3. The deploy workflow checks out the exact validated SHA, opens an SSH session to the production VPS using repository/environment secrets, verifies that `origin/main` still points at that SHA, resets the VPS checkout to it and invokes `docker/deploy-production.sh <sha>`.
-4. The VPS deploy script independently re-verifies the completed QA workflow for the exact SHA, enables maintenance mode, creates and verifies a backup, replaces web/worker, checks HTTP/container/MySQL health and disables maintenance only on success.
-5. A live HTTPS/security smoke runs from GitHub after the VPS deployment.
+The deploy job rejects stale successful runs when `origin/main` has moved, authenticates to the VPS with a dedicated SSH key and pinned `known_hosts`, and invokes the canonical deploy script with the exact tested SHA. The deploy keeps maintenance active through an external live security smoke; only after that smoke succeeds is maintenance removed. If remote deploy or live smoke fails, maintenance remains active by design until a verified rollback/fix.
 
-Required GitHub production secrets are `METEONEXA_VPS_HOST`, `METEONEXA_VPS_USER`, `METEONEXA_VPS_SSH_KEY` and `METEONEXA_VPS_KNOWN_HOSTS`. The SSH key used by Actions is separate from the VPS deploy-key used to read GitHub.
+Required GitHub production secrets: `METEONEXA_VPS_HOST`, `METEONEXA_VPS_USER`, `METEONEXA_VPS_PORT` (optional/22), `METEONEXA_VPS_SSH_KEY`, `METEONEXA_VPS_KNOWN_HOSTS`. The SSH key must be dedicated to GitHub Actions and should authorize only the `deploy` account.
 
-This makes a successful push to `main` the release trigger: **push → QA → automatic maintenance → backup/restore drill → production deploy → live security smoke**. A failed QA run never reaches the VPS.
+## Browser readiness contract
 
-## Interactive readiness contract
+`meteonexa:ready` keeps its historical meaning: the main application state/UI has initialized. It is deliberately **not** delayed by the deferred Suite/Assistant bootstrap, because changing that public contract caused Chromium and Firefox to time out globally in GitHub Actions.
 
-The second remote CI run exposed a real bootstrap race rather than a browser-specific defect: `js/app.js` could emit `meteonexa:ready` while the deferred Suite/Assistant interaction layer was still loading. The public ready contract now uses an explicit handshake with `modules/esm/bootstrap.mjs`; `meteonexa:ready` is emitted only after both the main application boot and the ESM/Suite bootstrap are usable. This protects fast user clicks as well as Playwright guest-Assistant tests.
+A second, stronger contract is now emitted by `modules/esm/bootstrap.mjs`: `meteonexa:interactive-ready` (and `window.__METEONEXA_INTERACTIVE_READY__`). Only tests or consumers that require the full deferred interaction layer, such as the guest Assistant tests, wait for this event. This removes the Assistant early-click race without serializing or blocking unrelated browser tests.
 
 ## Maintenance visual contract
 
-The maintenance surface now follows the same visual system as the application instead of a generic fallback card: dark MeteoNexa atmospheric gradient, ambient grid/orbs, radar rings, the application weather loader, blue gradient primary action, responsive layout and reduced-motion support. All user-visible copy remains sourced from the existing `maintenance.*` i18n keys in all five locales.
+`maintenance.html`, `css/maintenance.css` and `js/maintenance.js` are stable, non-fingerprinted release assets deliberately included in the production image. The page mirrors the MeteoNexa atmospheric/glass visual language, has a dark HTML-level fallback background, uses only `maintenance.*` i18n keys for visible copy, and polls the HTML entry point so it can automatically reload when maintenance ends. Absolute `/css`, `/js` and `/assets` paths make the page independent of the rewritten `api/maintenance.php` URL.

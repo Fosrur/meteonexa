@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { prepareStableApp, waitForMeteoNexaReady } from './test-helpers.mjs';
+import { prepareStableApp, waitForMeteoNexaReady, waitForMeteoNexaInteractiveReady } from './test-helpers.mjs';
 
 test.describe('guest access regression', () => {
   test.beforeEach(async ({ page }) => {
@@ -52,6 +52,7 @@ test.describe('guest access regression', () => {
   });
 
   test('guest Assistant Center opens in local mode and hides AI mode', async ({ page }) => {
+    await waitForMeteoNexaInteractiveReady(page);
     await page.locator('#guest-login').click();
     await expect(page.locator('#location-view')).toHaveClass(/active/, { timeout: 5000 });
     await page.evaluate(() => {
@@ -76,6 +77,7 @@ test.describe('guest access regression', () => {
   });
 
   test('guest Assistant controls stay local and work without suite bind timing', async ({ page }) => {
+    await waitForMeteoNexaInteractiveReady(page);
     await page.locator('#guest-login').click();
     await expect(page.locator('#location-view')).toHaveClass(/active/, { timeout: 5000 });
     await page.evaluate(() => {

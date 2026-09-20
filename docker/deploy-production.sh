@@ -74,9 +74,12 @@ WORKER_ID="$(docker compose ps -q worker)"
 bash docker/verify-mysql.sh
 docker compose ps
 
-bash docker/maintenance-mode.sh off
-MAINTENANCE_ACTIVE=0
+if [ "${METEONEXA_KEEP_MAINTENANCE:-0}" = "1" ]; then
+  echo 'DEPLOY_INTERNAL_PASS: maintenance mode resta ATTIVA fino allo smoke live esterno.'
+else
+  bash docker/maintenance-mode.sh off
+  MAINTENANCE_ACTIVE=0
+fi
 trap - ERR
 
-echo "DEPLOY_RC2_PASS sha=$DEPLOY_SHA backup=$BACKUP_DIR"
-echo 'Ora eseguire il workflow GitHub Actions manuale per il live-production-security esterno.'
+echo "DEPLOY_RC2_PASS sha=$DEPLOY_SHA backup=$BACKUP_DIR maintenance=${MAINTENANCE_ACTIVE:-0}"

@@ -35,7 +35,8 @@
     "check:i18n-runtime": "python3 qa/i18n_runtime_literal_smoke.py .",
     "check:p2:release": "python3 qa/p2_release_quality_smoke.py .",
     "check:layout": "python3 qa/architecture_layout_smoke.py .",
-    "check:maintenance": "python3 qa/maintenance_release_smoke.py ."
+    "check:maintenance": "python3 qa/maintenance_release_smoke.py .",
+    "check:deploy-contract": "python3 qa/automatic_deploy_contract_smoke.py"
   },
   "engines": {
     "node": ">=20.19"

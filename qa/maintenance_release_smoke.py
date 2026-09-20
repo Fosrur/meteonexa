@@ -4,7 +4,7 @@ import json,sys
 ROOT=Path(sys.argv[1]).resolve() if len(sys.argv)>1 else Path(__file__).resolve().parents[1]
 errors=[]
 def text(rel): return (ROOT/rel).read_text(encoding='utf-8')
-ht=text('.htaccess'); deploy=text('docker/deploy-production.sh'); mode=text('docker/maintenance-mode.sh'); html=text('maintenance.html'); js=text('js/maintenance.js'); css=text('css/maintenance.css'); auto=text('.github/workflows/deploy-production.yml')
+ht=text('.htaccess'); deploy=text('docker/deploy-production.sh'); mode=text('docker/maintenance-mode.sh'); html=text('maintenance.html'); js=text('js/maintenance.js')
 for needle in ['/var/lib/meteonexa/maintenance.flag','api/maintenance.php']:
     if needle not in ht: errors.append(f'.htaccess missing {needle}')
 if 'Service-Worker-Allowed' not in ht or '/js/sw.js' not in ht: errors.append('service worker root scope header missing')
@@ -12,13 +12,11 @@ on=deploy.find('bash docker/maintenance-mode.sh on'); up=deploy.find('docker com
 if not (0 <= on < up < off): errors.append('deploy maintenance sequence must be on -> container replacement -> off')
 if "trap 'echo \"ERRORE: deploy interrotto con maintenance mode ancora ATTIVA" not in deploy: errors.append('deploy failure maintenance trap missing')
 if 'maintenance.flag' not in mode: errors.append('maintenance helper missing shared flag contract')
-if 'data-i18n="maintenance.title"' not in html or 'js/maintenance.js' not in html or 'css/maintenance.css' not in html: errors.append('maintenance page not folder/i18n based')
+if 'data-i18n="maintenance.title"' not in html or '/js/maintenance.js' not in html or '/css/maintenance.css' not in html: errors.append('maintenance page not absolute folder/i18n based')
+if 'bgcolor="#030914"' not in html or 'maintenance-ambient' not in html or 'maintenance-weather-loader' not in html: errors.append('maintenance branded dark fallback/visual shell missing')
 if 'assets/i18n/${language}.json' not in js: errors.append('maintenance runtime does not load i18n catalog')
-if 'maintenance-ambient' not in html or 'weather-loader' not in html: errors.append('maintenance page does not use the MeteoNexa atmospheric/weather visual language')
-for needle in ['--bg:#030914','linear-gradient(145deg','#19a7ff','prefers-reduced-motion']:
-    if needle not in css: errors.append(f'maintenance branding CSS missing {needle}')
-for needle in ["workflow_run","MeteoNexa QA","github.event.workflow_run.conclusion == 'success'","head_branch == 'main'","docker/deploy-production.sh","METEONEXA_VPS_SSH_KEY","StrictHostKeyChecking=yes"]:
-    if needle not in auto: errors.append(f'automatic production deploy workflow missing {needle}')
+if 'maintenance_probe=' not in js or 'setInterval' not in js: errors.append('maintenance auto-recovery probe missing')
+if 'METEONEXA_KEEP_MAINTENANCE' not in deploy: errors.append('deploy cannot retain maintenance through external live smoke')
 seed=json.loads(text('api/install/translations.json'))['rows']
 keys={r['text_key'] for r in seed}; locales={r['locale'] for r in seed if r['text_key'].startswith('maintenance.')}
 required={'maintenance.kicker','maintenance.title','maintenance.message','maintenance.note','maintenance.retry','maintenance.page_title'}

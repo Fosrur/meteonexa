@@ -7,6 +7,7 @@ echo "== MeteoNexa 20.1 QA =="
 run_py release_audit.py "$ROOT"
 run_py architecture_layout_smoke.py "$ROOT"
 run_py maintenance_release_smoke.py "$ROOT"
+run_py automatic_deploy_contract_smoke.py
 run_py no_legacy_release_refs.py
 run_py asset_contract.py
 run_py model_consistency_smoke.py

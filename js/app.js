@@ -4633,17 +4633,7 @@ async function init() {
         await reconcileRootView({ refresh: true, waitForWeather: true });
         state.bootComplete = true;
         state.lastForegroundRefreshAt = Date.now();
-        // `meteonexa:ready` is the public interactive-ready contract: do not
-        // emit it until the ESM bootstrap has installed the Suite/Assistant
-        // interaction layer as well. This prevents a real early-click race for
-        // guest users on fast devices/networks.
-        if (globalThis.__METEONEXA_ESM_BOOTSTRAP_READY__ === true) {
-            document.dispatchEvent(new CustomEvent('meteonexa:ready'));
-        } else {
-            document.addEventListener('meteonexa:esm-bootstrap-ready', () => {
-                document.dispatchEvent(new CustomEvent('meteonexa:ready'));
-            }, { once: true });
-        }
+        document.dispatchEvent(new CustomEvent('meteonexa:ready'));
         pullAccountSync({ force: true }).catch(error => console.warn('ACCOUNT_SYNC_PULL_FAILED', error));
     }
     catch (error) {

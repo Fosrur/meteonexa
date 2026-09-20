@@ -213,6 +213,15 @@ async function boot() {
     await importInstall(POST_APP_ESM.decisionTimeline, services);
     await importInstall(POST_APP_ESM.watchPlan, services);
 
+    // Full interaction readiness is intentionally separate from `meteonexa:ready`.
+    // The legacy app-ready event continues to mean that the main application state/UI
+    // has initialized. Assistant/Suite-sensitive consumers can wait for this stronger
+    // contract without delaying the rest of the application or its existing tests.
+    globalThis.__METEONEXA_INTERACTIVE_READY__ = true;
+    document.dispatchEvent(new CustomEvent('meteonexa:interactive-ready', {
+        detail: { build: BUILD, services: services.names.length }
+    }));
+
     document.dispatchEvent(new CustomEvent('meteonexa:esm-bootstrap-ready', {
         detail: {
             build: BUILD,

@@ -2,45 +2,42 @@
 <html lang="it">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="robots" content="noindex,nofollow,noarchive">
   <meta name="theme-color" content="#030914">
+  <meta name="color-scheme" content="dark">
   <base href="/">
-  <link rel="icon" href="assets/icons/favicon.ico?v=20.1">
-  <link rel="stylesheet" href="css/maintenance.css?v=20.1">
+  <link rel="icon" href="/assets/icons/favicon.ico?v=20.1">
+  <link rel="stylesheet" href="/css/maintenance.css?v=20.1.1">
   <title>MeteoNexa</title>
 </head>
-<body>
+<body bgcolor="#030914">
   <div class="maintenance-ambient" aria-hidden="true">
     <span class="maintenance-orb maintenance-orb-one"></span>
     <span class="maintenance-orb maintenance-orb-two"></span>
     <span class="maintenance-orb maintenance-orb-three"></span>
-    <span class="maintenance-radar-ring maintenance-radar-ring-one"></span>
-    <span class="maintenance-radar-ring maintenance-radar-ring-two"></span>
   </div>
-
   <main class="maintenance-shell" aria-live="polite">
     <section class="maintenance-card">
-      <div class="maintenance-brand">
-        <img class="maintenance-logo" src="assets/logo-full.png" alt="MeteoNexa">
-        <span class="maintenance-status-dot" aria-hidden="true"></span>
-      </div>
-
-      <div class="weather-loader" aria-hidden="true">
-        <span class="loader-sun"></span>
-        <span class="loader-cloud"></span>
+      <header class="maintenance-brand">
+        <img class="maintenance-logo" src="/assets/logo-full.png" alt="MeteoNexa">
+        <span class="maintenance-status"><i aria-hidden="true"></i><span data-i18n="maintenance.kicker"></span></span>
+      </header>
+      <div class="maintenance-weather-loader" aria-hidden="true">
+        <span class="maintenance-sun"></span>
+        <span class="maintenance-cloud"></span>
         <i></i><i></i><i></i>
       </div>
-
-      <p class="maintenance-kicker" data-i18n="maintenance.kicker"></p>
       <h1 data-i18n="maintenance.title"></h1>
       <p class="maintenance-message" data-i18n="maintenance.message"></p>
-      <p class="maintenance-note" data-i18n="maintenance.note"></p>
-
       <div class="maintenance-progress" aria-hidden="true"><span></span></div>
-      <button class="maintenance-retry" id="maintenance-retry" type="button" data-i18n="maintenance.retry"></button>
+      <p class="maintenance-note" data-i18n="maintenance.note"></p>
+      <button class="maintenance-button" id="maintenance-retry" type="button">
+        <span class="maintenance-button-icon" aria-hidden="true">↻</span>
+        <span data-i18n="maintenance.retry"></span>
+      </button>
     </section>
   </main>
-  <script src="js/maintenance.js" defer></script>
+  <script src="/js/maintenance.js?v=20.1.1" defer></script>
 </body>
 </html>

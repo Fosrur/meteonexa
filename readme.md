@@ -2812,42 +2812,18 @@ P0 e P1 restano chiusi. La passata P2 completa i punti non bloccanti rimasti: ex
 
 Il deploy production richiede ora `METEONEXA_GITHUB_REPOSITORY` e, per repository privati, `METEONEXA_GITHUB_TOKEN` con accesso in sola lettura allo stato Actions. Se la run `MeteoNexa QA` del commit da pubblicare non è `completed/success`, il deploy viene interrotto prima di backup/build/avvio container.
 
----
+### Deploy automatico GitHub → VPS (20.1 RC2)
 
-## 20.1 RC2 — rilascio automatico GitHub → VPS
+Il rilascio production è automatico **solo dopo** il workflow `MeteoNexa QA` verde su un push a `main`. Il workflow `.github/workflows/deploy-production.yml` viene attivato da `workflow_run`, rifiuta run obsolete se `main` nel frattempo è avanzato, entra sulla VPS con una chiave SSH dedicata e distribuisce esattamente `github.event.workflow_run.head_sha`.
 
-La produzione usa due workflow separati. `MeteoNexa QA` valida il commit `main`; soltanto quando quella run termina con `success`, `MeteoNexa Production Deploy` parte automaticamente tramite `workflow_run` e distribuisce **lo stesso SHA** sulla VPS.
+Segreti GitHub richiesti (Settings → Secrets and variables → Actions): `METEONEXA_VPS_HOST`, `METEONEXA_VPS_USER`, `METEONEXA_VPS_PORT` (facoltativo, default 22), `METEONEXA_VPS_SSH_KEY`, `METEONEXA_VPS_KNOWN_HOSTS`. Non riutilizzare la deploy key VPS→GitHub: la chiave GitHub Actions→VPS deve essere dedicata e la sua pubblica va aggiunta a `/home/deploy/.ssh/authorized_keys`.
 
-Flusso definitivo:
+Sequenza: QA verde → SSH VPS → deploy exact-SHA → maintenance ON → backup/restore drill → build/container replacement → health/MySQL → maintenance resta ON → smoke live esterno → maintenance OFF. Se il deploy o lo smoke live falliscono, la maintenance resta attiva finché rollback/fix non è stato verificato.
 
-```text
-push main
-  → MeteoNexa QA
-  → release/MySQL/security/backup/staging/Chromium/Firefox verdi
-  → MeteoNexa Production Deploy
-  → SSH alla VPS
-  → verifica SHA origin/main
-  → maintenance ON
-  → backup + restore verification
-  → build/up web + worker
-  → HTTP/container/MySQL checks
-  → maintenance OFF
-  → live HTTPS/security smoke
-```
+La pagina maintenance usa gli asset stabili `/css/maintenance.css`, `/js/maintenance.js`, `/assets/...`, mantiene il look atmosferico/glass dell'app e usa le chiavi i18n `maintenance.*`; effettua inoltre un probe periodico e ricarica automaticamente l'app quando il rilascio torna disponibile.
 
-Secret richiesti nel repository/environment GitHub `production`:
+### Browser readiness — correzione regressione CI
 
-- `METEONEXA_VPS_HOST` — host/IP VPS;
-- `METEONEXA_VPS_USER` — utente operativo (`deploy`);
-- `METEONEXA_VPS_SSH_KEY` — chiave privata dedicata **GitHub Actions → VPS**;
-- `METEONEXA_VPS_KNOWN_HOSTS` — riga `known_hosts` pinning della VPS.
+`meteonexa:ready` resta il contratto storico di app pronta e non viene più subordinato al bootstrap differito Suite/Assistant. La run GitHub successiva al primo fix aveva reso quel segnale dipendente dall'handshake ESM e Chromium/Firefox finivano tutti in timeout su `waitForMeteoNexaReady`.
 
-La chiave Actions è distinta dalla deploy key `VPS → GitHub`: la prima consente a GitHub Actions di entrare sulla VPS; la seconda consente alla VPS di leggere il repository.
-
-### Readiness UI
-
-`meteonexa:ready` significa ora **app realmente interattiva**, non solo bootstrap core concluso. L'evento viene emesso dopo l'handshake `meteonexa:esm-bootstrap-ready`, così Assistant/Suite sono già collegati quando l'utente può interagire.
-
-### Maintenance UI
-
-`maintenance.html` usa il visual MeteoNexa (ambient atmosferico, radar rings, weather loader, gradienti e pulsante primario coerenti con l'app). Tutto il testo resta i18n tramite le chiavi `maintenance.*`; nessuna nuova copy visibile è hardcoded.
+Per le sole funzionalità che richiedono il layer interattivo completo viene usato `meteonexa:interactive-ready`, pubblicato a fine `modules/esm/bootstrap.mjs`. I test Assistant guest aspettano questo secondo segnale; tutti gli altri test browser continuano a usare `meteonexa:ready`. In questo modo il fix della race Assistant non altera il comportamento storico dell'app né il gate generale dei browser.

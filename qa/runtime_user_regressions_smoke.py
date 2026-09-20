@@ -3,7 +3,7 @@ from pathlib import Path
 import sys
 R=Path(__file__).resolve().parents[1]
 def t(p): return (R/p).read_text(encoding="utf-8")
-app=t("js/app.js"); nav=t("modules/esm/domains/navigation.mjs"); account=t("modules/esm/domains/account.mjs"); assistant=t("modules/esm/domains/suite-assistant.mjs"); suite=t("js/suite.js"); suite_css=t("css/suite.css"); advanced=t("js/advanced.js"); integ=t("modules/esm/domains/suite-integrations.mjs"); ht=t(".htaccess"); html=t("index.html"); e2e=t("qa/e2e/ui-controls.spec.mjs"); charts=t("qa/e2e/charts.spec.mjs"); workflow=t(".github/workflows/meteonexa-tests.yml")
+app=t("js/app.js"); nav=t("modules/esm/domains/navigation.mjs"); account=t("modules/esm/domains/account.mjs"); assistant=t("modules/esm/domains/suite-assistant.mjs"); suite=t("js/suite.js"); suite_css=t("css/suite.css"); advanced=t("js/advanced.js"); integ=t("modules/esm/domains/suite-integrations.mjs"); ht=t(".htaccess"); html=t("index.html"); e2e=t("qa/e2e/ui-controls.spec.mjs"); charts=t("qa/e2e/charts.spec.mjs"); workflow=t(".github/workflows/meteonexa-tests.yml"); helper=t("qa/e2e/test-helpers.mjs")
 checks={
  "guest local assistant visible": "'feature.assistant': { guest: true, authenticated: true }" in app and "featureKey === 'feature.assistant' && mode === 'guest'" in nav,
  "guest assistant opens local": 'button.hidden = guest' in assistant and "if (guest) setAssistantMode('local', false)" in assistant,
@@ -21,6 +21,7 @@ checks={
  "live security uses www": 'qa/live_security_check.py https://www.meteonexa.com/' in workflow,
  "scheduled QA cannot cancel push QA": 'group: meteonexa-qa-${{ github.event_name }}-${{ github.ref }}' in workflow,
  "browser regression rebuilds production assets": 'Build production frontend for browser regression' in workflow and 'npm run build:production' in workflow,
+ "browser E2E waits for full app and ESM readiness": "__meteonexaAppReady" in helper and "__meteonexaEsmReady" in helper and "meteonexa:esm-bootstrap-ready" in helper,
  "radar layers browser-clicked": 'await control.click({ trial: true });' in e2e and 'await control.click();' in e2e and 'await expect(control).toHaveClass(/active/);' in e2e,
  "built chart assertion is minification-safe": "chart-interaction-layer" in charts and "function registerChartInteraction(canvas, meta)" not in charts,
  "readme name": (R/'readme.md').is_file() and not (R/'reade.md').exists(),

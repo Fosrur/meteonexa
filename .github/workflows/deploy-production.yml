@@ -21,48 +21,66 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     environment: production
+    env:
+      DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
+      VPS_HOST: ${{ secrets.METEONEXA_VPS_HOST }}
+      VPS_USER: ${{ secrets.METEONEXA_VPS_USER }}
+      VPS_PORT: ${{ secrets.METEONEXA_VPS_PORT }}
     steps:
-      - name: Checkout exact validated release
+      - name: Checkout exact successful QA commit
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 1
+
+      - name: Reject stale successful runs
+        shell: bash
+        run: |
+          git fetch --no-tags origin main
+          test "$(git rev-parse origin/main)" = "$DEPLOY_SHA" || {
+            echo "A newer main exists; skip stale deploy $DEPLOY_SHA" >&2
+            exit 1
+          }
 
       - name: Configure production SSH
+        shell: bash
         env:
           VPS_SSH_KEY: ${{ secrets.METEONEXA_VPS_SSH_KEY }}
           VPS_KNOWN_HOSTS: ${{ secrets.METEONEXA_VPS_KNOWN_HOSTS }}
         run: |
-          set -euo pipefail
-          test -n "$VPS_SSH_KEY"
-          test -n "$VPS_KNOWN_HOSTS"
-          install -d -m 0700 "$HOME/.ssh"
-          printf '%s\n' "$VPS_SSH_KEY" > "$HOME/.ssh/meteonexa-production"
-          printf '%s\n' "$VPS_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
-          chmod 0600 "$HOME/.ssh/meteonexa-production" "$HOME/.ssh/known_hosts"
-
-      - name: Deploy exact QA-green SHA to VPS
-        env:
-          DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
-          VPS_HOST: ${{ secrets.METEONEXA_VPS_HOST }}
-          VPS_USER: ${{ secrets.METEONEXA_VPS_USER }}
-          REPOSITORY: ${{ github.repository }}
-        run: |
-          set -euo pipefail
           test -n "$VPS_HOST"
           test -n "$VPS_USER"
-          ssh \
-            -i "$HOME/.ssh/meteonexa-production" \
-            -o BatchMode=yes \
-            -o IdentitiesOnly=yes \
-            -o StrictHostKeyChecking=yes \
-            "$VPS_USER@$VPS_HOST" \
-            "set -euo pipefail; \
-             cd /opt/apps/meteonexa; \
-             git fetch --prune origin main; \
-             test \"\$(git rev-parse origin/main)\" = '$DEPLOY_SHA'; \
-             git reset --hard '$DEPLOY_SHA'; \
-             git clean -fd; \
-             METEONEXA_GITHUB_REPOSITORY='$REPOSITORY' bash docker/deploy-production.sh '$DEPLOY_SHA'"
+          test -n "$VPS_SSH_KEY"
+          test -n "$VPS_KNOWN_HOSTS"
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/meteonexa_prod
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/meteonexa_prod ~/.ssh/known_hosts
 
-      - name: Verify live production security after deploy
+      - name: Deploy exact SHA with maintenance retained
+        shell: bash
+        run: |
+          PORT="${VPS_PORT:-22}"
+          ssh -i ~/.ssh/meteonexa_prod -o IdentitiesOnly=yes -o BatchMode=yes -p "$PORT" \
+            "$VPS_USER@$VPS_HOST" \
+            "cd /opt/apps/meteonexa && METEONEXA_KEEP_MAINTENANCE=1 bash docker/deploy-production.sh '$DEPLOY_SHA'"
+
+      - name: External live production security smoke
+        shell: bash
         run: python3 qa/live_security_check.py https://www.meteonexa.com/
+
+      - name: Release maintenance after live smoke
+        shell: bash
+        run: |
+          PORT="${VPS_PORT:-22}"
+          ssh -i ~/.ssh/meteonexa_prod -o IdentitiesOnly=yes -o BatchMode=yes -p "$PORT" \
+            "$VPS_USER@$VPS_HOST" \
+            "cd /opt/apps/meteonexa && bash docker/maintenance-mode.sh off"
+
+      - name: Keep maintenance active on failed release
+        if: failure()
+        shell: bash
+        run: |
+          echo "Production deployment failed. Maintenance intentionally remains active if deployment had started."
+          echo "After verified rollback/fix: cd /opt/apps/meteonexa && bash docker/maintenance-mode.sh off"
