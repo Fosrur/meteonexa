@@ -40,6 +40,9 @@ ok("if (type === 'guest') {" in app and 'await enterSession();' in app,'guest ac
 ok("return waitForWeather ? state.weather : null;" in app,'background weather hydration still leaks its promise to callers and can block guest entry')
 ok("const shouldWaitForWeather = !isGuestSession()" in app,'restored guest sessions can still block on a fresh weather request')
 ok("if (isGuestSession()) {\n            await showApp({ refresh: true, waitForWeather: false, forceWeather: true });" in app,'continue-to-app still wraps guest entry in the global weather loader')
+ok("__METEONEXA_ESM_BOOTSTRAP_READY__ === true" in app and "meteonexa:esm-bootstrap-ready" in app, 'public ready event can fire before Suite/Assistant interaction layer is ready')
+bootstrap=text('modules/esm/bootstrap.mjs')
+ok("globalThis.__METEONEXA_ESM_BOOTSTRAP_READY__ = true" in bootstrap and "meteonexa:esm-bootstrap-ready" in bootstrap, 'ESM bootstrap does not publish the interactive-ready handshake')
 
 watch=text('modules/esm/features/watch-plan.mjs')
 ok('function authenticated()' in watch or 'const authenticated=' in watch,'watch plan has no auth guard')

@@ -82,3 +82,25 @@ P0, P1 and P2 remediation remain closed. This restructuring adds an explicit rep
 The first GitHub Actions run on commit `486f342` validated release gates, MySQL integration, quality/security, backup/restore and staging. Both browser jobs then stopped **before Playwright** because `qa/http_smoke.py` still asserted the pre-restructure privacy asset path `dist/privacy-context.*`.
 
 The production privacy page was already correct and referenced `dist/js/privacy-context.*`; the smoke contract is now aligned with the structured `dist/js/` architecture. This was a QA-path mismatch, not a privacy/runtime regression.
+
+## Automatic GitHub → VPS production delivery
+
+Production delivery is now split into two workflows so the deploy can never deadlock against its own CI gate:
+
+1. `MeteoNexa QA` runs on the pushed `main` commit and must complete successfully, including Chromium and Firefox.
+2. `.github/workflows/deploy-production.yml` starts only from a successful `workflow_run` of `MeteoNexa QA` for a `push` on `main`.
+3. The deploy workflow checks out the exact validated SHA, opens an SSH session to the production VPS using repository/environment secrets, verifies that `origin/main` still points at that SHA, resets the VPS checkout to it and invokes `docker/deploy-production.sh <sha>`.
+4. The VPS deploy script independently re-verifies the completed QA workflow for the exact SHA, enables maintenance mode, creates and verifies a backup, replaces web/worker, checks HTTP/container/MySQL health and disables maintenance only on success.
+5. A live HTTPS/security smoke runs from GitHub after the VPS deployment.
+
+Required GitHub production secrets are `METEONEXA_VPS_HOST`, `METEONEXA_VPS_USER`, `METEONEXA_VPS_SSH_KEY` and `METEONEXA_VPS_KNOWN_HOSTS`. The SSH key used by Actions is separate from the VPS deploy-key used to read GitHub.
+
+This makes a successful push to `main` the release trigger: **push → QA → automatic maintenance → backup/restore drill → production deploy → live security smoke**. A failed QA run never reaches the VPS.
+
+## Interactive readiness contract
+
+The second remote CI run exposed a real bootstrap race rather than a browser-specific defect: `js/app.js` could emit `meteonexa:ready` while the deferred Suite/Assistant interaction layer was still loading. The public ready contract now uses an explicit handshake with `modules/esm/bootstrap.mjs`; `meteonexa:ready` is emitted only after both the main application boot and the ESM/Suite bootstrap are usable. This protects fast user clicks as well as Playwright guest-Assistant tests.
+
+## Maintenance visual contract
+
+The maintenance surface now follows the same visual system as the application instead of a generic fallback card: dark MeteoNexa atmospheric gradient, ambient grid/orbs, radar rings, the application weather loader, blue gradient primary action, responsive layout and reduced-motion support. All user-visible copy remains sourced from the existing `maintenance.*` i18n keys in all five locales.

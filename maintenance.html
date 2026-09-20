@@ -4,22 +4,41 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow,noarchive">
-  <meta name="theme-color" content="#0d1724">
+  <meta name="theme-color" content="#030914">
   <base href="/">
   <link rel="icon" href="assets/icons/favicon.ico?v=20.1">
   <link rel="stylesheet" href="css/maintenance.css?v=20.1">
   <title>MeteoNexa</title>
 </head>
 <body>
+  <div class="maintenance-ambient" aria-hidden="true">
+    <span class="maintenance-orb maintenance-orb-one"></span>
+    <span class="maintenance-orb maintenance-orb-two"></span>
+    <span class="maintenance-orb maintenance-orb-three"></span>
+    <span class="maintenance-radar-ring maintenance-radar-ring-one"></span>
+    <span class="maintenance-radar-ring maintenance-radar-ring-two"></span>
+  </div>
+
   <main class="maintenance-shell" aria-live="polite">
     <section class="maintenance-card">
-      <img class="maintenance-logo" src="assets/logo-full.png" alt="MeteoNexa">
-      <div class="maintenance-spinner" aria-hidden="true"></div>
+      <div class="maintenance-brand">
+        <img class="maintenance-logo" src="assets/logo-full.png" alt="MeteoNexa">
+        <span class="maintenance-status-dot" aria-hidden="true"></span>
+      </div>
+
+      <div class="weather-loader" aria-hidden="true">
+        <span class="loader-sun"></span>
+        <span class="loader-cloud"></span>
+        <i></i><i></i><i></i>
+      </div>
+
       <p class="maintenance-kicker" data-i18n="maintenance.kicker"></p>
       <h1 data-i18n="maintenance.title"></h1>
       <p class="maintenance-message" data-i18n="maintenance.message"></p>
       <p class="maintenance-note" data-i18n="maintenance.note"></p>
-      <button id="maintenance-retry" type="button" data-i18n="maintenance.retry"></button>
+
+      <div class="maintenance-progress" aria-hidden="true"><span></span></div>
+      <button class="maintenance-retry" id="maintenance-retry" type="button" data-i18n="maintenance.retry"></button>
     </section>
   </main>
   <script src="js/maintenance.js" defer></script>

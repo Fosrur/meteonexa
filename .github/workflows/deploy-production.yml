@@ -1,0 +1,68 @@
+name: MeteoNexa Production Deploy
+
+on:
+  workflow_run:
+    workflows: ["MeteoNexa QA"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: meteonexa-production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy-production:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: production
+    steps:
+      - name: Checkout exact validated release
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Configure production SSH
+        env:
+          VPS_SSH_KEY: ${{ secrets.METEONEXA_VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.METEONEXA_VPS_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          test -n "$VPS_SSH_KEY"
+          test -n "$VPS_KNOWN_HOSTS"
+          install -d -m 0700 "$HOME/.ssh"
+          printf '%s\n' "$VPS_SSH_KEY" > "$HOME/.ssh/meteonexa-production"
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 0600 "$HOME/.ssh/meteonexa-production" "$HOME/.ssh/known_hosts"
+
+      - name: Deploy exact QA-green SHA to VPS
+        env:
+          DEPLOY_SHA: ${{ github.event.workflow_run.head_sha }}
+          VPS_HOST: ${{ secrets.METEONEXA_VPS_HOST }}
+          VPS_USER: ${{ secrets.METEONEXA_VPS_USER }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          test -n "$VPS_HOST"
+          test -n "$VPS_USER"
+          ssh \
+            -i "$HOME/.ssh/meteonexa-production" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            "set -euo pipefail; \
+             cd /opt/apps/meteonexa; \
+             git fetch --prune origin main; \
+             test \"\$(git rev-parse origin/main)\" = '$DEPLOY_SHA'; \
+             git reset --hard '$DEPLOY_SHA'; \
+             git clean -fd; \
+             METEONEXA_GITHUB_REPOSITORY='$REPOSITORY' bash docker/deploy-production.sh '$DEPLOY_SHA'"
+
+      - name: Verify live production security after deploy
+        run: python3 qa/live_security_check.py https://www.meteonexa.com/

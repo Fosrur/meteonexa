@@ -4,7 +4,7 @@ import json,sys
 ROOT=Path(sys.argv[1]).resolve() if len(sys.argv)>1 else Path(__file__).resolve().parents[1]
 errors=[]
 def text(rel): return (ROOT/rel).read_text(encoding='utf-8')
-ht=text('.htaccess'); deploy=text('docker/deploy-production.sh'); mode=text('docker/maintenance-mode.sh'); html=text('maintenance.html'); js=text('js/maintenance.js')
+ht=text('.htaccess'); deploy=text('docker/deploy-production.sh'); mode=text('docker/maintenance-mode.sh'); html=text('maintenance.html'); js=text('js/maintenance.js'); css=text('css/maintenance.css'); auto=text('.github/workflows/deploy-production.yml')
 for needle in ['/var/lib/meteonexa/maintenance.flag','api/maintenance.php']:
     if needle not in ht: errors.append(f'.htaccess missing {needle}')
 if 'Service-Worker-Allowed' not in ht or '/js/sw.js' not in ht: errors.append('service worker root scope header missing')
@@ -14,6 +14,11 @@ if "trap 'echo \"ERRORE: deploy interrotto con maintenance mode ancora ATTIVA" n
 if 'maintenance.flag' not in mode: errors.append('maintenance helper missing shared flag contract')
 if 'data-i18n="maintenance.title"' not in html or 'js/maintenance.js' not in html or 'css/maintenance.css' not in html: errors.append('maintenance page not folder/i18n based')
 if 'assets/i18n/${language}.json' not in js: errors.append('maintenance runtime does not load i18n catalog')
+if 'maintenance-ambient' not in html or 'weather-loader' not in html: errors.append('maintenance page does not use the MeteoNexa atmospheric/weather visual language')
+for needle in ['--bg:#030914','linear-gradient(145deg','#19a7ff','prefers-reduced-motion']:
+    if needle not in css: errors.append(f'maintenance branding CSS missing {needle}')
+for needle in ["workflow_run","MeteoNexa QA","github.event.workflow_run.conclusion == 'success'","head_branch == 'main'","docker/deploy-production.sh","METEONEXA_VPS_SSH_KEY","StrictHostKeyChecking=yes"]:
+    if needle not in auto: errors.append(f'automatic production deploy workflow missing {needle}')
 seed=json.loads(text('api/install/translations.json'))['rows']
 keys={r['text_key'] for r in seed}; locales={r['locale'] for r in seed if r['text_key'].startswith('maintenance.')}
 required={'maintenance.kicker','maintenance.title','maintenance.message','maintenance.note','maintenance.retry','maintenance.page_title'}

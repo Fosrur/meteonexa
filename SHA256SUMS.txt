@@ -3,6 +3,7 @@ c1737961e6677cce2837327e0f9c6fbe07770c5d6827cc3e836082110fc4c6e1  ./.dockerignor
 53c35e064789bc4f21239fc5b841ecbd1323470076747774ae4914ac6fd3dcdc  ./.env.staging.example
 9aa0c8417a2776c70ef1ae5443a921815a994c49ad48b7e851682e76b279cad1  ./.gitattributes
 dbdf47f62a27badc00789cd9369768de4d210117e6b04d534677154701c19435  ./.github/.htaccess
+3c48c2c6b26e107f5b1dddd74a94d4da7a207fd3f939e12b5a95bf2af6ec1d6b  ./.github/workflows/deploy-production.yml
 6e2111d5fbf395a4daa3398d93c4a3aa213b866a726dbeb33104da19611c69e9  ./.github/workflows/meteonexa-tests.yml
 11c4f5bc5b2005421c4eab979cc490474d19312c756727d485061e5e8609a405  ./.gitignore
 2ad7c6db2f08ca2c3bce6e069e02f7cfec5c41fede15e095bdf4e72f8bc86a06  ./.htaccess
@@ -173,7 +174,7 @@ cd00f78ec4fc7d9682145914359782b159c361aa1eb7e34b89d5e17de590176e  ./css/decision
 8dead21d322abab873132ba1ab3766f16f4cd130d4ae7b70d0d7ebe797113e47  ./css/error.css
 c28cbfbc9f2ea96a50069c4a41781e1456adf6a6669a1d884556c3e3a4089c26  ./css/intelligence.css
 775839eb1e783dd79d796c452ec3d3c92a4fe5d1544a63e3b7a0fa16be4f9512  ./css/light-theme.css
-e1439d2a80838073c1e469966cf893a262ed3525ae65d1950a949b828af45f63  ./css/maintenance.css
+e965908371199c587861ceaced36315dedeae5a7c970eff374ee442c5f135ff0  ./css/maintenance.css
 69fd72a2a46f0a07453401578487b707d014f71859248135a4ea3895485091d2  ./css/standalone.css
 a5e57d3e854ae2438621fe296534d59a544b3e3f6a5a59e5a93800839c5d6bab  ./css/styles.css
 6c336b04fc19a6598ba2eadab57d5bb202f26d5fc2988f38f5b9efe08247d3ce  ./css/suite.css
@@ -277,7 +278,7 @@ c10c1dac19b975ed41b9766237f26dae7c105857701baedd320fe9076a43a4ea  ./install/inde
 ca06a0c2842351227c2d3c991876fee6c35b291870cbde76d2371f2a2d349776  ./install/installer.css
 727985a7d7480ee0670342a04797f19e93fa261628b5ea28c4e84f05889604d5  ./install/installer.js
 2928c89cc76d32f4e43c268bca5bac8ee4ef2cecbfe7ee24ca3767f89af58c87  ./js/advanced.js
-d2cbfa928a262174837f58d24843b5ce70e5096456b92a950d04f426645e404c  ./js/app.js
+86008d01fbcd4b22791594a80e50af905606d7bda76970a5ec7a253cdcac9905  ./js/app.js
 d1df1e25eb153ee5406ed12775bc6088ea44c45813151206e474cb5dc0db1e46  ./js/asset-manifest.js
 6b92fa7108a17397f5f2c5e3081247758ec3c09913089c5afbedf94d75e31cd3  ./js/boot-clock.js
 5d96b58eba4c3524747dd0cafd1d5b2091efd0d2a01dc0d84e67aa6062b86a8f  ./js/config.js
@@ -293,8 +294,8 @@ b4dbf8677d9d29e3a61619a941b1c5892d0598e1cebc2b6850670fe402bc46b3  ./js/security-
 b2a0fa6d50c33d1a924fe8c8a9cdd015d3966acc28a8ba9a1ffa70826a4c8b6a  ./js/suite.js
 7f6ca1f0031fb76a1db4c3d4c6334bc15fe956a49cf2e2c5936f430eaf2c0ebf  ./js/sw.js
 aa3beb7aad6176b57b9f82b2273fcee875f3b6297fff8ee9572ac2ba7b2f3a9e  ./js/weather-intelligence.js
-2c311743c0972b1384f795fbe24e5918d777451c101fe1f7fdd687fc32004814  ./maintenance.html
-72e5a41e86403432030383d621f1234bf4b363a27e4e4b5ca342002c2b934047  ./modules/esm/bootstrap.mjs
+8f1225682e40e95884500a4d1c4aed849c09f7ce1dc31c4da98ad0b3a7b5f85f  ./maintenance.html
+e62fe2f6a2d366fa5ca4370dd96b7440f55d74d101a452540fc1797fdcea888d  ./modules/esm/bootstrap.mjs
 c8fb3a4a41cb85a5e4c5210608d4d11372d3c3329fb0912d4b806a703a864486  ./modules/esm/core/i18n-preferences.mjs
 619ea73b4c40b73017bee04c7ba62c6a1f5228ec8804290ecab886a41f3ba733  ./modules/esm/core/runtime-api.mjs
 4cb79b16b679efe54977a26313e814bfbdabf980e820a2c8206d2447df218d10  ./modules/esm/core/runtime-state.mjs
@@ -370,8 +371,8 @@ a36b12da848fd3e57e7dd2eee4b1f1c520ab55905c6d4048958aef5ddbc49fe2  ./qa/index.php
 fc3d08d8818df67f32612f6a99f5baddf7db72a31b3b410341c2373cc2943458  ./qa/lifecycle_contract_smoke.py
 5a757fff3c34498fcf9c25669f20dc1257461b0872c556adf2ad7afcd6bff4ff  ./qa/live_security_check.py
 1dbcefee9d99691ba2b18cca8a67db123fdd9ad7c662ec8f449f74c335c124a2  ./qa/login_trust_weather_smoke.py
-55d402716d8bf3e57e99327f8655eeea5bacc110948550a10f3e8d5d2e65d02f  ./qa/maintenance_release_smoke.py
-0877177aa2c639d54e9b54bcc546a7acef8213503402ac8a1808c3780b29a314  ./qa/mobile_bootstrap_smoke.py
+af2d6aec27d3098175a2390d60159e5399e08e9d9657dac7e9da2a8e559ea1ca  ./qa/maintenance_release_smoke.py
+20c83c4d3cc481732b9fd846ee3824f9e2595c5c3d2ac9dd910a0dd535dabc6f  ./qa/mobile_bootstrap_smoke.py
 5b632ed809f9f237af337c615a357cdfae18bdfe32488493fd0afe17c3f96c7c  ./qa/mobile_guest_alerts_private_smoke.py
 8db110dc3672662b8fbaf5d94ccf2ea2b211a43ec72427b40d6504564beafc2c  ./qa/model_consistency_smoke.py
 abdf95b7ab57c029df33a0a21e1303276caf2b8e4d5e9b1d76cc1d6b0d0eb865  ./qa/multidevice_auth_smoke.py
@@ -427,8 +428,8 @@ a8a371909493ba6c6d60609d7f129e29b9e98d3665139c23bf2b9a288a11cd15  ./qa/severe_we
 d5fc7977d7a8c02e974f739e92e4a15d42d81e89285b9425da872f4c161b76b8  ./qa/traffic_analytics_removed_smoke.py
 b341310d07c1f05c8bd510ab563b0cb60693a726024eb084f046728b17a3b289  ./qa/watch_plan_smoke.py
 1fb008a987f994ccb396d0e343ca7958341089fca8bce1be03e617f359d070fc  ./qa/weather_replay_smoke.php
-c359b0130fa033fcae6a43e23a2118ea943bc43be0362b20fc506df3463c65e9  ./readme.md
-b7dcc377331be987105e7feb6453edaa590bab147e78cece6b0e309cbf5e6974  ./reports/ARCHITECTURE-SECURITY.md
+18783d22f83e034dd559017b88209b8a863f82a97d7675a3ee33bf5cc4ad35cb  ./readme.md
+0cf496f117a3931c67896e6563a2ff62e5d2c6f920b578f79761aacb6d6dbefb  ./reports/ARCHITECTURE-SECURITY.md
 0c367e68ca08bca538114b116d62e65b31a04d399c161003a701aa83018ca468  ./robots.txt
 052f935d8b31949e141bfcaf29ec057a4357cceaec0a95ec92544df95952123d  ./sitemap.xml
 7f9ce627144060a6719a5c48c5e8ed2bc744ab708572b0c8f0f70dc9bcffebac  ./styles/main/00-foundation.css
