@@ -880,3 +880,10 @@ body:not(.guest-mode) [data-guest-only]{display:none!important}
   -webkit-user-select:none;
 }
 #guest-login>*{pointer-events:none!important}
+
+/* Bug report owns the lower-right interaction area.
+   Hide the floating assistant only on this page so media controls remain clickable. */
+body[data-page="bug-report"] .assistant-center-button{
+  display:none!important;
+  pointer-events:none!important;
+}

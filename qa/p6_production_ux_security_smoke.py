@@ -5,7 +5,7 @@ ROOT=Path(sys.argv[1]).resolve() if len(sys.argv)>1 else Path(__file__).resolve(
 read=lambda p:(ROOT/p).read_text(encoding='utf-8',errors='replace')
 ht=read('.htaccess'); css=read('styles/main/80-location-radar-overrides.css'); maint=read('maintenance.html')
 workflow=read('.github/workflows/meteonexa-tests.yml'); compose=read('docker-compose.yml')
-p0=read('qa/p0_security_refactor_smoke.py'); radar=read('js/advanced.js'); app_util=read('modules/esm/domains/app-utilities.mjs')
+p0=read('qa/p0_security_refactor_smoke.py'); radar=read('js/advanced.js'); app_util=read('modules/esm/domains/app-utilities.mjs'); reliability=read('styles/main/99-reliability-patches.css')
 checks={
  'CSP reporting endpoint is configured': all(x in ht for x in ('Reporting-Endpoints','Report-To','report-uri /api/csp-report.php','report-to csp-endpoint')) and (ROOT/'api/csp-report.php').is_file(),
  'maintenance static assets bypass the maintenance rewrite': all(x in ht for x in ('css/maintenance\\.css','js/maintenance\\.js','assets/logo-full\\.png','assets/i18n/')),
@@ -20,6 +20,7 @@ checks={
  'radar stale async retries are version-gated': 'radarLayerSelectionVersion' in radar and 'selectionVersion !== radarLayerSelectionVersion' in radar,
  'radar and forecast presentation are independent of vector-map readiness': (lambda block: block.find("if (layer === 'radar' || layer === 'forecast')") >= 0 and block.find("if (layer === 'radar' || layer === 'forecast')") < block.find("const map = appState().radar?.vectorMap"))(radar[radar.find('async function setAdvancedRadarLayer'):]),
  'bug recording flushes before stop and keeps local chunks': all(x in app_util for x in ('recorder.requestData?.()','const chunks = []','await new Promise(resolve => setTimeout(resolve, 80))','addBugReportFiles([file])')),
+ 'bug-report media controls cannot be intercepted by the floating assistant': 'body[data-page="bug-report"] .assistant-center-button' in reliability and 'display:none!important' in reliability,
 }
 failed=[name for name,ok in checks.items() if not ok]
 for name,ok in checks.items(): print(f"[{'OK' if ok else 'FAIL'}] {name}")

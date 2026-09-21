@@ -151,7 +151,7 @@ daa6aa058ac6d272c4b8f1f5c03f9ef6d0f06e3845989132bfde0f6a4b565960  ./api/vendor-a
 7cbdb1f4cb56983f06f7e71eaf271fd461c1197a99bb2ae4623778b368fa115a  ./api/weather/fusion.php
 d7c17c1a99ac9770eb6bedef143dcb11db65b0915ecd7e6c08f7e6770f0a3e40  ./api/weather/severe.php
 aa68a62bf31d23649ffdeedf87c585bf608e696d457f8423b94ea60de34f83b3  ./api/web_push.php
-e5c0e466bb0452bc0c628ffd390e3082c277c8c34617625b54268bfc151f1688  ./asset-manifest.json
+d6892ba2ae5721ba977df6e684519cfcc9bc9f4b0b6b0dee3d1fecd7cce9875a  ./asset-manifest.json
 af5339da7ab53a1b08aa5b15ee72f10164ac7c62695adde8997f5f2a3524c417  ./assets/data/world-lines.json
 a103b42946a897344b3015a06482c173652b00e9623bb14b44be6255c32a45e4  ./assets/i18n/de.json
 aa532cfa8672142c8105716ebe4d2efe702d9841dcfe51d49b547febc67b7fe3  ./assets/i18n/en.json
@@ -178,7 +178,7 @@ c28cbfbc9f2ea96a50069c4a41781e1456adf6a6669a1d884556c3e3a4089c26  ./css/intellig
 775839eb1e783dd79d796c452ec3d3c92a4fe5d1544a63e3b7a0fa16be4f9512  ./css/light-theme.css
 8315ad0fe37672bca43b74a1766ebea456707f57474f7ffe9cd27014acf027d4  ./css/maintenance.css
 69fd72a2a46f0a07453401578487b707d014f71859248135a4ea3895485091d2  ./css/standalone.css
-278e071bece57aa0095b948b8c5e8981932148e4cb9bac646124ecff1e348a4b  ./css/styles.css
+35b387af3022614963d04bcb83abf04966f8f439bd42f3ff39495d51499a69ed  ./css/styles.css
 6c336b04fc19a6598ba2eadab57d5bb202f26d5fc2988f38f5b9efe08247d3ce  ./css/suite.css
 5a1224731877e4a3ea58f284a2ca14931cc9fc10f533d340c5dc31a8789ddd8e  ./css/watch-plan.css
 1ebd4aca18a30327e4c2c31fc832f6fadbd2297fb4e9861dfe25db5fecc92adb  ./diagnostics/diagnostics.css
@@ -191,7 +191,7 @@ cd00f78ec4fc7d9682145914359782b159c361aa1eb7e34b89d5e17de590176e  ./dist/css/dec
 c28cbfbc9f2ea96a50069c4a41781e1456adf6a6669a1d884556c3e3a4089c26  ./dist/css/intelligence.c28cbfbc9f2e.css
 775839eb1e783dd79d796c452ec3d3c92a4fe5d1544a63e3b7a0fa16be4f9512  ./dist/css/light-theme.775839eb1e78.css
 69fd72a2a46f0a07453401578487b707d014f71859248135a4ea3895485091d2  ./dist/css/standalone.69fd72a2a46f.css
-5f0e63f92c8458b45119620be976aac73915e17858aa589ef45793c6b94d0397  ./dist/css/styles.5f0e63f92c84.css
+35b387af3022614963d04bcb83abf04966f8f439bd42f3ff39495d51499a69ed  ./dist/css/styles.35b387af3022.css
 6c336b04fc19a6598ba2eadab57d5bb202f26d5fc2988f38f5b9efe08247d3ce  ./dist/css/suite.6c336b04fc19.css
 5a1224731877e4a3ea58f284a2ca14931cc9fc10f533d340c5dc31a8789ddd8e  ./dist/css/watch-plan.5a1224731877.css
 1ebd4aca18a30327e4c2c31fc832f6fadbd2297fb4e9861dfe25db5fecc92adb  ./dist/diagnostics/diagnostics.1ebd4aca18a3.css
@@ -272,7 +272,7 @@ ce37a78ac4625cfd274df4210738e04aecfaf0d66936a04002bffbdb77caa170  ./docker/verif
 a4961f7caa78991a687f0aaaa9fa5c8920973158a77b5643090dcbdafd9155e4  ./docker/verify-mysql.sh
 d15a7978c3879d9ec12453dd7ad14ed751c0ec6dd410ceae9ffa8f58c4d89840  ./docker/worker-loop.sh
 d42455210fafdb406f41f7cc288d17ebc4345fd229fa0cc8f64c9ab4eebe1a26  ./eslint.config.mjs
-bbc6b8a1251699f8c530a85aa9a2002cff7bcc2f0cf846c5cf3189437ff4bcdf  ./index.html
+3d3ed5678c67e92e68d7041df3bfbd17508102d1144712b0f1b1b172923bc0b8  ./index.html
 7ae983d670ace66d4571fc70e60df8d093ec1948eb0e3f97108b5f1a548d1850  ./install/.htaccess
 c4630e47a01a92fff84e6e3c17548a78c95375c02125dd88d26447e6e4e9ba4b  ./install/ENABLE_INSTALL.example
 207b36410731acc61b029a500f47d407d7aa9e1f242b777e09179491cbd7337f  ./install/InstallerException.php
@@ -281,7 +281,7 @@ ca06a0c2842351227c2d3c991876fee6c35b291870cbde76d2371f2a2d349776  ./install/inst
 727985a7d7480ee0670342a04797f19e93fa261628b5ea28c4e84f05889604d5  ./install/installer.js
 48d3ee2d8b7b23f403227aaac86174d20ac4e54f8258ea93515add795b96f923  ./js/advanced.js
 d2cbfa928a262174837f58d24843b5ce70e5096456b92a950d04f426645e404c  ./js/app.js
-410c7f01ee4d7df93ed6655b2cf65554f150ecbd3abafe94412d0edc72dd3c89  ./js/asset-manifest.js
+b2f05e5e01b76258259fc4f922d8de1e4a3a5afccb86e8c0f3cedd8ea9f02bb1  ./js/asset-manifest.js
 6b92fa7108a17397f5f2c5e3081247758ec3c09913089c5afbedf94d75e31cd3  ./js/boot-clock.js
 5d96b58eba4c3524747dd0cafd1d5b2091efd0d2a01dc0d84e67aa6062b86a8f  ./js/config.js
 6b61f9c9288f2e2ea9e12930213eabe99d73fa13c0acc0297f27f15f4e212eb1  ./js/custom-controls.js
@@ -352,7 +352,7 @@ b776ea127d4659668ca97b3015ad63c2b7d08eacf56264a73034e361332a3653  ./qa/copilot_d
 a10db06a7c38c06e88773c16fa45f8be4559f7fc959eaf83e82cb373904684bf  ./qa/decision_route_account_sync_smoke.php
 e3e48bf8dee08f4377576278a88baa5ef7ebce43ae80c441344799a9586282d4  ./qa/dependency_lock_smoke.py
 ad283edc6f3e815848c57ca081bbc1af4f3929e629627af48758d57065ff4250  ./qa/e2e/auth-guest.spec.mjs
-4b99ee466526ab0c1004fe1d3632e64bf4432946be45878f2be094d82926ff0f  ./qa/e2e/bug-report.spec.mjs
+0ccf0f06ec7591c8938ec4ab8190844f42d086e20154c60bf3250d7f8fadc99c  ./qa/e2e/bug-report.spec.mjs
 1e1fa13ea8574425c0bd4e3a47cd3249aea9cf3a9a16438eae1173f773edf3b3  ./qa/e2e/charts.spec.mjs
 57dcdec27b35827dfaa37dc77e64a7d381e6e14cf3229abfac29c208df84519f  ./qa/e2e/performance.spec.mjs
 e40a7b398823eb5ffcf3797e1b5bde40bcc498ff3d19039925dd6fb56deb358b  ./qa/e2e/responsive-all.spec.mjs
@@ -404,7 +404,7 @@ c67cba52a83acc66731622d9ee12c71f302efdbde75dddd61878fddbc563ea5f  ./qa/p4_i18n_s
 585d7942d1684e6ce9ece6d2cd2a8d74c20eb2b8e671ccd001633e9e9bc8eb4c  ./qa/p4_platform_hardening_smoke.py
 9b11b9c859201166ef62a936e88af68ef0c8b7f2c84e3543a24d63f575c931b2  ./qa/p4_production_build_smoke.py
 da6979aac5afa79f4d37f4969b9f4d3863321c03b15a984f6afa624e356531e2  ./qa/p5_audit_performance_smoke.py
-74bef6e034ce43295ee929b1ec5fe8f539e4e8741e75c8df050f32e1b7845b71  ./qa/p6_production_ux_security_smoke.py
+61908a098a9f46309b39e06935470919a4a3d77d92de31c784c41cf92afffe6f  ./qa/p6_production_ux_security_smoke.py
 bb1a2f879512d699446619593e508d6344685ffd85c8a07b52781a0d9c7fe665  ./qa/package-lock.json
 3c6a65a0b82540338fa42b6cefffbcf6a540b4cfb84d7bcf41b2ee59e477f4f0  ./qa/package.json
 10640eb1146ff5f23b1231c662ccf19e747075b658e7033f9e4a280d36c53c8c  ./qa/playwright.config.mjs
@@ -449,7 +449,7 @@ dd2966fb8248f87b7d31af4a65ac82e6afc307dea7cf58c3af3555674f23e123  ./styles/main/
 0a9708d0d8e4d2619b3c6081797f805a0f000dcec8b168b66a9ae888f2f8dd5a  ./styles/main/70-runtime-visibility-components.css
 9eb4e3e745673c6d007ade6573a6629f9edd2e9fdc8593c7b0a6399b1fbbdfed  ./styles/main/80-location-radar-overrides.css
 4b5b1f5cb758cf8385d93e87c7fc46a7fdbaf303ace5342da6bc8b23cda56896  ./styles/main/90-product-polish.css
-bc63eb8ddeaef4ee80873abfe63e1ce653ca82a26dcdf10ec4d66cf7d006f20b  ./styles/main/99-reliability-patches.css
+e32664ebce857182476df9d6024d4a1dd690e6a396ce13f338f5a57ceb911a9a  ./styles/main/99-reliability-patches.css
 d6941d552c6ac8e541554bfa0751af39c743f4c57cf3c0da535da1a6a96f3345  ./styles/suite/00-suite-foundation.css
 e026f897057d863dec799c2810a690d3414741019682461485654d3b9f60885e  ./styles/suite/20-suite-responsive.css
 f062e1c3cdd4a7a75da8b5ce1598e44099c8f992eedbea89c3654215c3afc7fe  ./styles/suite/40-ui-regression-fixes.css

@@ -59,7 +59,11 @@ test.describe('bug report recording regression', () => {
       document.body.dataset.page = 'bug-report';
     });
 
-    await page.locator('#bug-record-video').click();
+    await expect(page.locator('#assistant-center-button')).toBeHidden();
+    const recordButton = page.locator('#bug-record-video');
+    await recordButton.scrollIntoViewIfNeeded();
+    await expect(recordButton).toBeVisible();
+    await recordButton.click();
     await expect(page.locator('#bug-recording-panel')).toBeVisible();
     await page.locator('#bug-recording-stop').click();
     await expect.poll(() => page.evaluate(() => window.__bugRecorderRequestData)).toBeGreaterThan(0);
