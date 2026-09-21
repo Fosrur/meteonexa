@@ -54,11 +54,15 @@ def source_markdown_files() -> list[str]:
 
 
 project_markdown = source_markdown_files()
+REPORT_MARKDOWN_PREFIX = 'docs/reports/'
 authoritative_markdown = [
     path for path in project_markdown
-    if not path.startswith('reports/')
+    if not path.startswith(REPORT_MARKDOWN_PREFIX)
 ]
-report_markdown = [path for path in project_markdown if path.startswith('reports/')]
+report_markdown = [
+    path for path in project_markdown
+    if path.startswith(REPORT_MARKDOWN_PREFIX)
+]
 
 current_contract_match = re.search(
     r'<!-- METEONEXA_CURRENT_CONTRACT_START -->(.*?)<!-- METEONEXA_CURRENT_CONTRACT_END -->',
@@ -84,7 +88,7 @@ browser_ci_matrix = (
 
 checks = {
     'single authoritative Markdown source of truth': authoritative_markdown == ['readme.md'],
-    'report Markdown is isolated as non-authoritative evidence': all(path.startswith('reports/') for path in report_markdown),
+    'report Markdown is isolated as non-authoritative evidence': all(path.startswith(REPORT_MARKDOWN_PREFIX) for path in report_markdown),
     'README has an explicit current-contract block': bool(current_contract),
     'schema 28 is the current contract': ('schema **28**' in current_contract or 'schema 28' in current_contract) and not re.search(r'schema\s+(?:\*\*)?(?:26|27)(?:\*\*)?', current_contract, re.I),
     'runtime bind mount is explicit and staging-parameterized': compose.count('${METEONEXA_RUNTIME_DIR:-./runtime}:/var/lib/meteonexa') >= 2,

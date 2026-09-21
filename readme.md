@@ -4,7 +4,7 @@
 
 Questa revisione mantiene la release **20.1 RC2 / Final Candidate** e aggiunge hardening/affidabilità senza cambiare lo schema DB: CSP reporting first-party (`/api/csp-report.php`), verifica live dei relativi header, audit dipendenze schedulato indipendentemente dai deploy, runbook di rotazione chiavi, contratto che mantiene il worker fuori dalla rete pubblica `proxy`, test production-like della maintenance 503 con asset CSS/JS/logo/i18n, fallback maintenance leggibile anche in caso di failure degli asset, correzione del menu lingua login senza overlay sul CTA ospite, guardrail performance in browser reale e una lane PHPStan incrementale a livello 4 sul driver DB.
 
-Il repository **non può modificare da solo il flag GitHub “Allow write access” di una deploy key**: il requisito read-only è documentato in `docs/docs/reports/ARCHITECTURE-SECURITY.md` (sezione Key rotation runbook) e va verificato una volta nelle impostazioni GitHub del repository. La rotazione VAPID è esplicitamente trattata come operazione che richiede nuova sottoscrizione push dei client.
+Il repository **non può modificare da solo il flag GitHub “Allow write access” di una deploy key**: il requisito read-only è documentato in `docs/reports/ARCHITECTURE-SECURITY.md` (sezione Key rotation runbook) e va verificato una volta nelle impostazioni GitHub del repository. La rotazione VAPID è esplicitamente trattata come operazione che richiede nuova sottoscrizione push dei client.
 
 
 <!-- METEONEXA_CURRENT_CONTRACT_START -->
@@ -18,7 +18,7 @@ Il deploy production prepara il candidato **con il sito ancora online**: build d
 
 ## Contratto corrente della release — 21 settembre 2026
 
-Questa è la sezione normativa per lo stato attuale del sorgente. **Versione applicazione: 20.1 RC2 / Final Candidate; schema 28; tabelle applicative: 47; translation seed: `20.1-semantic-i18n-v2`; catalogo attivo: 4.645 chiavi × 5 lingue.** `readme.md` resta l'unica documentazione Markdown normativa; `docs/docs/reports/*.md` contiene soltanto evidenze/audit e non può ridefinire il contratto corrente.
+Questa è la sezione normativa per lo stato attuale del sorgente. **Versione applicazione: 20.1 RC2 / Final Candidate; schema 28; tabelle applicative: 47; translation seed: `20.1-semantic-i18n-v2`; catalogo attivo: 4.645 chiavi × 5 lingue.** `readme.md` resta l'unica documentazione Markdown normativa; `docs/reports/*.md` contiene soltanto evidenze/audit e non può ridefinire il contratto corrente.
 
 Il comando autorevole per rigenerare `SHA256SUMS.txt` è `npm run checksums:update`, implementato in Node e quindi utilizzabile anche su Windows senza WSL/Bash. Il controllo in CI resta `npm run checksums:verify`.
 
@@ -27,12 +27,16 @@ Evidenza prima di questa riorganizzazione: **MeteoNexa QA #21** e **MeteoNexa Pr
 ### Checksum release cross-platform
 
 Il generatore `tools/update-release-checksums.mjs` calcola gli SHA-256 dai blob presenti nell'indice Git, non dai line ending del working tree locale. In questo modo `npm run checksums:update` produce lo stesso manifest su Windows e Linux ed evita differenze CRLF/LF nei file di configurazione.
+
+### Remediation QA punto 9
+
+La classificazione documentale del gate `qa/production_readiness_smoke.py` segue ora la struttura `docs/reports/`: `readme.md` resta l'unico Markdown normativo, mentre i file in `docs/reports/` sono esclusivamente evidenze non normative. Sono stati inoltre rimossi i riferimenti accidentali `docs/docs/reports/` introdotti durante la prima riorganizzazione della root.
 <!-- METEONEXA_CURRENT_CONTRACT_END -->
 
 ## P1 release/documentation hardening — 20 settembre 2026
 
 - `qa/production_readiness_smoke.py` usa l'indice Git solo quando `git rev-parse --show-toplevel` coincide esattamente con la root applicativa; un repository padre non viene più scambiato per il repository MeteoNexa.
-- Il contratto documentale distingue `readme.md` (source of truth) da `docs/docs/reports/*.md` (evidenze non normative), evitando falsi failure nei bundle di audit.
+- Il contratto documentale distingue `readme.md` (source of truth) da `docs/reports/*.md` (evidenze non normative), evitando falsi failure nei bundle di audit.
 - `qa/release_provenance_smoke.py` valida l'identità VCS: nei source bundle senza `.git` opera in modalità neutra; in CI richiede repository alla root, HEAD committato e working tree pulita.
 - Le sezioni storiche dello stesso README sono state rese esplicite come snapshot temporali; lo schema attuale resta esclusivamente **28**.
 
@@ -167,7 +171,7 @@ La build resta **MeteoNexa 20.1 RC2** e non è implicitamente deployata in produ
 
 ## Storico RC1 — runtime fix 11
 
-Questo README resta l’unica documentazione Markdown **normativa** della release. Consolida architettura, security, audit RC, release notes, checklist e note CSS precedentemente separate; eventuali `docs/docs/reports/*.md` sono soltanto evidenze non normative.
+Questo README resta l’unica documentazione Markdown **normativa** della release. Consolida architettura, security, audit RC, release notes, checklist e note CSS precedentemente separate; eventuali `docs/reports/*.md` sono soltanto evidenze non normative.
 
 ### Fix applicato in questa revisione
 
@@ -2818,7 +2822,7 @@ The real GitHub Actions pipeline on `Fosrur/meteonexa` is now being used as the 
 
 ## 20.1 RC2 — P2 remediation (2026-09-20)
 
-P0 e P1 restano chiusi. La passata P2 completa i punti non bloccanti rimasti: export PDF storico reale (download `application/pdf`, non più `window.print()`), gate di deploy sul workflow GitHub Actions verde per lo SHA esatto, correzione mojibake del README, riduzione del CSS parser-blocking tramite defer di `css/advanced.css` e ampliamento dei controlli i18n contro copy UI hardcoded. Il report tecnico non normativo aggiornato è `docs/docs/reports/ARCHITECTURE-SECURITY.md`; `readme.md` resta l'unica source of truth del prodotto.
+P0 e P1 restano chiusi. La passata P2 completa i punti non bloccanti rimasti: export PDF storico reale (download `application/pdf`, non più `window.print()`), gate di deploy sul workflow GitHub Actions verde per lo SHA esatto, correzione mojibake del README, riduzione del CSS parser-blocking tramite defer di `css/advanced.css` e ampliamento dei controlli i18n contro copy UI hardcoded. Il report tecnico non normativo aggiornato è `docs/reports/ARCHITECTURE-SECURITY.md`; `readme.md` resta l'unica source of truth del prodotto.
 
 Il deploy production richiede ora `METEONEXA_GITHUB_REPOSITORY` e, per repository privati, `METEONEXA_GITHUB_TOKEN` con accesso in sola lettura allo stato Actions. Se la run `MeteoNexa QA` del commit da pubblicare non è `completed/success`, il deploy viene interrotto prima di backup/build/avvio container.
 
