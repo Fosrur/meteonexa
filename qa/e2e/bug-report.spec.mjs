@@ -46,6 +46,14 @@ test.describe('bug report recording regression', () => {
       if (auth) auth.hidden = true;
       location?.classList.remove('active');
       if (app) app.hidden = false;
+      // getDisplayMedia is intentionally mocked above with a lightweight stream.
+      // Native HTMLMediaElement.srcObject rejects that plain test double in both
+      // Chromium and Firefox before the recording panel can be shown, so isolate
+      // the recorder regression from browser MediaStream brand checks.
+      const preview = document.querySelector('#bug-recording-video');
+      if (preview) {
+        Object.defineProperty(preview, 'srcObject', { configurable: true, writable: true, value: null });
+      }
       document.querySelectorAll('.page').forEach(node => node.classList.remove('active-page'));
       document.querySelector('#page-bug-report')?.classList.add('active-page');
       document.body.dataset.page = 'bug-report';

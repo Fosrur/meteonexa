@@ -352,7 +352,7 @@ b776ea127d4659668ca97b3015ad63c2b7d08eacf56264a73034e361332a3653  ./qa/copilot_d
 a10db06a7c38c06e88773c16fa45f8be4559f7fc959eaf83e82cb373904684bf  ./qa/decision_route_account_sync_smoke.php
 e3e48bf8dee08f4377576278a88baa5ef7ebce43ae80c441344799a9586282d4  ./qa/dependency_lock_smoke.py
 ad283edc6f3e815848c57ca081bbc1af4f3929e629627af48758d57065ff4250  ./qa/e2e/auth-guest.spec.mjs
-71f7ecfbdbd8387bd83d7566ff294efa06f8744f201a5714057f18c0e9c038aa  ./qa/e2e/bug-report.spec.mjs
+4b99ee466526ab0c1004fe1d3632e64bf4432946be45878f2be094d82926ff0f  ./qa/e2e/bug-report.spec.mjs
 1e1fa13ea8574425c0bd4e3a47cd3249aea9cf3a9a16438eae1173f773edf3b3  ./qa/e2e/charts.spec.mjs
 e449dbb4f8af6f7d57da7986fc09ed29a75424211cc39a97b7fb2ccae8990909  ./qa/e2e/performance.spec.mjs
 e40a7b398823eb5ffcf3797e1b5bde40bcc498ff3d19039925dd6fb56deb358b  ./qa/e2e/responsive-all.spec.mjs
