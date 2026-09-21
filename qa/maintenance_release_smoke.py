@@ -26,6 +26,10 @@ for fallback in ('MeteoNexa è in manutenzione','RILASCIO IN CORSO','Riprova ora
 if 'bgcolor="#030914"' not in html or 'maintenance-ambient' not in html or 'maintenance-weather-loader' not in html: errors.append('maintenance branded dark fallback/visual shell missing')
 if 'assets/i18n/${language}.json' not in js: errors.append('maintenance runtime does not load i18n catalog')
 if 'maintenance_probe=' not in js or 'setInterval' not in js: errors.append('maintenance auto-recovery probe missing')
+if '@media(min-width:621px)' not in html or 'max-height:calc(100dvh - 36px)' not in html or 'width:min(100%,600px)' not in html: errors.append('maintenance desktop compact no-scroll contract missing')
+if '@media(max-width:620px),(max-height:560px)' not in html or 'body{overflow:auto}' not in html: errors.append('maintenance small-viewport scroll fallback missing')
+if 'http-equiv="refresh"' not in html: errors.append('maintenance HTML refresh fallback missing')
+if 'maintenance_release=' not in js or 'location.replace' not in js: errors.append('maintenance cache-busting release navigation missing')
 if 'METEONEXA_KEEP_MAINTENANCE' not in deploy: errors.append('deploy cannot retain maintenance through internal replacement checks')
 if 'api/system/status.php' not in deploy: errors.append('deploy must gate release on dynamic system status/schema migration endpoint')
 seed=json.loads(text('api/install/translations.json'))['rows']

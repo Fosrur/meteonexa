@@ -32,7 +32,7 @@
         headers: { Accept: 'text/html' },
       });
       if (response.ok) {
-        location.reload();
+        location.replace(/?maintenance_release=);
         return;
       }
       if (reloadOnFailure) location.reload();

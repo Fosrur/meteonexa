@@ -35,6 +35,10 @@ La classificazione documentale del gate `qa/production_readiness_smoke.py` segue
 ### Remediation quality gate dopo riorganizzazione root
 
 I gate P4 sono stati riallineati alla nuova struttura `config/quality/`: `qa/p4_platform_hardening_smoke.py` verifica `config/quality/phpstan.neon` e `qa/p4_backend_maintainability_smoke.py` valida il finder PHP-CS-Fixer relativo alla root tramite `dirname(__DIR__, 2)`. Questo elimina gli ultimi riferimenti ai precedenti file quality collocati direttamente nella root.
+
+### Maintenance desktop compacta e auto-recovery
+
+La pagina di maintenance usa ora un layout desktop compatto entro la viewport: card massima di 600 px, spazi verticali ridotti e variante dedicata per viewport basse, evitando scroll sui normali schermi desktop. Su mobile e viewport eccezionalmente basse resta consentito lo scroll per non troncare i contenuti. Il critical CSS inline resta sincronizzato con `css/maintenance.css` e il relativo hash CSP viene aggiornato insieme al sorgente. Oltre al probe JavaScript ogni 15 secondi, la pagina dispone di refresh HTML di sicurezza e, quando il servizio torna disponibile, naviga verso una URL cache-busted per evitare di restare bloccata su una vecchia risposta 503.
 <!-- METEONEXA_CURRENT_CONTRACT_END -->
 
 ## P1 release/documentation hardening — 20 settembre 2026
