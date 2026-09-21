@@ -4,32 +4,31 @@
 
 Questa revisione mantiene la release **20.1 RC2 / Final Candidate** e aggiunge hardening/affidabilità senza cambiare lo schema DB: CSP reporting first-party (`/api/csp-report.php`), verifica live dei relativi header, audit dipendenze schedulato indipendentemente dai deploy, runbook di rotazione chiavi, contratto che mantiene il worker fuori dalla rete pubblica `proxy`, test production-like della maintenance 503 con asset CSS/JS/logo/i18n, fallback maintenance leggibile anche in caso di failure degli asset, correzione del menu lingua login senza overlay sul CTA ospite, guardrail performance in browser reale e una lane PHPStan incrementale a livello 4 sul driver DB.
 
-Il repository **non può modificare da solo il flag GitHub “Allow write access” di una deploy key**: il requisito read-only è documentato in `reports/ARCHITECTURE-SECURITY.md` (sezione Key rotation runbook) e va verificato una volta nelle impostazioni GitHub del repository. La rotazione VAPID è esplicitamente trattata come operazione che richiede nuova sottoscrizione push dei client.
+Il repository **non può modificare da solo il flag GitHub “Allow write access” di una deploy key**: il requisito read-only è documentato in `docs/docs/reports/ARCHITECTURE-SECURITY.md` (sezione Key rotation runbook) e va verificato una volta nelle impostazioni GitHub del repository. La rotazione VAPID è esplicitamente trattata come operazione che richiede nuova sottoscrizione push dei client.
 
 
 <!-- METEONEXA_CURRENT_CONTRACT_START -->
-## 20.1 RC2 — root pulita, i18n e maintenance deploy
+## 20.1 RC2 — root organizzata, deploy verificabile e tooling cross-platform
 
-La root del repository è un **control plane**, non una cartella di sorgenti frontend. Non sono ammessi file sorgente/runtime `.js`, `.css`, `.php` o `.ico` direttamente in root. Le pagine HTML pubbliche e `readme.md` restano in root insieme ai soli file di configurazione/build/release e ai metadati web (`robots.txt`, `sitemap.xml`). I JavaScript classici/runtime sono in `js/`; i bundle CSS sono in `css/`; gli ESM restano in `modules/esm/`; i partial CSS manutentibili restano in `styles/`; gli endpoint PHP pubblici e backend restano in `api/`. Il gate `qa/architecture_layout_smoke.py` impedisce regressioni di questa struttura.
+La root del repository resta il **control plane + document root pubblico** della web app, ma non contiene più configurazioni quality non convenzionali sparse. Le pagine HTML pubbliche, `readme.md`, i file convenzionali di build/deploy e i metadati web restano in root; PHPStan, PHP-CS-Fixer e Semgrep sono centralizzati in `config/quality/`; le evidenze Markdown non normative sono in `docs/reports/`. I runtime JavaScript sono in `js/`, i bundle CSS in `css/`, gli ESM in `modules/esm/`, i partial CSS in `styles/` e gli endpoint/backend in `api/`. `qa/architecture_layout_smoke.py` protegge questa struttura. Lo spostamento dell'intero document root sotto `public/` resta volutamente fuori da questa stabilizzazione perché richiederebbe un refactoring coordinato di Apache, Dockerfile, Service Worker, fingerprint e QA.
 
-Il catalogo i18n corrente è **4.645 chiavi × 5 lingue = 23.225 traduzioni**. Anche `maintenance.html` è priva di copy applicativa hardcoded: `js/maintenance.js` carica lo stesso fallback statico `assets/i18n/<locale>.json`, e le sei chiavi `maintenance.*` sono presenti nel seed DB, nella baseline SQLite e nei cinque cataloghi statici. I gate anti-hardcode includono ora anche la pagina e il runtime manutenzione.
+Il catalogo i18n corrente è **4.645 chiavi × 5 lingue = 23.225 traduzioni**. Anche `maintenance.html` usa il contratto i18n condiviso e mantiene critical CSS/logo embedded per restare leggibile durante il cutover.
 
-Ogni deploy production valido attiva automaticamente la maintenance mode tramite il flag condiviso `/var/lib/meteonexa/maintenance.flag` **prima** di backup/build/sostituzione container. `.htaccess` intercetta le navigazioni HTML e serve `api/maintenance.php` con HTTP 503 + `Retry-After`, mentre gli health check tecnici e le API non vengono mascherati. Dopo health check container e verifica MySQL, `docker/deploy-production.sh` disattiva il flag. In caso di errore dopo l'attivazione, la maintenance resta intenzionalmente attiva fino a rollback/verifica manuale. Comandi operativi: `bash docker/maintenance-mode.sh on|off|status`.
+Il deploy production prepara il candidato **con il sito ancora online**: build delle immagini con SHA, backup del database/runtime e restore drill. `metadata.txt` registra `schema_source`; il restore deve riprodurre quello schema sorgente, non essere già allo schema target. Solo dopo questi gate viene attivato `/var/lib/meteonexa/maintenance.flag`, vengono ricreati `web` e `worker`, `/api/system/status.php` apre il DB ed esegue le migration necessarie fino allo schema corrente **28**, poi `verify-mysql.sh` richiede `MYSQL_SCHEMA_PASS`. Le immagini/container espongono la revisione Git tramite provenance OCI e il deploy deve verificare che la revisione corrisponda al `DEPLOY_SHA`. Nel workflow GitHub la maintenance resta attiva durante i controlli interni, viene rimossa prima dello smoke live esterno e viene ripristinata se quello smoke fallisce.
 
+## Contratto corrente della release — 21 settembre 2026
 
-## Contratto corrente della release — 20 settembre 2026
+Questa è la sezione normativa per lo stato attuale del sorgente. **Versione applicazione: 20.1 RC2 / Final Candidate; schema 28; tabelle applicative: 47; translation seed: `20.1-semantic-i18n-v2`; catalogo attivo: 4.645 chiavi × 5 lingue.** `readme.md` resta l'unica documentazione Markdown normativa; `docs/docs/reports/*.md` contiene soltanto evidenze/audit e non può ridefinire il contratto corrente.
 
-Questa è la sezione normativa per lo stato attuale del sorgente. **Versione applicazione: 20.1 RC2 / Final Candidate; schema **28**; tabelle applicative: 47; translation seed: `20.1-semantic-i18n-v2`; catalogo attivo: 4.645 chiavi × 5 lingue.** Il nome `20.1 Final` resta bloccato finché il commit pubblicato non supera CI completa, browser Chromium/Firefox, staging/deploy, backup/restore e smoke live previsti dal freeze.
+Il comando autorevole per rigenerare `SHA256SUMS.txt` è `npm run checksums:update`, implementato in Node e quindi utilizzabile anche su Windows senza WSL/Bash. Il controllo in CI resta `npm run checksums:verify`.
 
-Il pacchetto sorgente distribuito è intenzionalmente **VCS-neutral** e non contiene `.git`: dopo l'import nel nuovo repository deve essere creato almeno un commit prima di considerare la build identificabile o distribuibile. La CI verifica che il proprio Git top-level coincida esattamente con la root MeteoNexa e che il checkout del commit sia pulito.
-
-`readme.md` è l'unica documentazione Markdown normativa del sorgente. Eventuali file `reports/*.md` sono ammessi esclusivamente come evidenze/audit non normativi e non possono ridefinire versione, schema o contratto di release. Tutti i riferimenti alle revisioni DB precedenti (26 e 27) presenti nelle sezioni storiche descrivono **lo stato di quella specifica milestone**, non lo stato corrente.
+Evidenza prima di questa riorganizzazione: **MeteoNexa QA #21** e **MeteoNexa Production Deploy #21** sul commit `496e610a8d01c263e921ad9621894fba396e6a8a` sono terminati con successo; il deploy ha ricreato `web` e `worker`, portato/verificato MySQL a `schema_version=28`, stampato `MYSQL_SCHEMA_PASS actual=28 expected=28`, rimosso la maintenance e superato lo smoke live esterno. Ogni nuovo commit, inclusa questa pulizia della root, deve superare nuovamente gli stessi gate prima di essere considerato production-ready.
 <!-- METEONEXA_CURRENT_CONTRACT_END -->
 
 ## P1 release/documentation hardening — 20 settembre 2026
 
 - `qa/production_readiness_smoke.py` usa l'indice Git solo quando `git rev-parse --show-toplevel` coincide esattamente con la root applicativa; un repository padre non viene più scambiato per il repository MeteoNexa.
-- Il contratto documentale distingue `readme.md` (source of truth) da `reports/*.md` (evidenze non normative), evitando falsi failure nei bundle di audit.
+- Il contratto documentale distingue `readme.md` (source of truth) da `docs/docs/reports/*.md` (evidenze non normative), evitando falsi failure nei bundle di audit.
 - `qa/release_provenance_smoke.py` valida l'identità VCS: nei source bundle senza `.git` opera in modalità neutra; in CI richiede repository alla root, HEAD committato e working tree pulita.
 - Le sezioni storiche dello stesso README sono state rese esplicite come snapshot temporali; lo schema attuale resta esclusivamente **28**.
 
@@ -164,7 +163,7 @@ La build resta **MeteoNexa 20.1 RC2** e non è implicitamente deployata in produ
 
 ## Storico RC1 — runtime fix 11
 
-Questo README resta l’unica documentazione Markdown **normativa** della release. Consolida architettura, security, audit RC, release notes, checklist e note CSS precedentemente separate; eventuali `reports/*.md` sono soltanto evidenze non normative.
+Questo README resta l’unica documentazione Markdown **normativa** della release. Consolida architettura, security, audit RC, release notes, checklist e note CSS precedentemente separate; eventuali `docs/docs/reports/*.md` sono soltanto evidenze non normative.
 
 ### Fix applicato in questa revisione
 
@@ -2082,7 +2081,7 @@ Il `Dockerfile` non usa più `COPY . /var/www/html`: l'immagine contiene solo en
 
 ### Quality/security toolchain e CI
 
-Sono aggiunti `composer.json`, `phpstan.neon`, `.php-cs-fixer.dist.php` e `.semgrep.yml`. La CI installa PHPStan/PHP-CS-Fixer, esegue ESLint + verifica esbuild, esegue Semgrep 1.169.0 con regole locali e Trivy `v0.36.0` sia sul filesystem sia sull'immagine Docker finale. La scansione Trivy blocca finding HIGH/CRITICAL non ignorati.
+Sono aggiunti `composer.json`, `phpstan.neon`, `config/quality/php-cs-fixer.php` e `config/quality/semgrep.yml`. La CI installa PHPStan/PHP-CS-Fixer, esegue ESLint + verifica esbuild, esegue Semgrep 1.169.0 con regole locali e Trivy `v0.36.0` sia sul filesystem sia sull'immagine Docker finale. La scansione Trivy blocca finding HIGH/CRITICAL non ignorati.
 
 Il job MySQL 8.4 esegue ora sia `qa/mysql_auth_integration.php` sia `qa/mysql_full_integration.php`: quest'ultimo ricrea lo schema reale, verifica le 47 tabelle, attraversa la catena di upgrade da schema 15 fino allo schema **28** e applica i capability sync idempotenti e verifica i trigger di revisione traduzioni.
 
@@ -2124,7 +2123,7 @@ Le sincronizzazioni schema 24/25/26 e la data-migration i18n 27 sono raggiungibi
 
 Sono stati normalizzati **42 file PHP** che nella baseline P4 fase 1 contenevano i blocchi più compressi, inclusi account/preferences/locations, Intelligence, calibration/pipeline, Netatmo, privacy, diagnostics, radar, push e helper DB. La trasformazione è stata eseguita con un formatter conservativo basato su `token_get_all()`: prima di scrivere ogni file viene confrontata la sequenza completa dei token PHP significativi, quindi una trasformazione che alteri codice/stringhe/operatori viene rifiutata. Dopo la normalizzazione l'intero backend viene nuovamente sottoposto a `php -l`.
 
-Il gate `qa/p4_backend_maintainability_smoke.py` impedisce il ritorno del vecchio pattern dei grandi endpoint compressi (file >4 KB in ≤15 righe), verificava le 12 migration consecutive 0016→0027 e importa realmente il registry con PHP. `.php-cs-fixer.dist.php` copre ora tutto `api/` oltre all'installer, non soltanto `api/database/`.
+Il gate `qa/p4_backend_maintainability_smoke.py` impedisce il ritorno del vecchio pattern dei grandi endpoint compressi (file >4 KB in ≤15 righe), verificava le 12 migration consecutive 0016→0027 e importa realmente il registry con PHP. `config/quality/php-cs-fixer.php` copre ora tutto `api/` oltre all'installer, non soltanto `api/database/`.
 
 Comandi dedicati:
 
@@ -2815,7 +2814,7 @@ The real GitHub Actions pipeline on `Fosrur/meteonexa` is now being used as the 
 
 ## 20.1 RC2 — P2 remediation (2026-09-20)
 
-P0 e P1 restano chiusi. La passata P2 completa i punti non bloccanti rimasti: export PDF storico reale (download `application/pdf`, non più `window.print()`), gate di deploy sul workflow GitHub Actions verde per lo SHA esatto, correzione mojibake del README, riduzione del CSS parser-blocking tramite defer di `css/advanced.css` e ampliamento dei controlli i18n contro copy UI hardcoded. Il report tecnico non normativo aggiornato è `reports/ARCHITECTURE-SECURITY.md`; `readme.md` resta l'unica source of truth del prodotto.
+P0 e P1 restano chiusi. La passata P2 completa i punti non bloccanti rimasti: export PDF storico reale (download `application/pdf`, non più `window.print()`), gate di deploy sul workflow GitHub Actions verde per lo SHA esatto, correzione mojibake del README, riduzione del CSS parser-blocking tramite defer di `css/advanced.css` e ampliamento dei controlli i18n contro copy UI hardcoded. Il report tecnico non normativo aggiornato è `docs/docs/reports/ARCHITECTURE-SECURITY.md`; `readme.md` resta l'unica source of truth del prodotto.
 
 Il deploy production richiede ora `METEONEXA_GITHUB_REPOSITORY` e, per repository privati, `METEONEXA_GITHUB_TOKEN` con accesso in sola lettura allo stato Actions. Se la run `MeteoNexa QA` del commit da pubblicare non è `completed/success`, il deploy viene interrotto prima di backup/build/avvio container.
 

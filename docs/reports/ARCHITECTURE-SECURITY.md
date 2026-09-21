@@ -13,7 +13,7 @@
 
 ## Repository architecture
 
-The repository root is intentionally a control plane. Public HTML (`index.html`, `privacy.html`, `cookie-policy.html`, `offline.html`, `maintenance.html`), `readme.md`, build/configuration files and web metadata remain in root. No runtime/source `.js`, `.css`, `.php` or `.ico` file is allowed directly in root; `qa/architecture_layout_smoke.py` enforces this.
+The repository root is intentionally a control plane. Public HTML (`index.html`, `privacy.html`, `cookie-policy.html`, `offline.html`, `maintenance.html`), `readme.md`, conventional build/deploy files and web metadata remain in root. Quality/security configuration is centralized in `config/quality/`; non-authoritative Markdown evidence lives in `docs/reports/`. No runtime/source `.js`, `.css`, `.php` or `.ico` file is allowed directly in root; `qa/architecture_layout_smoke.py` enforces this.
 
 Frontend boundaries are:
 
@@ -46,11 +46,12 @@ Deployment sequence:
 1. clean Git checkout + `origin/main`/expected SHA validation;
 2. successful `MeteoNexa QA` workflow for the exact SHA;
 3. release preflight and runtime ownership check;
-4. `docker/maintenance-mode.sh on`;
-5. pre-deploy backup + restore verification;
-6. image build and container replacement;
-7. HTTP/container/MySQL verification;
-8. `docker/maintenance-mode.sh off`.
+4. build `web`/`worker` images with the exact Git SHA while production is still online;
+5. pre-deploy backup with `schema_source` + real restore drill against MySQL 8.4;
+6. activate `docker/maintenance-mode.sh on` only for the cutover window;
+7. replace containers and call `/api/system/status.php` so required DB migrations run to the current schema;
+8. verify hardened containers, OCI revision provenance and `MYSQL_SCHEMA_PASS`;
+9. keep maintenance active through internal checks, release it before the external live security smoke, and restore it if that smoke fails.
 
 Browser navigations receive `api/maintenance.php` with HTTP **503**, `Retry-After: 120`, no-store headers and the translated `maintenance.html`. API calls and health checks are not rewritten merely because maintenance is active. If deployment fails after maintenance activation, the mode remains active by design until rollback or remediation is verified; the deploy script prints the explicit recovery command.
 
@@ -99,7 +100,7 @@ A second, stronger contract is now emitted by `modules/esm/bootstrap.mjs`: `mete
 
 ## Maintenance visual contract
 
-`maintenance.html`, `css/maintenance.css` and `js/maintenance.js` are stable, non-fingerprinted release assets deliberately included in the production image. The page mirrors the MeteoNexa atmospheric/glass visual language, has a dark HTML-level fallback background, uses only `maintenance.*` i18n keys for visible copy, and polls the HTML entry point so it can automatically reload when maintenance ends. Absolute `/css`, `/js` and `/assets` paths make the page independent of the rewritten `api/maintenance.php` URL.
+`maintenance.html`, `css/maintenance.css` and `js/maintenance.js` are stable, non-fingerprinted release assets deliberately included in the production image. The page mirrors the MeteoNexa atmospheric/glass visual language, has a dark HTML-level fallback background, uses only `maintenance.*` i18n keys for visible copy, and polls the HTML entry point so it can automatically reload when maintenance ends. Critical presentation and branding are embedded in `maintenance.html`; `css/maintenance.css` and `js/maintenance.js` remain stable external enhancement assets explicitly exempted from the maintenance rewrite, and runtime i18n uses `/assets/i18n/...`.
 
 # P0 + P5/P6 stabilization
 

@@ -28,7 +28,7 @@
     "check:rc": "python3 qa/release_candidate_smoke.py .",
     "check:i18n-copy": "python3 qa/i18n_hardcoded_copy_smoke.py .",
     "check:services": "node qa/esm_service_publication_smoke.mjs",
-    "checksums:update": "bash tools/update-release-checksums.sh",
+    "checksums:update": "node tools/update-release-checksums.mjs",
     "checksums:verify": "sha256sum -c SHA256SUMS.txt",
     "build:release": "npm run build:production && npm run checksums:update",
     "check:provenance": "python3 qa/release_provenance_smoke.py .",

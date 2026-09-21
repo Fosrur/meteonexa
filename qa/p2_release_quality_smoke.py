@@ -38,7 +38,7 @@ need(blocking_bytes < 400*1024,f'blocking CSS budget exceeded: {blocking_bytes} 
 
 for bad in ['â€”','â€™','Ã ','giÃ','unâ€™']:
     need(bad not in readme,'README mojibake remains: '+bad)
-need((ROOT/'reports/ARCHITECTURE-SECURITY.md').is_file(),'architecture/security Markdown report missing')
+need((ROOT/'docs/reports/ARCHITECTURE-SECURITY.md').is_file(),'architecture/security Markdown report missing')
 need((ROOT/'qa/i18n_runtime_literal_smoke.py').is_file(),'extended hardcoded translation audit missing')
 
 print('P2 release quality: '+('PASS' if not errors else 'FAIL'))

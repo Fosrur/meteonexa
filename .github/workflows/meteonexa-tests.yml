@@ -92,7 +92,7 @@ jobs:
       - name: PHPStan
         run: |
           composer analyse
-          vendor/bin/phpstan analyse -c phpstan-p6.neon --no-progress --memory-limit=1G
+          vendor/bin/phpstan analyse -c config/quality/phpstan-p6.neon --no-progress --memory-limit=1G
       - name: ESLint, esbuild graph and production frontend build
         run: |
           npm run lint:eslint
@@ -101,7 +101,7 @@ jobs:
           npm run check:p4:build
           npm run check:p4:i18n
       - name: Semgrep local security rules
-        run: docker run --rm -v "$PWD:/src" semgrep/semgrep:1.169.0 semgrep scan --config /src/.semgrep.yml --error --metrics=off /src/api /src/install /src/modules/esm
+        run: docker run --rm -v "$PWD:/src" semgrep/semgrep:1.169.0 semgrep scan --config /src/config/quality/semgrep.yml --error --metrics=off /src/api /src/install /src/modules/esm
       - name: Build hardened production image
         run: docker build -t meteonexa:ci .
       - name: Trivy filesystem scan

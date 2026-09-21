@@ -2,8 +2,8 @@
 
 $finder = PhpCsFixer\Finder::create()
     ->in([
-        __DIR__ . '/api',
-        __DIR__ . '/install',
+        dirname(__DIR__, 2) . '/api',
+        dirname(__DIR__, 2) . '/install',
     ])
     ->name('*.php')
     ->exclude(['cache']);

@@ -1,0 +1,8 @@
+parameters:
+    level: 4
+    paths:
+        - ../../api/database/driver.php
+    scanFiles:
+        - ../../api/storage_helpers.php
+    tmpDir: ../../.cache/phpstan-p6
+    reportUnmatchedIgnoredErrors: false
