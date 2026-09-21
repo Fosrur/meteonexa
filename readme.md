@@ -1,5 +1,12 @@
 # MeteoNexa 20.1 — Final Candidate
 
+## P0 + P5/P6 stabilization — 21 settembre 2026
+
+Questa revisione mantiene la release **20.1 RC2 / Final Candidate** e aggiunge hardening/affidabilità senza cambiare lo schema DB: CSP reporting first-party (`/api/csp-report.php`), verifica live dei relativi header, audit dipendenze schedulato indipendentemente dai deploy, runbook di rotazione chiavi, contratto che mantiene il worker fuori dalla rete pubblica `proxy`, test production-like della maintenance 503 con asset CSS/JS/logo/i18n, fallback maintenance leggibile anche in caso di failure degli asset, correzione del menu lingua login senza overlay sul CTA ospite, guardrail performance in browser reale e una lane PHPStan incrementale a livello 4 sul driver DB.
+
+Il repository **non può modificare da solo il flag GitHub “Allow write access” di una deploy key**: il requisito read-only è documentato in `reports/ARCHITECTURE-SECURITY.md` (sezione Key rotation runbook) e va verificato una volta nelle impostazioni GitHub del repository. La rotazione VAPID è esplicitamente trattata come operazione che richiede nuova sottoscrizione push dei client.
+
+
 <!-- METEONEXA_CURRENT_CONTRACT_START -->
 ## 20.1 RC2 — root pulita, i18n e maintenance deploy
 

@@ -1,0 +1,43 @@
+name: MeteoNexa Dependency Security
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '15 3 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: meteonexa-dependency-security
+  cancel-in-progress: true
+
+jobs:
+  dependency-security:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - name: Root npm vulnerability audit
+        run: npm audit --audit-level=high --omit=optional
+      - name: Browser QA npm vulnerability audit
+        working-directory: qa
+        run: npm audit --audit-level=high --omit=optional
+      - name: Composer dependency audit
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y composer
+          composer audit --locked --no-interaction
+      - name: Trivy repository vulnerability, secret and misconfiguration audit
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: HIGH,CRITICAL
+          scanners: vuln,secret,misconfig
+          ignore-unfixed: true
+          exit-code: '1'

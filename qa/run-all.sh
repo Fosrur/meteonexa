@@ -56,6 +56,7 @@ run_py p4_css_architecture_smoke.py "$ROOT"
 run_py p4_i18n_semantic_smoke.py "$ROOT"
 run_py p4_production_build_smoke.py "$ROOT"
 run_py p5_audit_performance_smoke.py "$ROOT"
+run_py p6_production_ux_security_smoke.py "$ROOT"
 run_py release_candidate_smoke.py "$ROOT"
 run_py privacy_article13_smoke.py
 run_py i18n_ai_home_alert_smoke.py

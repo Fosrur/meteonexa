@@ -10,6 +10,8 @@ db='\n'.join(path.read_text(encoding='utf-8',errors='replace') for path in sorte
 vendor=read('api/vendor-asset.php')
 env=read('.env.example')
 installer=read('install/index.php')
+ht=read('.htaccess')
+compose=read('docker-compose.yml')
 checks={
     'QA admin allowlist is deployment-owned': "getenv('METEONEXA_QA_ADMIN_EMAILS')" in config and "'admin_emails'" in config,
     'no package bootstrap administrator source': 'bootstrap_admin_emails' not in config+diag+db,
@@ -23,6 +25,8 @@ checks={
     'pre-hardening cache names are not reused': 'npm-pinned.js' in vendor and 'npm-pinned.css' in vendor,
     'package integrity is checked before cache write': '$integrityMatches($packageBody' in vendor and 'VENDOR_PACKAGE_INTEGRITY_FAILED' in vendor,
     'installer checks Phar/zlib runtime support': "class_exists('PharData')" in installer and "extension_loaded('zlib')" in installer,
+    'CSP reporting is configured': all(x in ht for x in ('Reporting-Endpoints','Report-To','report-uri /api/csp-report.php','report-to csp-endpoint')) and (root/'api/csp-report.php').is_file(),
+    'worker stays off public proxy network': bool(re.search(r'(?ms)^  worker:.*?^    networks:\n      - backend\n(?=\n|volumes:)', compose)),
 }
 failed=[]
 for name,ok in checks.items():

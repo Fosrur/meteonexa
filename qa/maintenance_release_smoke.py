@@ -12,11 +12,20 @@ on=deploy.find('bash docker/maintenance-mode.sh on'); up=deploy.find('docker com
 if not (0 <= on < up < off): errors.append('deploy maintenance sequence must be on -> container replacement -> off')
 if "trap 'echo \"ERRORE: deploy interrotto con maintenance mode ancora ATTIVA" not in deploy: errors.append('deploy failure maintenance trap missing')
 if 'maintenance.flag' not in mode: errors.append('maintenance helper missing shared flag contract')
-if 'data-i18n="maintenance.title"' not in html or '/js/maintenance.js' not in html or '/css/maintenance.css' not in html: errors.append('maintenance page not absolute folder/i18n based')
+if 'data-i18n="maintenance.title"' not in html or 'js/maintenance.js' not in html or 'css/maintenance.css' not in html: errors.append('maintenance page assets/i18n wiring missing')
+for asset in ('css/maintenance\\.css','js/maintenance\\.js','assets/logo-full\\.png','assets/icons/(?:favicon-32\\.png|favicon\\.ico|apple-touch-icon\\.png|icon-192\\.png)','assets/i18n/'):
+    if asset not in ht: errors.append('maintenance rewrite does not exempt '+asset)
+
+for asset in ('assets/logo-full.png','assets/icons/favicon-32.png','assets/icons/favicon.ico','assets/icons/apple-touch-icon.png'):
+    if not (ROOT/asset).is_file(): errors.append('maintenance branding asset missing '+asset)
+for ref in ('assets/logo-full.png?v=20.1','assets/icons/favicon-32.png?v=20.1','assets/icons/favicon.ico?v=20.1','assets/icons/apple-touch-icon.png?v=20.1'):
+    if ref not in html: errors.append('maintenance branding reference missing '+ref)
+for fallback in ('MeteoNexa è in manutenzione','RILASCIO IN CORSO','Riprova ora','style="min-height:100vh'):
+    if fallback not in html: errors.append('maintenance resilient fallback missing '+fallback)
 if 'bgcolor="#030914"' not in html or 'maintenance-ambient' not in html or 'maintenance-weather-loader' not in html: errors.append('maintenance branded dark fallback/visual shell missing')
 if 'assets/i18n/${language}.json' not in js: errors.append('maintenance runtime does not load i18n catalog')
 if 'maintenance_probe=' not in js or 'setInterval' not in js: errors.append('maintenance auto-recovery probe missing')
-if 'METEONEXA_KEEP_MAINTENANCE' not in deploy: errors.append('deploy cannot retain maintenance through external live smoke')
+if 'METEONEXA_KEEP_MAINTENANCE' not in deploy: errors.append('deploy cannot retain maintenance through internal replacement checks')
 seed=json.loads(text('api/install/translations.json'))['rows']
 keys={r['text_key'] for r in seed}; locales={r['locale'] for r in seed if r['text_key'].startswith('maintenance.')}
 required={'maintenance.kicker','maintenance.title','maintenance.message','maintenance.note','maintenance.retry','maintenance.page_title'}

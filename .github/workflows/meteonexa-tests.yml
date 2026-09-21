@@ -90,7 +90,9 @@ jobs:
           composer install --no-interaction --no-progress --prefer-dist
           npm ci --ignore-scripts --no-audit --no-fund
       - name: PHPStan
-        run: composer analyse
+        run: |
+          composer analyse
+          vendor/bin/phpstan analyse -c phpstan-p6.neon --no-progress --memory-limit=1G
       - name: ESLint, esbuild graph and production frontend build
         run: |
           npm run lint:eslint
@@ -178,6 +180,16 @@ jobs:
           test "$(docker inspect -f '{{.Config.User}}' meteonexa-staging-worker)" = '33:33'
           test "$(docker inspect -f '{{.HostConfig.ReadonlyRootfs}}' meteonexa-staging-worker)" = 'true'
           docker exec meteonexa-staging-web curl -fsS http://127.0.0.1/ >/dev/null
+      - name: Verify maintenance mode surface and assets
+        run: |
+          docker exec meteonexa-staging-web sh -c ': > /var/lib/meteonexa/maintenance.flag'
+          CODE="$(docker exec meteonexa-staging-web curl -sS -o /tmp/maintenance.html -w '%{http_code}' -H 'Accept: text/html' http://127.0.0.1/)"
+          test "$CODE" = '503'
+          docker exec meteonexa-staging-web grep -q 'maintenance-card' /tmp/maintenance.html
+          for path in /css/maintenance.css /js/maintenance.js /assets/logo-full.png /assets/i18n/it.json; do
+            test "$(docker exec meteonexa-staging-web curl -sS -o /dev/null -w '%{http_code}' "http://127.0.0.1$path")" = '200'
+          done
+          docker exec meteonexa-staging-web rm -f /var/lib/meteonexa/maintenance.flag /tmp/maintenance.html
       - name: Cleanup
         if: always()
         run: |

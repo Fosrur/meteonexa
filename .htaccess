@@ -65,7 +65,9 @@ ErrorDocument 504 /api/public-error.php?code=504
   Header always set Cross-Origin-Opener-Policy "same-origin"
   Header always set Cross-Origin-Resource-Policy "same-origin"
   Header always set Strict-Transport-Security "max-age=31536000"
-  Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self'; script-src-attr 'none'; style-src 'self'; style-src-elem 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data: blob: https://gibs.earthdata.nasa.gov https://tiles.openfreemap.org; font-src 'self' data: https://tiles.openfreemap.org; connect-src 'self' data: https://api.open-meteo.com https://archive-api.open-meteo.com https://previous-runs-api.open-meteo.com https://ensemble-api.open-meteo.com https://air-quality-api.open-meteo.com https://marine-api.open-meteo.com https://geocoding-api.open-meteo.com https://tiles.openfreemap.org https://gibs.earthdata.nasa.gov; worker-src 'self' blob:; child-src 'self' blob:; manifest-src 'self'; media-src 'self' blob:; upgrade-insecure-requests"
+  Header always set Reporting-Endpoints "csp-endpoint=\"/api/csp-report.php\""
+  Header always set Report-To "{\"group\":\"csp-endpoint\",\"max_age\":10886400,\"endpoints\":[{\"url\":\"/api/csp-report.php\"}]}"
+  Header always set Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; frame-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self'; script-src-attr 'none'; style-src 'self'; style-src-elem 'self'; style-src-attr 'unsafe-inline'; img-src 'self' data: blob: https://gibs.earthdata.nasa.gov https://tiles.openfreemap.org; font-src 'self' data: https://tiles.openfreemap.org; connect-src 'self' data: https://api.open-meteo.com https://archive-api.open-meteo.com https://previous-runs-api.open-meteo.com https://ensemble-api.open-meteo.com https://air-quality-api.open-meteo.com https://marine-api.open-meteo.com https://geocoding-api.open-meteo.com https://tiles.openfreemap.org https://gibs.earthdata.nasa.gov; worker-src 'self' blob:; child-src 'self' blob:; manifest-src 'self'; media-src 'self' blob:; upgrade-insecure-requests; report-uri /api/csp-report.php; report-to csp-endpoint"
 </IfModule>
 
 <IfModule mod_rewrite.c>
@@ -76,6 +78,10 @@ ErrorDocument 504 /api/public-error.php?code=504
   RewriteCond %{HTTP_ACCEPT} text/html [NC]
   RewriteCond %{REQUEST_URI} !^/maintenance\.html$ [NC]
   RewriteCond %{REQUEST_URI} !^/api/maintenance\.php$ [NC]
+  # Maintenance assets must remain reachable even when a browser sends a broad
+  # Accept header containing text/html. This keeps the branded maintenance UI
+  # styled and translated while the application itself intentionally returns 503.
+  RewriteCond %{REQUEST_URI} !^/(?:css/maintenance\.css|js/maintenance\.js|assets/logo-full\.png|assets/logo\.png|assets/icons/(?:favicon-32\.png|favicon\.ico|apple-touch-icon\.png|icon-192\.png)|assets/i18n/(?:it|en|fr|es|de)\.json)$ [NC]
   RewriteRule ^ api/maintenance.php [L,QSA]
   # Canonical browser navigation: keep a single storage/session origin for the
   # public UI. API/service-worker requests on the apex remain reachable so an older

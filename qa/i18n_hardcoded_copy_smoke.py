@@ -13,7 +13,7 @@ class VisibleTextAudit(HTMLParser):
         super().__init__(convert_charrefs=True)
         self.name=name; self.stack=[]; self.skip=0; self.i18n_skip=0
     def handle_starttag(self, tag, attrs):
-        attrs=dict(attrs); localized=bool(attrs.get('data-i18n-key') or attrs.get('data-i18n-attr')); explicit_skip='data-i18n-skip' in attrs
+        attrs=dict(attrs); localized=bool(attrs.get('data-i18n-key') or attrs.get('data-i18n-attr') or attrs.get('data-i18n')); explicit_skip='data-i18n-skip' in attrs
         parent_localized=self.stack[-1][1] if self.stack else False
         effective=localized or parent_localized
         self.stack.append((tag,effective,explicit_skip))

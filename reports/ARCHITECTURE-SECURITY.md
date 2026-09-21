@@ -87,7 +87,7 @@ The production privacy page was already correct and referenced `dist/js/privacy-
 
 Production delivery is now a separate workflow, `.github/workflows/deploy-production.yml`, triggered by `workflow_run` only after **MeteoNexa QA** has completed successfully for a push to `main`. Keeping CD separate from QA is intentional: `docker/deploy-production.sh` verifies that the QA workflow for the exact SHA is already completed/successful, avoiding a circular "current workflow is still in progress" gate.
 
-The deploy job rejects stale successful runs when `origin/main` has moved, authenticates to the VPS with a dedicated SSH key and pinned `known_hosts`, and invokes the canonical deploy script with the exact tested SHA. The deploy keeps maintenance active through an external live security smoke; only after that smoke succeeds is maintenance removed. If remote deploy or live smoke fails, maintenance remains active by design until a verified rollback/fix.
+The deploy job rejects stale successful runs when `origin/main` has moved, authenticates to the VPS with a dedicated SSH key and pinned `known_hosts`, and invokes the canonical deploy script with the exact tested SHA. The deploy keeps maintenance active through internal replacement and health checks, then releases maintenance immediately before the external live security smoke so the public probe can receive HTTP 200. If that live smoke fails after a successful internal deploy, the workflow restores maintenance automatically. If the remote deploy fails earlier, the deploy script preserves the safe maintenance state only when it had already entered maintenance.
 
 Required GitHub production secrets: `METEONEXA_VPS_HOST`, `METEONEXA_VPS_USER`, `METEONEXA_VPS_PORT` (optional/22), `METEONEXA_VPS_SSH_KEY`, `METEONEXA_VPS_KNOWN_HOSTS`. The SSH key must be dedicated to GitHub Actions and should authorize only the `deploy` account.
 
@@ -100,3 +100,75 @@ A second, stronger contract is now emitted by `modules/esm/bootstrap.mjs`: `mete
 ## Maintenance visual contract
 
 `maintenance.html`, `css/maintenance.css` and `js/maintenance.js` are stable, non-fingerprinted release assets deliberately included in the production image. The page mirrors the MeteoNexa atmospheric/glass visual language, has a dark HTML-level fallback background, uses only `maintenance.*` i18n keys for visible copy, and polls the HTML entry point so it can automatically reload when maintenance ends. Absolute `/css`, `/js` and `/assets` paths make the page independent of the rewritten `api/maintenance.php` URL.
+
+# P0 + P5/P6 stabilization
+
+## Maintenance branding hardening
+
+The maintenance document now mirrors the main app favicon contract (`favicon-32.png`, `favicon.ico`, `apple-touch-icon.png`) and uses the canonical `assets/logo-full.png` lockup. All of those branding assets are explicitly exempted from the maintenance rewrite, and the maintenance QA contract verifies both the files and their HTML references. The maintenance CSS bundle was also de-duplicated so the fallback surface remains small and deterministic.
+
+
+## Implemented in this package
+
+- CSP reporting is first-party through `/api/csp-report.php`, with `Reporting-Endpoints`, `Report-To`, `report-uri` and `report-to`. The endpoint caps payload size and logs only sanitized directive/URL-path signals without query strings or custom client identifiers.
+- The production live security smoke now verifies the CSP reporting contract in addition to HTTPS/TLS/HSTS/CSP/frame/nosniff/referrer/permissions headers.
+- `.github/workflows/dependency-security.yml` runs a separate nightly/manual dependency security lane (root npm, QA npm, Composer and Trivy) independently from deployment.
+- the **Key rotation runbook** section in this document documents separate rotation of VPS→GitHub read-only deploy key, GitHub Actions→VPS SSH key, cron secrets, VAPID and application/SMTP/database secrets.
+- The worker remains attached only to `backend`, never to the public `proxy` network; P0/P6 tests lock this architecture in.
+- Production-like staging now activates `maintenance.flag`, requires HTTP 503 for HTML, and requires HTTP 200 for maintenance CSS, JS, logo and i18n assets before cleanup.
+- Maintenance assets are explicitly exempted from the maintenance rewrite even if a browser sends a broad `Accept` header. The HTML also contains readable/styled fallback content so a transient asset failure does not collapse into the bare page seen during the previous deploy.
+- The welcome language menu now participates in the login layout instead of absolutely overlaying the guest CTA; a Playwright regression checks that the menu stays between the guest button and privacy card.
+- A real-browser performance regression records navigation/resource timings and enforces deliberately broad catastrophe guardrails rather than relying only on source-size budgets.
+- The existing Firefox radar race fix is explicitly locked by P6 (`radarLayerSelectionVersion`).
+- PHPStan keeps the existing level-3 baseline and adds an incremental level-4 lane for the isolated database driver, allowing strictness to increase without forcing a risky whole-backend migration in one release.
+- Existing P3 shell-size budgets remain enforced. No cosmetic shell extraction was performed merely to reduce line counts; further extraction stays opportunistic when those areas are functionally modified.
+
+## Manual production action still required
+
+The repository cannot change GitHub repository settings. Verify once that the **VPS→GitHub Deploy key has “Allow write access” disabled**. This is the only item from this stabilization set that cannot be enforced by source code.
+
+## Validation performed on the package
+
+`qa/run-all.sh` was exercised through the architecture/security/P0-P6/RC/privacy gates; the critical modified gates passed. The remaining i18n/mobile/auth/SQL gates were also run individually and passed. PHP syntax, JS syntax for the new Playwright test, YAML parsing and committed SHA256 verification passed. Full Chromium/Firefox execution and Docker staging maintenance verification are intentionally delegated to GitHub Actions because this build environment does not have the Playwright browsers/Docker release topology available.
+
+# Key rotation runbook
+
+This runbook documents production secret rotation without recording secret values in Git, CI logs, tickets or chat.
+
+## VPS → GitHub repository deploy key
+
+The key installed on the production VPS for `git fetch`/`git pull` must be **read-only** in GitHub. In repository settings, its Deploy key entry must have **Allow write access disabled**.
+
+Rotation procedure:
+1. generate a new dedicated ED25519 key pair for the VPS repository checkout;
+2. place only its public key in GitHub **Settings → Deploy keys** with write access disabled;
+3. install the private key on the VPS with mode `0600` and update the SSH config/identity used by `/opt/apps/meteonexa`;
+4. verify `ssh -T git@github.com` and `git fetch origin main`;
+5. run the complete QA + production deploy;
+6. remove the previous GitHub deploy key only after the new checkout path is proven.
+
+## GitHub Actions → VPS SSH credential
+
+This is a separate credential. Its private key is stored as `METEONEXA_VPS_SSH_KEY` in GitHub Actions secrets and the matching public key is in the VPS user's `authorized_keys`. Rotate it independently, preserve the pinned VPS host key in `METEONEXA_VPS_KNOWN_HOSTS`, and verify one complete deployment before revoking the previous key.
+
+Recommended cadence for both SSH credentials: every 90–180 days and immediately after any suspected exposure.
+
+## Pipeline / push / radar / calibration cron secrets
+
+Rotate the applicable `METEONEXA_*_CRON_SECRET` values independently. Generate at least 32 random bytes per secret and never reuse one secret for another worker.
+
+Procedure: update `.env` on the VPS without committing it, restart only the affected containers through the normal deployment flow, verify worker/diagnostics health, then revoke the old value at the scheduler/caller side.
+
+## VAPID key pair
+
+The VAPID private key is generated and stored in the protected runtime (`vapid.json`), not committed to Git. A VAPID rotation changes the public application-server key and can invalidate existing browser push subscriptions.
+
+Rotate VAPID only for incident response or a planned migration. Back up the runtime first, rotate the key pair in a maintenance window, then require clients to establish fresh push subscriptions and verify delivery before deleting the previous backup.
+
+## Application/runtime and SMTP secrets
+
+Rotate `.app-secret`, SMTP credentials and database credentials only with a tested migration/rollback plan. The application secret protects persisted encrypted material, so replacing it without a migration can make existing encrypted data unreadable.
+
+## Evidence checklist
+
+For every rotation record only: date/time, operator, credential class, reason, new key fingerprint/identifier (never the secret), successful QA/deploy run ID, successful smoke result, and revocation confirmation for the previous credential.

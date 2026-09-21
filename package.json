@@ -8,7 +8,7 @@
     "check:syntax": "node tools/static-analysis.mjs --syntax-only",
     "lint:eslint": "eslint \"modules/esm/**/*.mjs\"",
     "bundle:verify": "node tools/esbuild-verify.mjs",
-    "check:full": "npm run check && npm run check:graph && npm run check:services && npm run check:di && npm run check:shell && npm run check:final && npm run check:p4 && npm run check:p4:backend && npm run check:p4:css && npm run check:p4:i18n && npm run check:p4:build && npm run check:p5 && npm run check:layout && npm run check:maintenance && npm run check:i18n-copy && npm run check:i18n-runtime && npm run check:p2:release && npm run check:rc && npm run lint:eslint && npm run bundle:verify",
+    "check:full": "npm run check && npm run check:graph && npm run check:services && npm run check:di && npm run check:shell && npm run check:final && npm run check:p4 && npm run check:p4:backend && npm run check:p4:css && npm run check:p4:i18n && npm run check:p4:build && npm run check:p5 && npm run check:p6 && npm run check:layout && npm run check:maintenance && npm run check:i18n-copy && npm run check:i18n-runtime && npm run check:p2:release && npm run check:rc && npm run lint:eslint && npm run bundle:verify",
     "build:assets": "python3 tools/fingerprint_assets.py",
     "build": "npm run check && npm run build:production",
     "qa": "bash qa/run-all.sh",
@@ -36,7 +36,8 @@
     "check:p2:release": "python3 qa/p2_release_quality_smoke.py .",
     "check:layout": "python3 qa/architecture_layout_smoke.py .",
     "check:maintenance": "python3 qa/maintenance_release_smoke.py .",
-    "check:deploy-contract": "python3 qa/automatic_deploy_contract_smoke.py"
+    "check:deploy-contract": "python3 qa/automatic_deploy_contract_smoke.py",
+    "check:p6": "python3 qa/p6_production_ux_security_smoke.py ."
   },
   "engines": {
     "node": ">=20.19"
