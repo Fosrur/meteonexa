@@ -484,21 +484,29 @@
         }
         removeAdvancedRadarLayers();
         if (layer === "radar") {
+            appState().radar.presentationLayer = 'radar';
             setRadarMode('live', { notify: false, persist: false });
+            renderRadarMap();
             q('#radar-source').textContent = meteonexaText("advanced.setadvancedradarlayer.observed_librewxr_radar");
             return;
         }
         if (layer === 'forecast') {
+            appState().radar.presentationLayer = 'forecast';
             setRadarMode('forecast', { notify: false, persist: false });
+            appState().radar.index = 0;
+            setRadarFrame(0);
+            renderRadarMap();
             q('#radar-source').textContent = meteonexaText("advanced.setadvancedradarlayer.precipitation_forecast_active");
             return;
         }
         removeRadarVectorLayer();
+        appState().radar.presentationLayer = layer;
         appState().radar.mode = 'live';
         if (layer === 'satellite') {
             const date = satelliteDate(), tiles = `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/${date}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`;
             map.addSource('meteonexa-satellite-source', { type: 'raster', tiles: [tiles], tileSize: 256, maxzoom: 9, attribution: meteonexaText('provider.nasa_gibs') });
             map.addLayer({ id: 'meteonexa-satellite-layer', type: 'raster', source: 'meteonexa-satellite-source', paint: { 'raster-opacity': .82, 'raster-fade-duration': 0 } });
+            map.triggerRepaint?.();
             q('#radar-source').textContent = meteonexaText("advanced.setadvancedradarlayer.nasa_satellite_previous_day");
             return;
         }

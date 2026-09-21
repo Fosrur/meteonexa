@@ -11,7 +11,7 @@ checks={
  'maintenance static assets bypass the maintenance rewrite': all(x in ht for x in ('css/maintenance\\.css','js/maintenance\\.js','assets/logo-full\\.png','assets/i18n/')),
  'maintenance has usable no-JS/no-CSS fallback copy': all(x in maint for x in ('MeteoNexa è in manutenzione','RILASCIO IN CORSO','Riprova ora','id="maintenance-critical"')),
  'maintenance critical branding is self-contained': 'id="maintenance-critical"' in maint and maint.count('data:image/png;base64,') >= 4 and "style-src 'self' 'sha256-" in ht and "style-src-elem 'self' 'sha256-" in ht,
- 'welcome language menu opens downward and scrolls': '#auth-view .welcome-language-menu{position:relative!important' in css and 'bottom:auto!important' in css and 'overflow-y:auto!important' in css and 'max-height:min(176px,24dvh)' in css,
+ 'welcome language menu overlays upward without moving picker and scrolls': '#auth-view .welcome-language-menu{position:absolute!important' in css and 'bottom:calc(100% + 8px)!important' in css and 'overflow-y:auto!important' in css and 'max-height:min(176px,24dvh)' in css,
  'nightly dependency security workflow exists': (ROOT/'.github/workflows/dependency-security.yml').is_file(),
  'browser performance regression is included': (ROOT/'qa/e2e/performance.spec.mjs').is_file(),
  'production-like maintenance assets are tested in staging CI': 'Verify maintenance mode surface and assets' in workflow and 'maintenance.flag' in workflow,

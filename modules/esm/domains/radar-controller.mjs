@@ -95,7 +95,7 @@ export function install(services, host = globalThis) {
                         return false;
                     if (state.radar.vectorRadarFailed && Date.now() < state.radar.vectorRadarRetryAt)
                         return false;
-                    if (state.radar.mode !== 'live') {
+                    if (state.radar.mode !== 'live' || (state.radar.presentationLayer && state.radar.presentationLayer !== 'radar')) {
                         removeRadarVectorLayer();
                         return false;
                     }
@@ -659,8 +659,9 @@ export function install(services, host = globalThis) {
                     const selected = mode === 'forecast' ? 'forecast' : 'live';
                     stopRadarAnimation();
                     state.radar.mode = selected;
+                    state.radar.presentationLayer = selected === 'forecast' ? 'forecast' : 'radar';
                     state.radar.frames = activeRadarFrames();
-                    state.radar.index = Math.max(0, state.radar.frames.length - 1);
+                    state.radar.index = selected === 'forecast' ? 0 : Math.max(0, state.radar.frames.length - 1);
                     if (persist) {
                         state.settings.radarMode = selected;
                         persistLocalSettings();
@@ -696,7 +697,10 @@ export function install(services, host = globalThis) {
                         tiles.replaceChildren();
                         if (state.radar.mode === 'live') {
                             clearForecastCanvas();
-                            syncRadarVectorLayer();
+                            if (!state.radar.presentationLayer || state.radar.presentationLayer === 'radar')
+                                syncRadarVectorLayer();
+                            else
+                                removeRadarVectorLayer();
                         }
                         else {
                             removeRadarVectorLayer();
@@ -984,8 +988,9 @@ export function install(services, host = globalThis) {
                         if (desired === 'forecast' && !forecastOk)
                             desired = liveOk ? 'live' : 'forecast';
                         state.radar.mode = desired;
+                        state.radar.presentationLayer = desired === 'forecast' ? 'forecast' : 'radar';
                         state.radar.frames = activeRadarFrames();
-                        state.radar.index = Math.max(0, state.radar.frames.length - 1);
+                        state.radar.index = desired === 'forecast' ? 0 : Math.max(0, state.radar.frames.length - 1);
                         if (liveOk)
                             setRadarStatus('success', desired === 'live' ? t('radar.connected') : t('radar.background.ready'));
                         else if (forecastOk)
@@ -1047,7 +1052,7 @@ export function install(services, host = globalThis) {
                     $('#radar-frame-label').textContent = state.radar.mode === 'live' ? meteonexaText("radar.observation_value_local_value", { time: timeText, localTime: localTime }) : meteonexaText("radar.forecast_value_local_value", { time: timeText, localTime: localTime });
                     $('#radar-progress-copy').textContent = meteonexaText('radar.radar_frame_value_value', { current: state.radar.index + 1, total: frames.length });
                     updateRadarStats();
-                    if (state.radar.vectorMapReady && state.radar.mode === 'live')
+                    if (state.radar.vectorMapReady && state.radar.mode === 'live' && (!state.radar.presentationLayer || state.radar.presentationLayer === 'radar'))
                         syncRadarVectorLayer({ force: true });
                     renderRadarMap();
                 }

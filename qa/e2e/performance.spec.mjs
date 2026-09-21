@@ -30,7 +30,7 @@ test.describe('production browser performance guardrails', () => {
     if (metrics.transferredBytes > 0) expect(metrics.transferredBytes).toBeLessThan(5_000_000);
   });
 
-  test('welcome language menu opens downward and is independently scrollable', async ({ page }) => {
+  test('welcome language menu opens upward without moving the picker and is independently scrollable', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 760 });
     await prepareStableApp(page, { clearStorage: true });
     await page.goto('/', { waitUntil: 'domcontentloaded' });
@@ -38,6 +38,7 @@ test.describe('production browser performance guardrails', () => {
     await expect(page.locator('#welcome')).toBeVisible();
     const button = page.locator('#welcome-language-button');
     await expect(button).not.toHaveAttribute('data-tooltip', /.+/);
+    const before = await button.boundingBox();
     await button.click();
     const menu = page.locator('#welcome-language-menu');
     await expect(menu).toBeVisible();
@@ -47,15 +48,21 @@ test.describe('production browser performance guardrails', () => {
       const rect = menu?.getBoundingClientRect();
       const style = menu ? getComputedStyle(menu) : null;
       return button && menu && rect && style ? {
+        buttonTop: button.top,
         buttonBottom: button.bottom,
         menuTop: rect.top,
+        menuBottom: rect.bottom,
         menuClientHeight: menu.clientHeight,
         menuScrollHeight: menu.scrollHeight,
         overflowY: style.overflowY,
       } : null;
     });
     expect(layout).not.toBeNull();
-    expect(layout.menuTop).toBeGreaterThanOrEqual(layout.buttonBottom - 1);
+    const after = await button.boundingBox();
+    expect(before).not.toBeNull();
+    expect(after).not.toBeNull();
+    expect(Math.abs(after.y - before.y)).toBeLessThanOrEqual(1);
+    expect(layout.menuBottom).toBeLessThanOrEqual(layout.buttonTop + 1);
     expect(['auto', 'scroll']).toContain(layout.overflowY);
     expect(layout.menuClientHeight).toBeLessThan(layout.menuScrollHeight);
     await menu.evaluate(node => { node.scrollTop = node.scrollHeight; });

@@ -213,6 +213,10 @@ test.describe('MeteoNexa custom controls and loaders', () => {
       await control.click({ trial: true });
       await control.click();
       await expect(control).toHaveClass(/active/);
+      if (selector.includes('forecast')) {
+        await expect(page.locator('#radar-map')).toHaveClass(/forecast-mode/);
+        await expect(page.locator('#radar-progress-copy')).toContainText('1');
+      }
     }
   });
 
