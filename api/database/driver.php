@@ -17,9 +17,9 @@ function meteonexa_mysql_rewrite_sql(string $sql): string
     $sql = preg_replace('/^\s*BEGIN\s+IMMEDIATE\s*;?\s*$/i', 'START TRANSACTION', $sql) ?? $sql;
     $sql = preg_replace('/\bINSERT\s+OR\s+IGNORE\s+INTO\b/i', 'INSERT IGNORE INTO', $sql) ?? $sql;
     if (preg_match('/\s+ON\s+CONFLICT\s*\(([^)]+)\)\s+DO\s+UPDATE\s+SET\s+(.+)$/is', $sql, $match, PREG_OFFSET_CAPTURE)) {
-        $offset = (int)($match[0][1] ?? 0);
+        $offset = (int)$match[0][1];
         $prefix = substr($sql, 0, $offset);
-        $update = trim((string)($match[2][0] ?? ''));
+        $update = trim((string)$match[2][0]);
         // SQLite permits an UPDATE-WHERE clause after the UPSERT assignment
         // list. MySQL performs the same write unconditionally; values are equal
         // in the only MeteoNexa use of this clause (app_version).
