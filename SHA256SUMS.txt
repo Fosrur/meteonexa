@@ -168,8 +168,8 @@ a3944293791a1a21ccc5553f2532ee146fe93a886c9c2af7c64d2a4e7d829830  ./assets/icons
 f4994f934143ffe1c95f515e88c76987a907a233c493d3dbe6c7201003e79aaa  ./composer.json
 24836626fd44a6c43aba11c9f0a82659205f8beff13b26a5ef8abc252793ad0e  ./composer.lock
 293106abcb98dce4e64192ac568f32ab9b0576242a8c7a383175f29ad5e21af2  ./config/quality/php-cs-fixer.php
-0e79c0a960dbcd1aacdb5e2ee2701fcaa2ea4e5677273d6142d9deff4788b319  ./config/quality/phpstan-p6.neon
-63ad823af286f93d30f68521723d6aed66e8cf9de50ca947001585c99a751abf  ./config/quality/phpstan.neon
+5b329da8fa8b0142205b875c5f4b68df3c3f1e3522898b3a0c9490a93ac756aa  ./config/quality/phpstan-p6.neon
+568f1753ea03306f3bbd4715ebbd277c28fad82ee3d57a73522a3e1ee73fd8fa  ./config/quality/phpstan.neon
 36931f173c77be8fd602295fd37c981ee512dfd0d301a0f8854c554a8476e142  ./config/quality/semgrep.yml
 e76d3bc6cc432d7a11287e9f4cfad81545f5f875306d6a4ab3c1ea7a2bde506a  ./cookie-policy.html
 0b369fa3eb461705ddd25ee20070b9b925da548e6b97b524867e3b10fe37c955  ./css/advanced.css
@@ -439,7 +439,7 @@ a8a371909493ba6c6d60609d7f129e29b9e98d3665139c23bf2b9a288a11cd15  ./qa/severe_we
 d5fc7977d7a8c02e974f739e92e4a15d42d81e89285b9425da872f4c161b76b8  ./qa/traffic_analytics_removed_smoke.py
 b341310d07c1f05c8bd510ab563b0cb60693a726024eb084f046728b17a3b289  ./qa/watch_plan_smoke.py
 1fb008a987f994ccb396d0e343ca7958341089fca8bce1be03e617f359d070fc  ./qa/weather_replay_smoke.php
-e014f5de28591a01a5579d7b53e5e4d9e2c9f6eb1280e7643b19dd4559d5df8d  ./readme.md
+fe8a02c7a63540d8a3a5390a80715d5c1d741c6135797b1098357834f7605cda  ./readme.md
 0c367e68ca08bca538114b116d62e65b31a04d399c161003a701aa83018ca468  ./robots.txt
 052f935d8b31949e141bfcaf29ec057a4357cceaec0a95ec92544df95952123d  ./sitemap.xml
 7f9ce627144060a6719a5c48c5e8ed2bc744ab708572b0c8f0f70dc9bcffebac  ./styles/main/00-foundation.css
@@ -468,5 +468,5 @@ b971521ab192419b0df9e4bd4b6d62cc75a03ed8a155ee8a3f78468216d70b3c  ./styles/suite
 b724ac2bbe60f466bb57059fbd30f2046217933bc52105dd75c59ee347cf3c43  ./tools/migrate_semantic_i18n.py
 adf4cf79bfb46bf668397759080979bffe7bf161ab13d85973f08b8f0ea730bb  ./tools/migrate_semantic_i18n_residual.py
 c46b89e7c61c3dc9de3df8cc15b448fe9a933375ef5e681a4156c9992bcb4020  ./tools/static-analysis.mjs
-4dc5cfbfab2c198d819d26a3d69a05d0156187ca4fb61278ce6e605a6502d353  ./tools/update-release-checksums.mjs
+8dcd7dce6419700b41a45eb61d2877073524de1ed9a63b5f7ab6bd6f378efd35  ./tools/update-release-checksums.mjs
 34abfdf04a8ccdf9e065d0baa4eadde9d8b7a88facf80c5ce0c8002776cd6618  ./tools/update-release-checksums.sh

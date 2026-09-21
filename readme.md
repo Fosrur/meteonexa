@@ -23,6 +23,10 @@ Questa è la sezione normativa per lo stato attuale del sorgente. **Versione app
 Il comando autorevole per rigenerare `SHA256SUMS.txt` è `npm run checksums:update`, implementato in Node e quindi utilizzabile anche su Windows senza WSL/Bash. Il controllo in CI resta `npm run checksums:verify`.
 
 Evidenza prima di questa riorganizzazione: **MeteoNexa QA #21** e **MeteoNexa Production Deploy #21** sul commit `496e610a8d01c263e921ad9621894fba396e6a8a` sono terminati con successo; il deploy ha ricreato `web` e `worker`, portato/verificato MySQL a `schema_version=28`, stampato `MYSQL_SCHEMA_PASS actual=28 expected=28`, rimosso la maintenance e superato lo smoke live esterno. Ogni nuovo commit, inclusa questa pulizia della root, deve superare nuovamente gli stessi gate prima di essere considerato production-ready.
+
+### Checksum release cross-platform
+
+Il generatore `tools/update-release-checksums.mjs` calcola gli SHA-256 dai blob presenti nell'indice Git, non dai line ending del working tree locale. In questo modo `npm run checksums:update` produce lo stesso manifest su Windows e Linux ed evita differenze CRLF/LF nei file di configurazione.
 <!-- METEONEXA_CURRENT_CONTRACT_END -->
 
 ## P1 release/documentation hardening — 20 settembre 2026
