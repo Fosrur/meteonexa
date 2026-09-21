@@ -31,6 +31,10 @@ Il generatore `tools/update-release-checksums.mjs` calcola gli SHA-256 dai blob 
 ### Remediation QA punto 9
 
 La classificazione documentale del gate `qa/production_readiness_smoke.py` segue ora la struttura `docs/reports/`: `readme.md` resta l'unico Markdown normativo, mentre i file in `docs/reports/` sono esclusivamente evidenze non normative. Sono stati inoltre rimossi i riferimenti accidentali `docs/docs/reports/` introdotti durante la prima riorganizzazione della root.
+
+### Remediation quality gate dopo riorganizzazione root
+
+I gate P4 sono stati riallineati alla nuova struttura `config/quality/`: `qa/p4_platform_hardening_smoke.py` verifica `config/quality/phpstan.neon` e `qa/p4_backend_maintainability_smoke.py` valida il finder PHP-CS-Fixer relativo alla root tramite `dirname(__DIR__, 2)`. Questo elimina gli ultimi riferimenti ai precedenti file quality collocati direttamente nella root.
 <!-- METEONEXA_CURRENT_CONTRACT_END -->
 
 ## P1 release/documentation hardening — 20 settembre 2026

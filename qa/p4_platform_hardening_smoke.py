@@ -22,7 +22,7 @@ checks = {
     'runtime state uses the documented host bind mount': compose.count('${METEONEXA_RUNTIME_DIR:-./runtime}:/var/lib/meteonexa') >= 2 and 'meteonexa_runtime:' not in compose,
     'installer has a typed exception contract': 'final class MeteoNexaInstallerException' in installer_error and 'translationKey' in installer_error,
     'installer no longer maps public errors by message text': 'str_contains($message' not in installer and 'instanceof MeteoNexaInstallerException' in installer,
-    'PHPStan is configured': 'phpstan/phpstan' in composer and (root / 'phpstan.neon').is_file(),
+    'PHPStan is configured': 'phpstan/phpstan' in composer and (root / 'config/quality/phpstan.neon').is_file(),
     'PHP CS Fixer is configured': 'friendsofphp/php-cs-fixer' in composer and (root / 'config/quality/php-cs-fixer.php').is_file(),
     'Semgrep local rules are configured': 'meteonexa-php-eval' in semgrep and 'semgrep/semgrep:1.169.0' in workflow,
     'Trivy scans source and production image': workflow.count('aquasecurity/trivy-action@v0.36.0') >= 2 and 'image-ref: meteonexa:ci' in workflow,

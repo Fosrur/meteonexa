@@ -76,7 +76,7 @@ if dense_php:
     fail("compressed PHP reintroduced: " + ", ".join(sorted(set(dense_php))))
 
 fixer = (ROOT / "config/quality/php-cs-fixer.php").read_text(encoding="utf-8")
-if "__DIR__ . '/api'" not in fixer:
+if "dirname(__DIR__, 2) . '/api'" not in fixer:
     fail("PHP-CS-Fixer must cover the complete api/ tree")
 
 # Every revision descriptor must declare its version/name/driver contract.
