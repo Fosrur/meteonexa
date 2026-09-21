@@ -18,6 +18,7 @@ checks={
  'worker is backend-only': bool(re.search(r'(?ms)^  worker:.*?^    networks:\n      - backend\n(?=\n|volumes:)', compose)) and 'worker:\n' in compose,
  'P0 contract covers reporting and worker isolation': 'CSP reporting is configured' in p0 and 'worker stays off public proxy network' in p0,
  'radar stale async retries are version-gated': 'radarLayerSelectionVersion' in radar and 'selectionVersion !== radarLayerSelectionVersion' in radar,
+ 'radar and forecast presentation are independent of vector-map readiness': (lambda block: block.find("if (layer === 'radar' || layer === 'forecast')") >= 0 and block.find("if (layer === 'radar' || layer === 'forecast')") < block.find("const map = appState().radar?.vectorMap"))(radar[radar.find('async function setAdvancedRadarLayer'):]),
  'bug recording flushes before stop and keeps local chunks': all(x in app_util for x in ('recorder.requestData?.()','const chunks = []','await new Promise(resolve => setTimeout(resolve, 80))','addBugReportFiles([file])')),
 }
 failed=[name for name,ok in checks.items() if not ok]

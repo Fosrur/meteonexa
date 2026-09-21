@@ -464,6 +464,20 @@
         });
     }
     function satelliteDate() { return dateValue(addDays(new Date(), -1)); }
+    function applyBaseRadarPresentation(layer) {
+        const forecast = layer === 'forecast';
+        removeAdvancedRadarLayers();
+        appState().radar.presentationLayer = forecast ? 'forecast' : 'radar';
+        setRadarMode(forecast ? 'forecast' : 'live', { notify: false, persist: false });
+        if (forecast) {
+            appState().radar.index = 0;
+            setRadarFrame(0);
+        }
+        renderRadarMap();
+        q('#radar-source').textContent = forecast
+            ? meteonexaText("advanced.setadvancedradarlayer.precipitation_forecast_active")
+            : meteonexaText("advanced.setadvancedradarlayer.observed_librewxr_radar");
+    }
     async function setAdvancedRadarLayer(layer, selectionVersion = null, retryCount = 0) {
         if (selectionVersion === null)
             selectionVersion = ++radarLayerSelectionVersion;
@@ -471,6 +485,20 @@
             return;
         activeRadarLayer = layer;
         qa('[data-advanced-radar-layer]').forEach(button => button.classList.toggle('active', button.dataset.advancedRadarLayer === layer));
+
+        // Radar and precipitation forecast must work even while MapLibre is still
+        // initializing or when the app is using the canvas fallback. Apply the UI
+        // state immediately, then re-apply it after ensureRadar(): ensureRadar()
+        // may restore the persisted radarMode while its asynchronous fetch finishes.
+        if (layer === 'radar' || layer === 'forecast') {
+            applyBaseRadarPresentation(layer);
+            await ensureRadar();
+            if (selectionVersion !== radarLayerSelectionVersion)
+                return;
+            applyBaseRadarPresentation(layer);
+            return;
+        }
+
         await ensureRadar();
         if (selectionVersion !== radarLayerSelectionVersion)
             return;
@@ -483,22 +511,6 @@
             return;
         }
         removeAdvancedRadarLayers();
-        if (layer === "radar") {
-            appState().radar.presentationLayer = 'radar';
-            setRadarMode('live', { notify: false, persist: false });
-            renderRadarMap();
-            q('#radar-source').textContent = meteonexaText("advanced.setadvancedradarlayer.observed_librewxr_radar");
-            return;
-        }
-        if (layer === 'forecast') {
-            appState().radar.presentationLayer = 'forecast';
-            setRadarMode('forecast', { notify: false, persist: false });
-            appState().radar.index = 0;
-            setRadarFrame(0);
-            renderRadarMap();
-            q('#radar-source').textContent = meteonexaText("advanced.setadvancedradarlayer.precipitation_forecast_active");
-            return;
-        }
         removeRadarVectorLayer();
         appState().radar.presentationLayer = layer;
         appState().radar.mode = 'live';
