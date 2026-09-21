@@ -50,7 +50,9 @@ gzip -dc "$BACKUP_DIR/mysql.sql.gz" | docker exec -i "$CID" sh -lc 'export MYSQL
 
 DB_NAME="$(sed -n 's/^mysql_database=//p' "$BACKUP_DIR/metadata.txt" | head -1)"
 [ -n "$DB_NAME" ] || DB_NAME=meteonexa
+SCHEMA_SOURCE="$(sed -n 's/^schema_source=//p' "$BACKUP_DIR/metadata.txt" | head -1)"
+[[ "$SCHEMA_SOURCE" =~ ^[0-9]+$ ]] || { echo "ERRORE: metadata backup senza schema_source valido: ${SCHEMA_SOURCE:-<vuoto>}" >&2; exit 7; }
 SCHEMA="$(docker exec -e DB_NAME="$DB_NAME" "$CID" sh -lc 'export MYSQL_PWD="$MYSQL_ROOT_PASSWORD"; mysql -N -B -uroot "$DB_NAME" -e "SELECT meta_value FROM app_metadata WHERE meta_key=\"schema_version\" LIMIT 1"' 2>/dev/null || true)"
-[ "$SCHEMA" = "28" ] || { echo "ERRORE: restore MySQL riuscito ma schema_version=$SCHEMA (atteso 28)." >&2; exit 7; }
+[ "$SCHEMA" = "$SCHEMA_SOURCE" ] || { echo "ERRORE: restore MySQL riuscito ma schema_version=$SCHEMA (sorgente backup $SCHEMA_SOURCE)." >&2; exit 7; }
 
 printf '%s\n' 'RESTORE DRILL PASS: checksum, runtime extract e import MySQL 8.4 verificati su ambiente temporaneo.'

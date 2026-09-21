@@ -8,12 +8,16 @@ def need(ok,msg):
     if not ok: errors.append(msg)
 def read(p): return (ROOT/p).read_text(encoding='utf-8')
 
-suite=read('js/suite.js'); support=read('modules/esm/domains/suite-support.mjs'); deploy=read('docker/deploy-production.sh'); ci=read('docker/verify-ci-green.sh'); index=read('index.html'); bootstrap=read('modules/esm/bootstrap.mjs'); readme=read('readme.md')
+suite=read('js/suite.js'); support=read('modules/esm/domains/suite-support.mjs'); deploy=read('docker/deploy-production.sh'); ci=read('docker/verify-ci-green.sh'); mysql_verify=read('docker/verify-mysql.sh'); dockerfile=read('Dockerfile'); compose=read('docker-compose.yml'); index=read('index.html'); bootstrap=read('modules/esm/bootstrap.mjs'); readme=read('readme.md')
 need('window.print()' not in suite and 'window.print()' not in support,'history PDF still delegates to window.print()')
 need('exportHistoryPdf(suite.history)' in suite,'history PDF button is not wired to the PDF exporter')
 for token in ['function exportHistoryPdf(history)', "type: 'application/pdf'", 'a.download = `meteonexa-history-${history.start}-${history.end}.pdf`']:
     need(token in support,'real history PDF export missing: '+token)
 need('bash docker/verify-ci-green.sh "$DEPLOY_SHA"' in deploy,'production deploy does not require green CI for exact SHA')
+need('meteonexa_current_schema_version()' in mysql_verify and '[ "$ACTUAL_SCHEMA" = "$EXPECTED_SCHEMA" ]' in mysql_verify,'MySQL post-deploy verification is not a real current-schema gate')
+need('org.opencontainers.image.revision' in dockerfile and dockerfile.count('METEONEXA_BUILD_SHA') >= 3,'Docker image revision provenance label/env missing')
+need(compose.count('METEONEXA_BUILD_SHA: ${METEONEXA_BUILD_SHA:-unknown}') >= 2,'web/worker build SHA args missing from compose')
+need('METEONEXA_BUILD_SHA="$DEPLOY_SHA" docker compose build --pull web worker' in deploy and 'CONTAINER_PROVENANCE_PASS' in deploy and deploy.count('org.opencontainers.image.revision') >= 2,'post-deploy container SHA provenance gate missing')
 for token in ['actions/workflows/$WORKFLOW_FILE/runs?head_sha=$SHA','status!=\'completed\'','conclusion!=\'success\'']:
     # tolerate shell/python spacing for status/conclusion checks
     if token.startswith('status'):

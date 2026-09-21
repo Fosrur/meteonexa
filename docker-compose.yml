@@ -28,6 +28,8 @@ services:
   web:
     build:
       context: .
+      args:
+        METEONEXA_BUILD_SHA: ${METEONEXA_BUILD_SHA:-unknown}
     container_name: ${METEONEXA_WEB_CONTAINER_NAME:-meteonexa-web}
     restart: unless-stopped
     environment: &meteonexa_env
@@ -99,6 +101,8 @@ services:
   worker:
     build:
       context: .
+      args:
+        METEONEXA_BUILD_SHA: ${METEONEXA_BUILD_SHA:-unknown}
     container_name: ${METEONEXA_WORKER_CONTAINER_NAME:-meteonexa-worker}
     restart: unless-stopped
     user: "33:33"

@@ -12,6 +12,10 @@ RUN npm run build:production
 
 FROM php:8.3-apache
 
+ARG METEONEXA_BUILD_SHA=unknown
+LABEL org.opencontainers.image.revision="${METEONEXA_BUILD_SHA}"
+ENV METEONEXA_RELEASE_SHA="${METEONEXA_BUILD_SHA}"
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \

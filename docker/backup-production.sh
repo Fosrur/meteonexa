@@ -12,6 +12,12 @@ RUNTIME_DIR="${METEONEXA_RUNTIME_DIR:-./runtime}"
 
 docker compose ps --status running db | grep -q . || { echo 'ERRORE: container db non attivo.' >&2; exit 1; }
 
+SCHEMA_SOURCE="$(docker compose exec -T db sh -lc '
+  export MYSQL_PWD="$MYSQL_PASSWORD"
+  exec mysql -N -B --user="$MYSQL_USER" "$MYSQL_DATABASE" -e "SELECT meta_value FROM app_metadata WHERE meta_key=\"schema_version\" LIMIT 1"
+' | tr -d '\r' | head -n 1)"
+[[ "$SCHEMA_SOURCE" =~ ^[0-9]+$ ]] || { echo "ERRORE: schema_version sorgente non valido: ${SCHEMA_SOURCE:-<vuoto>}" >&2; exit 1; }
+
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 BACKUP_ROOT="${METEONEXA_BACKUP_DIR:-./backups}"
 DEST="${1:-$BACKUP_ROOT/$STAMP}"
@@ -54,6 +60,7 @@ test -s "$DEST/runtime.tar.gz" || { echo 'ERRORE: archivio runtime vuoto.' >&2; 
 {
   printf 'created_utc=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
   printf 'app_version=20.1\n'
+  printf 'schema_source=%s\n' "$SCHEMA_SOURCE"
   printf 'schema_expected=28\n'
   printf 'runtime_source=%s\n' "$RUNTIME_DIR"
   printf 'mysql_database=%s\n' "$MYSQL_DATABASE"
