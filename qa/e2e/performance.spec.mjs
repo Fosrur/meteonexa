@@ -30,26 +30,35 @@ test.describe('production browser performance guardrails', () => {
     if (metrics.transferredBytes > 0) expect(metrics.transferredBytes).toBeLessThan(5_000_000);
   });
 
-  test('welcome language menu never covers the guest CTA', async ({ page }) => {
+  test('welcome language menu opens downward and is independently scrollable', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 760 });
     await prepareStableApp(page, { clearStorage: true });
     await page.goto('/', { waitUntil: 'domcontentloaded' });
     await waitForMeteoNexaReady(page);
     await expect(page.locator('#welcome')).toBeVisible();
-    await page.locator('#welcome-language-button').click();
-    await expect(page.locator('#welcome-language-menu')).toBeVisible();
-    const boxes = await page.evaluate(() => {
-      const guest = document.querySelector('#guest-login')?.getBoundingClientRect();
-      const menu = document.querySelector('#welcome-language-menu')?.getBoundingClientRect();
-      const security = document.querySelector('#auth-view .auth-security')?.getBoundingClientRect();
-      return guest && menu && security ? {
-        guestBottom: guest.bottom,
-        menuTop: menu.top,
-        menuBottom: menu.bottom,
-        securityTop: security.top,
+    const button = page.locator('#welcome-language-button');
+    await expect(button).not.toHaveAttribute('data-tooltip', /.+/);
+    await button.click();
+    const menu = page.locator('#welcome-language-menu');
+    await expect(menu).toBeVisible();
+    const layout = await page.evaluate(() => {
+      const button = document.querySelector('#welcome-language-button')?.getBoundingClientRect();
+      const menu = document.querySelector('#welcome-language-menu');
+      const rect = menu?.getBoundingClientRect();
+      const style = menu ? getComputedStyle(menu) : null;
+      return button && menu && rect && style ? {
+        buttonBottom: button.bottom,
+        menuTop: rect.top,
+        menuClientHeight: menu.clientHeight,
+        menuScrollHeight: menu.scrollHeight,
+        overflowY: style.overflowY,
       } : null;
     });
-    expect(boxes).not.toBeNull();
-    expect(boxes.menuTop).toBeGreaterThanOrEqual(boxes.guestBottom - 1);
-    expect(boxes.menuBottom).toBeLessThanOrEqual(boxes.securityTop + 1);
+    expect(layout).not.toBeNull();
+    expect(layout.menuTop).toBeGreaterThanOrEqual(layout.buttonBottom - 1);
+    expect(['auto', 'scroll']).toContain(layout.overflowY);
+    expect(layout.menuClientHeight).toBeLessThan(layout.menuScrollHeight);
+    await menu.evaluate(node => { node.scrollTop = node.scrollHeight; });
+    await expect(page.locator('[data-language-option="de"]')).toBeVisible();
   });
 });

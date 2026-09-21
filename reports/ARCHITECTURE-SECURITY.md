@@ -172,3 +172,16 @@ Rotate `.app-secret`, SMTP credentials and database credentials only with a test
 ## Evidence checklist
 
 For every rotation record only: date/time, operator, credential class, reason, new key fingerprint/identifier (never the secret), successful QA/deploy run ID, successful smoke result, and revocation confirmation for the previous credential.
+
+## P6 final UX reliability hardening
+
+- The login language selector always expands **below** its trigger. The option list has a bounded height and its own vertical scrolling, so it cannot grow beyond the phone viewport or reopen upward over the guest CTA.
+- The login language trigger no longer shows the redundant floating tooltip while the listbox is open; the accessible `aria-label` remains.
+- The maintenance document embeds the exact MeteoNexa full logo, favicon/touch icon and the complete critical maintenance stylesheet. External maintenance assets remain available as progressive enhancement and are still probed in production-like CI.
+- The inline maintenance stylesheet is authorized with a SHA-256 CSP hash rather than by enabling unrestricted inline styles.
+
+## P6 stabilization addendum
+
+- Login language selector opens downward inside the card and uses a bounded, scrollable list instead of covering the guest CTA.
+- Maintenance critical branding is self-contained so the release screen keeps logo/favicon/critical presentation even while application assets are transitioning.
+- Bug-report screen recording explicitly flushes MediaRecorder data before stop, preserves chunks per recording, and has a Chromium/Firefox regression test for “Ferma e allega”.

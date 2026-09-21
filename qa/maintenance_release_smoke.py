@@ -18,9 +18,10 @@ for asset in ('css/maintenance\\.css','js/maintenance\\.js','assets/logo-full\\.
 
 for asset in ('assets/logo-full.png','assets/icons/favicon-32.png','assets/icons/favicon.ico','assets/icons/apple-touch-icon.png'):
     if not (ROOT/asset).is_file(): errors.append('maintenance branding asset missing '+asset)
-for ref in ('assets/logo-full.png?v=20.1','assets/icons/favicon-32.png?v=20.1','assets/icons/favicon.ico?v=20.1','assets/icons/apple-touch-icon.png?v=20.1'):
-    if ref not in html: errors.append('maintenance branding reference missing '+ref)
-for fallback in ('MeteoNexa è in manutenzione','RILASCIO IN CORSO','Riprova ora','style="min-height:100vh'):
+if 'id="maintenance-critical"' not in html: errors.append('maintenance embedded critical CSS missing')
+if html.count('data:image/png;base64,') < 4: errors.append('maintenance embedded logo/favicon fallback missing')
+if "style-src 'self' 'sha256-" not in ht or "style-src-elem 'self' 'sha256-" not in ht: errors.append('maintenance critical CSS CSP hash missing')
+for fallback in ('MeteoNexa è in manutenzione','RILASCIO IN CORSO','Riprova ora','id="maintenance-critical"'):
     if fallback not in html: errors.append('maintenance resilient fallback missing '+fallback)
 if 'bgcolor="#030914"' not in html or 'maintenance-ambient' not in html or 'maintenance-weather-loader' not in html: errors.append('maintenance branded dark fallback/visual shell missing')
 if 'assets/i18n/${language}.json' not in js: errors.append('maintenance runtime does not load i18n catalog')

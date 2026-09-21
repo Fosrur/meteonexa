@@ -186,7 +186,7 @@ jobs:
           CODE="$(docker exec meteonexa-staging-web curl -sS -o /tmp/maintenance.html -w '%{http_code}' -H 'Accept: text/html' http://127.0.0.1/)"
           test "$CODE" = '503'
           docker exec meteonexa-staging-web grep -q 'maintenance-card' /tmp/maintenance.html
-          for path in /css/maintenance.css /js/maintenance.js /assets/logo-full.png /assets/i18n/it.json; do
+          for path in /css/maintenance.css /js/maintenance.js /assets/logo-full.png /assets/icons/favicon-32.png /assets/i18n/it.json; do
             test "$(docker exec meteonexa-staging-web curl -sS -o /dev/null -w '%{http_code}' "http://127.0.0.1$path")" = '200'
           done
           docker exec meteonexa-staging-web rm -f /var/lib/meteonexa/maintenance.flag /tmp/maintenance.html
