@@ -29,10 +29,25 @@ test -s "$DEST/mysql.sql.gz" || { echo 'ERRORE: dump MySQL vuoto.' >&2; exit 1; 
 printf '%s\n' 'Backup runtime applicativo...'
 RUNTIME_PARENT="$(cd "$(dirname "$RUNTIME_DIR")" && pwd -P)"
 RUNTIME_BASE="$(basename "$RUNTIME_DIR")"
-tar -C "$RUNTIME_PARENT" \
-  --exclude="$RUNTIME_BASE/*.lock" \
-  --exclude="$RUNTIME_BASE/*.pid" \
-  -czf "$DEST/runtime.tar.gz" "$RUNTIME_BASE"
+WEB_ID="$(docker compose ps -q --status running web 2>/dev/null || true)"
+
+if [ -n "$WEB_ID" ]; then
+  RUNTIME_COPY="$(mktemp -d)"
+  trap 'rm -rf "$RUNTIME_COPY"' EXIT INT TERM
+  mkdir -p "$RUNTIME_COPY/$RUNTIME_BASE"
+  docker cp "$WEB_ID:/var/lib/meteonexa/." "$RUNTIME_COPY/$RUNTIME_BASE/"
+  tar -C "$RUNTIME_COPY" \
+    --exclude="$RUNTIME_BASE/*.lock" \
+    --exclude="$RUNTIME_BASE/*.pid" \
+    -czf "$DEST/runtime.tar.gz" "$RUNTIME_BASE"
+  rm -rf "$RUNTIME_COPY"
+  trap - EXIT INT TERM
+else
+  tar -C "$RUNTIME_PARENT" \
+    --exclude="$RUNTIME_BASE/*.lock" \
+    --exclude="$RUNTIME_BASE/*.pid" \
+    -czf "$DEST/runtime.tar.gz" "$RUNTIME_BASE"
+fi
 
 test -s "$DEST/runtime.tar.gz" || { echo 'ERRORE: archivio runtime vuoto.' >&2; exit 1; }
 

@@ -9,6 +9,7 @@ checks={
  'runtime is parameterized host bind for web+worker': compose.count('${METEONEXA_RUNTIME_DIR:-./runtime}:/var/lib/meteonexa')>=2,
  'mysql remains a named volume':'meteonexa_mysql:/var/lib/mysql' in compose and 'meteonexa_mysql:' in compose,
  'backup includes runtime mysql metadata and checksum':all(x in backup for x in ('runtime.tar.gz','mysql.sql.gz','metadata.txt','SHA256SUMS','sha256sum')),
+ 'protected production runtime is copied through the running web container':all(x in backup for x in ('docker compose ps -q --status running web','docker cp','/var/lib/meteonexa/.','RUNTIME_COPY')),
  'restore consumes the canonical compressed backup format':all(x in restore for x in ('METEONEXA_RESTORE_CONFIRM','verify-backup-restore.sh','runtime.tar.gz','mysql.sql.gz')),
  'legacy restore command delegates to canonical restore':'restore-production-backup.sh' in wrapper,
  'staging uses exactly production compose with isolated runtime':all(x in staging for x in ('docker compose --env-file','COMPOSE_PROJECT_NAME','METEONEXA_RUNTIME_DIR','./runtime-staging')) and '-f docker-compose' not in staging,
