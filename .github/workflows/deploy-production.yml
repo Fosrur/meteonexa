@@ -26,6 +26,7 @@ jobs:
       VPS_HOST: ${{ secrets.METEONEXA_VPS_HOST }}
       VPS_USER: ${{ secrets.METEONEXA_VPS_USER }}
       VPS_PORT: ${{ secrets.METEONEXA_VPS_PORT }}
+      REPOSITORY: ${{ github.repository }}
     steps:
       - name: Checkout exact successful QA commit
         uses: actions/checkout@v4
@@ -64,7 +65,7 @@ jobs:
           PORT="${VPS_PORT:-22}"
           ssh -i ~/.ssh/meteonexa_prod -o IdentitiesOnly=yes -o BatchMode=yes -p "$PORT" \
             "$VPS_USER@$VPS_HOST" \
-            "cd /opt/apps/meteonexa && METEONEXA_KEEP_MAINTENANCE=1 bash docker/deploy-production.sh '$DEPLOY_SHA'"
+            "cd /opt/apps/meteonexa && METEONEXA_GITHUB_REPOSITORY='$REPOSITORY' METEONEXA_KEEP_MAINTENANCE=1 bash docker/deploy-production.sh '$DEPLOY_SHA'"
 
       - name: External live production security smoke
         shell: bash

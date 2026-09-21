@@ -25,6 +25,8 @@ else:
     require(text, 'docker/maintenance-mode.sh off', 'maintenance release step missing')
     require(text, 'METEONEXA_VPS_SSH_KEY', 'dedicated VPS SSH secret missing')
     require(text, 'METEONEXA_VPS_KNOWN_HOSTS', 'pinned VPS host key secret missing')
+    require(text, 'REPOSITORY: ${{ github.repository }}', 'GitHub repository identity must be exported by workflow')
+    require(text, "METEONEXA_GITHUB_REPOSITORY='$REPOSITORY'", 'deploy must pass repository identity to CI verifier on VPS')
 
 if deploy.is_file():
     text = deploy.read_text(encoding='utf-8')
