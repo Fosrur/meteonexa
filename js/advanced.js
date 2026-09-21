@@ -21,7 +21,7 @@
     const historyState = { data: null, accuracy: null, request: null };
     const routeState = { points: [], request: null };
     let activeRadarLayer = "radar";
-    let radarLayerRetryCount = 0;
+    let radarLayerSelectionVersion = 0;
     const q = (selector, root = document) => root.querySelector(selector);
     const qa = (selector, root = document) => [...root.querySelectorAll(selector)];
     // Advanced is loaded after js/app.js, but production must fail closed if a
@@ -464,23 +464,24 @@
         });
     }
     function satelliteDate() { return dateValue(addDays(new Date(), -1)); }
-    async function setAdvancedRadarLayer(layer) {
+    async function setAdvancedRadarLayer(layer, selectionVersion = null, retryCount = 0) {
+        if (selectionVersion === null)
+            selectionVersion = ++radarLayerSelectionVersion;
+        if (selectionVersion !== radarLayerSelectionVersion)
+            return;
         activeRadarLayer = layer;
         qa('[data-advanced-radar-layer]').forEach(button => button.classList.toggle('active', button.dataset.advancedRadarLayer === layer));
         await ensureRadar();
+        if (selectionVersion !== radarLayerSelectionVersion)
+            return;
         const map = appState().radar?.vectorMap;
         if (!map || !appState().radar.vectorMapReady) {
-            if (radarLayerRetryCount < 8) {
-                radarLayerRetryCount += 1;
-                setTimeout(() => setAdvancedRadarLayer(layer), 650);
-            }
-            else {
-                radarLayerRetryCount = 0;
+            if (retryCount < 8)
+                setTimeout(() => setAdvancedRadarLayer(layer, selectionVersion, retryCount + 1), 650);
+            else
                 toast(meteonexaText("advanced.setadvancedradarlayer.unavailable"), meteonexaText("advanced.setadvancedradarlayer.map_not_ready_yet_try_again_shortly"), 'warning');
-            }
             return;
         }
-        radarLayerRetryCount = 0;
         removeAdvancedRadarLayers();
         if (layer === "radar") {
             setRadarMode('live', { notify: false, persist: false });
