@@ -60,6 +60,7 @@ jobs:
           chmod 600 ~/.ssh/meteonexa_prod ~/.ssh/known_hosts
 
       - name: Deploy exact SHA with maintenance retained
+        id: deploy
         shell: bash
         run: |
           PORT="${VPS_PORT:-22}"
@@ -67,11 +68,7 @@ jobs:
             "$VPS_USER@$VPS_HOST" \
             "cd /opt/apps/meteonexa && METEONEXA_GITHUB_REPOSITORY='$REPOSITORY' METEONEXA_KEEP_MAINTENANCE=1 bash docker/deploy-production.sh '$DEPLOY_SHA'"
 
-      - name: External live production security smoke
-        shell: bash
-        run: python3 qa/live_security_check.py https://www.meteonexa.com/
-
-      - name: Release maintenance after live smoke
+      - name: Release maintenance for external live smoke
         shell: bash
         run: |
           PORT="${VPS_PORT:-22}"
@@ -79,9 +76,23 @@ jobs:
             "$VPS_USER@$VPS_HOST" \
             "cd /opt/apps/meteonexa && bash docker/maintenance-mode.sh off"
 
-      - name: Keep maintenance active on failed release
-        if: failure()
+      - name: External live production security smoke
+        id: live_smoke
+        shell: bash
+        run: python3 qa/live_security_check.py https://www.meteonexa.com/
+
+      - name: Restore maintenance on failed live smoke
+        if: failure() && steps.deploy.outcome == 'success'
         shell: bash
         run: |
-          echo "Production deployment failed. Maintenance intentionally remains active if deployment had started."
-          echo "After verified rollback/fix: cd /opt/apps/meteonexa && bash docker/maintenance-mode.sh off"
+          PORT="${VPS_PORT:-22}"
+          ssh -i ~/.ssh/meteonexa_prod -o IdentitiesOnly=yes -o BatchMode=yes -p "$PORT" \
+            "$VPS_USER@$VPS_HOST" \
+            "cd /opt/apps/meteonexa && bash docker/maintenance-mode.sh on"
+
+      - name: Keep maintenance state on failed deployment
+        if: failure() && steps.deploy.outcome != 'success'
+        shell: bash
+        run: |
+          echo "Production deployment failed before the external live smoke."
+          echo "The deploy script keeps maintenance active only if it had already entered maintenance mode."
