@@ -11,7 +11,7 @@ c70e171b89857ee7dd07078cd0b63392e0188be51c2a01ac7c58170d21e65243  ./.htaccess
 9e59ab4eb3002a58b2a4624553734728e9d40382da1a8901e41ef214ff4452ca  ./.php-cs-fixer.dist.php
 36931f173c77be8fd602295fd37c981ee512dfd0d301a0f8854c554a8476e142  ./.semgrep.yml
 a390584903816dcba203fbe8fd3a200d4aa9538593f0913fe5de5d67ccc40d0b  ./.trivyignore
-1da48c034efd00e6057983f67844dd92f981fdeb3c7a255ec8b43c6248b7c974  ./Dockerfile
+d23582ada168a90b0daabcd3245f16f6bcf225ad7abb5ff06455abde1b7d9e40  ./Dockerfile
 ee4fddbfe5d24df10f8706d5d7a753b34479fc5fe407fb2525ea44382a62956d  ./api/.htaccess
 166ea3356a4207aa812de61fcf4b3255179595f2f575bab8e7271dfa5ba91afd  ./api/SmtpMailer.php
 3aaa4d9b477b65986d99e27ffb2270072e0cf502bdf68aeb97f26a85f078631b  ./api/account/account_helpers.php
@@ -191,7 +191,9 @@ cd00f78ec4fc7d9682145914359782b159c361aa1eb7e34b89d5e17de590176e  ./dist/css/dec
 c28cbfbc9f2ea96a50069c4a41781e1456adf6a6669a1d884556c3e3a4089c26  ./dist/css/intelligence.c28cbfbc9f2e.css
 775839eb1e783dd79d796c452ec3d3c92a4fe5d1544a63e3b7a0fa16be4f9512  ./dist/css/light-theme.775839eb1e78.css
 69fd72a2a46f0a07453401578487b707d014f71859248135a4ea3895485091d2  ./dist/css/standalone.69fd72a2a46f.css
+195d543927d908aa0be891733e02d821fd0e951a776eb16718e5a69b93777fd9  ./dist/css/styles.195d543927d9.css
 35b387af3022614963d04bcb83abf04966f8f439bd42f3ff39495d51499a69ed  ./dist/css/styles.35b387af3022.css
+5f0e63f92c8458b45119620be976aac73915e17858aa589ef45793c6b94d0397  ./dist/css/styles.5f0e63f92c84.css
 6c336b04fc19a6598ba2eadab57d5bb202f26d5fc2988f38f5b9efe08247d3ce  ./dist/css/suite.6c336b04fc19.css
 5a1224731877e4a3ea58f284a2ca14931cc9fc10f533d340c5dc31a8789ddd8e  ./dist/css/watch-plan.5a1224731877.css
 1ebd4aca18a30327e4c2c31fc832f6fadbd2297fb4e9861dfe25db5fecc92adb  ./dist/diagnostics/diagnostics.1ebd4aca18a3.css
@@ -224,6 +226,7 @@ c70598789e25e606cbae11394b0b19eb0360022281ccb759f38ba871575393b1  ./dist/modules
 9f4bc2833b1f944b7f6b373053906d53c05176c113316f714ba059846292dbea  ./dist/modules/esm/domains/ai.9f4bc2833b1f.mjs
 e98eda3b4fed65b483a924b839e7577be5b9165ee48c814f74fa409f3fd39501  ./dist/modules/esm/domains/alerts.e98eda3b4fed.mjs
 b2886d8416b3b8ae7ca501143e08b65238fa1081d9b3b38b0465d2c459085161  ./dist/modules/esm/domains/app-lifecycle.b2886d8416b3.mjs
+419e5eacb52ad53bd6d7672a0ef5aaeb0dfa6683da048ba8dcccd26a80ba2ba9  ./dist/modules/esm/domains/app-utilities.419e5eacb52a.mjs
 b6d7c29b6f0859a3b68c5fb7b9735702de097889b09df2f91a83300835fd9e9c  ./dist/modules/esm/domains/app-utilities.b6d7c29b6f08.mjs
 fbdaacf9c0fa8fbacdd9f6b35a19fd0998aa121347346261ed99e05b64355e20  ./dist/modules/esm/domains/auth-flow.fbdaacf9c0fa.mjs
 91fde798c5c2e6daf2d5ed95a3c6d0315a0e8e175b1193100fa62aca9ab9509b  ./dist/modules/esm/domains/auth.91fde798c5c2.mjs
@@ -250,12 +253,12 @@ c4a6126c5a4ab5d273f69047d04fd217a22bdf8f2a9e81789e9641dafa4f8798  ./dist/modules
 f7591d909a4f257883a338192ef68fffe57aeffcb408fec29332e6e640b3598a  ./dist/modules/esm/features/watch-plan.f7591d909a4f.mjs
 269ad8277a933943053e0fb2e8274a721b8ec6415846ff5c0bf63fbcd7c691a8  ./dist/qa/qa.269ad8277a93.css
 2fdf8f061a7be2b62b944a54bf54e35d3c90515c56bb591e04564bca45c3cfb0  ./dist/qa/qa.2fdf8f061a7b.js
-b8349c9bb0a6b0f0a88304bd92d9c4a96cec05e66d072ef37a61ea023a7d903b  ./docker-compose.yml
+1d3c5dd6377ed8bfcecc6b3e6ba3514622728522b3870ac845ef0bfd43e0264c  ./docker-compose.yml
 55e5ea4475552a139d5a62741804e9c15f7ff9c6a8498f06497ac2ea20b202e9  ./docker/apache-vhost.conf
-2797000bfeca1ff7c8647abe868ffc3012ef08b290c2b10f499c76e677a54ddc  ./docker/backup-production.sh
+4d431ab731c8aa83fabc7a7f3f357e0a6e1bf760f04fdb586225448b40b3789c  ./docker/backup-production.sh
 2b910b31b144c2c861c3413a44b7c56ef515b6e013164e5000fd409d44eb65c9  ./docker/configure-smtp.sh
 9d474f3adf2279f9de354c254badd1e05c839f10b07ae8c128fbdbd4e22f1ef8  ./docker/container-entrypoint.sh
-97d574a5fe6006d274d1681e69de11b567ad34817931cb0918c52487aa708077  ./docker/deploy-production.sh
+c054486287788a5adb656203866485a404fe54aa5a908df5a4bdce3c153520c7  ./docker/deploy-production.sh
 af7949762de8e78fc11a4d8304eb93e8c5f7be6c9aa1f2c0e6d7d826c8e1c1cc  ./docker/disable-installer.sh
 61a95f2ed214842d20e247e351696718b022aac957760885106d0f79c4167314  ./docker/enable-installer.sh
 84efa10b8b6091be36d36cc9a457a7d199fa2302cb20c0bfbef14cd9710664f7  ./docker/init-env.sh
@@ -267,9 +270,9 @@ d27f6caf3b68d6a390c754e512cf3a12f8b315a677841ac574c392707f440324  ./docker/resto
 5ab7f12e1cc6d20691025d6aac546835f2b9496f770888bf74019ce145bef572  ./docker/restore-production.sh
 d93445dfdd56d222c4b82ed7ab43a0b0b1f1b36c84cad6cb4c96d33aa66f9ac8  ./docker/restore-runtime.sh
 8653549838a3c4054cff56087806e02dbd63aec6eb6ca3b94be140a7e96812a8  ./docker/staging-up.sh
-ce37a78ac4625cfd274df4210738e04aecfaf0d66936a04002bffbdb77caa170  ./docker/verify-backup-restore.sh
+6c0e9fef4b27383a8dde5aa004f9812a9139250c672cbbb093380f02e4aa020f  ./docker/verify-backup-restore.sh
 7ddeeb1cc81776bb61947514db350974b0ef78a0698ec0615adb65a458ad9723  ./docker/verify-ci-green.sh
-a4961f7caa78991a687f0aaaa9fa5c8920973158a77b5643090dcbdafd9155e4  ./docker/verify-mysql.sh
+97e11019c15b57a833a7abfbaaa2b180d6df385240856d5617a438f8f428badb  ./docker/verify-mysql.sh
 d15a7978c3879d9ec12453dd7ad14ed751c0ec6dd410ceae9ffa8f58c4d89840  ./docker/worker-loop.sh
 d42455210fafdb406f41f7cc288d17ebc4345fd229fa0cc8f64c9ab4eebe1a26  ./eslint.config.mjs
 3d3ed5678c67e92e68d7041df3bfbd17508102d1144712b0f1b1b172923bc0b8  ./index.html
@@ -346,7 +349,7 @@ d2a638c06adb311bb4dc0ac3ee3d64bec69fde5201f2d8cd2404cf5f6d5f3251  ./qa/asset_con
 6a0dbc3cbdce6674b3a92c05d54f6f0bbf78c9569b8cefcf70088b74dc41c2f6  ./qa/auth_challenge_fallback_smoke.php
 a323c51bf70ef9029dd2d4833705931a20923968e7e1e2aed62e437a673d9d09  ./qa/auth_request_runtime_smoke.py
 57f676ba1edd64be17b5b26bf7232d21748ec223e76affc40e8364867c0283d2  ./qa/automatic_deploy_contract_smoke.py
-41a4f8e480135faa2db6bb59ed9893410e75541dc5786702ee447c61cc50a67b  ./qa/backup_restore_contract_smoke.py
+01f3cb63623cbb5d19a868383b6e6b83caa64cc6d91ba018180f2b0ec7d97efe  ./qa/backup_restore_contract_smoke.py
 b776ea127d4659668ca97b3015ad63c2b7d08eacf56264a73034e361332a3653  ./qa/copilot_decision_smoke.php
 94868c0b389c54cfe8fee0c43fc59a9efca5a6656010e172bc0f53d0248dc425  ./qa/copilot_orchestration_smoke.py
 a10db06a7c38c06e88773c16fa45f8be4559f7fc959eaf83e82cb373904684bf  ./qa/decision_route_account_sync_smoke.php
@@ -377,7 +380,7 @@ a36b12da848fd3e57e7dd2eee4b1f1c520ab55905c6d4048958aef5ddbc49fe2  ./qa/index.php
 fc3d08d8818df67f32612f6a99f5baddf7db72a31b3b410341c2373cc2943458  ./qa/lifecycle_contract_smoke.py
 f3f61759198f7239ddf420c2d2e007780b36812000f072b3c1be63b75a372b23  ./qa/live_security_check.py
 1dbcefee9d99691ba2b18cca8a67db123fdd9ad7c662ec8f449f74c335c124a2  ./qa/login_trust_weather_smoke.py
-0919c3f47ca4ce1dfc4d8131ece5fa21ea3090c0c0d368e5195b333142df34a6  ./qa/maintenance_release_smoke.py
+9b5c3d8739f716a1661e69f61158ac8c50429abb0dc13fdd8a568b1661c3d1d0  ./qa/maintenance_release_smoke.py
 bac300fb41f7b2638d010b5cc8f6bad86ee2b8cc96d40ab3332439003eb0bf37  ./qa/mobile_bootstrap_smoke.py
 5b632ed809f9f237af337c615a357cdfae18bdfe32488493fd0afe17c3f96c7c  ./qa/mobile_guest_alerts_private_smoke.py
 8db110dc3672662b8fbaf5d94ccf2ea2b211a43ec72427b40d6504564beafc2c  ./qa/model_consistency_smoke.py
@@ -392,7 +395,7 @@ e07a8aeb65a44648942d26c6b2743c7d68260f83dbee018f333f7f600f615519  ./qa/p1_mainta
 19505ef941cddd820ab43e2b0548b47121b12d6432c8287ef5cbd748233b4574  ./qa/p2_core_esm_smoke.mjs
 4d46148c064ccdea97d961e5102ef570da163fb743c0f6f873132e3b6a56d3b8  ./qa/p2_domain_esm_smoke.mjs
 8b45604cf9fdab7de967caedda997dd52790f6f148befbcd2aba7885dc303045  ./qa/p2_esm_runtime_smoke.mjs
-e79baba2d66b661a4f4fdf6a5c54bbeb83875b68f00762adc47e74dced6d4bbf  ./qa/p2_release_quality_smoke.py
+7dde61d8338e545ade9c511aeba14cd36617f891973549a5bb9a2da673d426a1  ./qa/p2_release_quality_smoke.py
 81e4dd41a623757489eb6ebe495652205402f6071f937af55b2b4fc3f2446b5d  ./qa/p2_toolchain_smoke.py
 be5193f69313a756d57f14fd1ac4c389e8a52b2e3e7de09c60ec20d85a7f757b  ./qa/p3_dependency_graph_smoke.mjs
 495ef7b349e03cfbc64ed2b79a374e8f44e7a6b5f0b6a756864e530f5a0980a4  ./qa/p3_dependency_injection_smoke.mjs
