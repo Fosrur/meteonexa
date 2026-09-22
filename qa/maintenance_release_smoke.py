@@ -28,6 +28,12 @@ if "document.readyState === 'complete'" not in notifications or "void registerSe
     errors.append('PWA registration can miss window.load when application bootstrap completes late')
 for needle in ('qa/php-browser-router.php','METEONEXA_TEST_MAINTENANCE_FLAG','METEONEXA_MAINTENANCE_FLAG'):
     if needle not in workflow: errors.append('browser QA workflow missing real maintenance contract '+needle)
+if '--grep-invert="@maintenance-exclusive"' not in workflow:
+    errors.append('parallel browser QA does not exclude the shared maintenance flag test')
+if 'e2e/maintenance-active-session.spec.mjs --project="${{ matrix.browser }}" --workers=1' not in workflow:
+    errors.append('maintenance browser QA is not executed exclusively with one worker')
+if "@maintenance-exclusive deployment maintenance active session" not in text('qa/e2e/maintenance-active-session.spec.mjs'):
+    errors.append('maintenance browser QA exclusive marker missing')
 if 'data-i18n="maintenance.title"' not in html or 'js/maintenance.js' not in html or 'css/maintenance.css' not in html: errors.append('maintenance page assets/i18n wiring missing')
 for asset in ('css/maintenance\\.css','js/maintenance\\.js','assets/logo-full\\.png','assets/icons/(?:favicon-32\\.png|favicon\\.ico|apple-touch-icon\\.png|icon-192\\.png)','assets/i18n/'):
     if asset not in ht: errors.append('maintenance rewrite does not exempt '+asset)

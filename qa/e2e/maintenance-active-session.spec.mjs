@@ -13,7 +13,7 @@ async function setMaintenance(enabled) {
   }
 }
 
-test.describe('deployment maintenance active session', () => {
+test.describe('@maintenance-exclusive deployment maintenance active session', () => {
   test.afterEach(async () => {
     if (flag) await setMaintenance(false);
   });

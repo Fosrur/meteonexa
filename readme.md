@@ -32,6 +32,8 @@ Il passaggio maintenance conserva inoltre la destinazione della tab in `sessionS
 
 I due timeout occasionali osservati nel primo tentativo Chromium del freeze 20.1.0 sono trattati senza introdurre retry ciechi: il solo viewport 3840×2160 dispone di un budget dedicato e il test dei custom controls aspetta esplicitamente che dialog e switch siano realmente disponibili prima di leggerne lo stato.
 
+Il test Playwright della maintenance è deliberatamente **esclusivo**: modifica lo stesso flag filesystem usato dal web server QA e quindi non può condividere il pool parallelo con i test responsive/UI. Chromium e Firefox eseguono prima la suite browser ordinaria in parallelo e poi `maintenance-active-session.spec.mjs` da solo con `--workers=1`. Questo evita che una pagina di un altro test riceva legittimamente HTTP 503 mentre il test maintenance sta simulando il cutover.
+
 ### P2 — supply-chain CI
 
 Le GitHub Actions usate dai workflow sono pin-nate a SHA immutabili; `qa/workflow_supply_chain_smoke.py` rifiuta nuovi `uses:` basati su tag o branch mobili. Semgrep/Trivy, PHPStan/ESLint, dependency audit, container non-root/read-only, exact-SHA deploy, backup/restore e provenance restano gate della release.

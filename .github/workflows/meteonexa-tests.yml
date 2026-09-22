@@ -236,7 +236,14 @@ jobs:
         env:
           METEONEXA_TEST_BASE_URL: http://127.0.0.1:8088/
           METEONEXA_TEST_MAINTENANCE_FLAG: ${{ runner.temp }}/meteonexa/runtime/maintenance.flag
-        run: npm run test:e2e -- --project="${{ matrix.browser }}"
+        run: |
+          # The maintenance E2E toggles one filesystem flag shared by the PHP
+          # test server. Exclude it from the parallel pool so another page
+          # cannot receive the maintenance 503 while it is booting.
+          npm run test:e2e -- --project="${{ matrix.browser }}" --grep-invert="@maintenance-exclusive"
+
+          # Exercise the real shared-flag/PWA path separately and exclusively.
+          npm run test:e2e -- e2e/maintenance-active-session.spec.mjs --project="${{ matrix.browser }}" --workers=1
       - name: Upload browser report on failure
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
