@@ -39,6 +39,14 @@ I gate P4 sono stati riallineati alla nuova struttura `config/quality/`: `qa/p4_
 ### Maintenance desktop compacta e auto-recovery
 
 La pagina di maintenance usa ora un layout desktop compatto entro la viewport: card massima di 600 px, spazi verticali ridotti e variante dedicata per viewport basse, evitando scroll sui normali schermi desktop. Su mobile e viewport eccezionalmente basse resta consentito lo scroll per non troncare i contenuti. Il critical CSS inline resta sincronizzato con `css/maintenance.css` e il relativo hash CSP viene aggiornato insieme al sorgente. Oltre al probe JavaScript ogni 15 secondi, la pagina dispone di refresh HTML di sicurezza e, quando il servizio torna disponibile, naviga verso una URL cache-busted per evitare di restare bloccata su una vecchia risposta 503.
+
+### Remediation syntax maintenance auto-recovery
+
+Corretto il redirect cache-busted della pagina di maintenance: il probe JavaScript usa `location.replace(`/?maintenance_release=${Date.now()}`)` con template literal valido. Il gate locale esegue ora esplicitamente `node --check` sul runtime maintenance e l'intero `qa/release_audit.py` prima della rigenerazione dei checksum.
+
+### Release audit UTF-8 cross-platform
+
+Il gate `qa/release_audit.py` apre esplicitamente in UTF-8 tutti i file testuali del repository. Questo rende l'audit riproducibile anche su Windows, dove l'encoding predefinito di Python può essere `cp1252`, senza alterare il comportamento Linux della CI.
 <!-- METEONEXA_CURRENT_CONTRACT_END -->
 
 ## P1 release/documentation hardening — 20 settembre 2026

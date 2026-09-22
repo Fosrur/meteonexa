@@ -32,7 +32,7 @@
         headers: { Accept: 'text/html' },
       });
       if (response.ok) {
-        location.replace(/?maintenance_release=);
+        location.replace(`/?maintenance_release=${Date.now()}`);
         return;
       }
       if (reloadOnFailure) location.reload();

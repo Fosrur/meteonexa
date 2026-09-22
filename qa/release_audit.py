@@ -30,7 +30,7 @@ ck(meta=={'app_version':'20.1','schema_version':'28','translation_seed_version':
 ck(len(tables)==47,'SQLite has 47 application tables')
 ck(tr[2]==5 and tr[0]==tr[1]*5,f'i18n complete ({tr[1]} keys x 5 = {tr[0]})')
 # packaged translations
-seed=json.loads((root/'api/install/translations.json').read_text()); rows=seed['rows']; locales={r['locale'] for r in rows}; keys={r['text_key'] for r in rows}
+seed=json.loads((root/'api/install/translations.json').read_text(encoding='utf-8')); rows=seed['rows']; locales={r['locale'] for r in rows}; keys={r['text_key'] for r in rows}
 ck(seed.get('version')=='20.1-semantic-i18n-v2' and seed.get('created_for')=='MeteoNexa 20.1','packaged translation metadata current')
 ck(locales=={'it','en','es','fr','de'} and len(rows)==len(keys)*5,'packaged translations complete across five locales')
 for k in ['ai.system.tool_orchestration','privacy.release.current','cookie.release.current','privacy.ai.orchestration','copilot.evidence.title']:
@@ -41,13 +41,13 @@ mtables=set(re.findall(r'CREATE TABLE IF NOT EXISTS\s+`?([A-Za-z0-9_]+)`?',mysql
 ck(tables==mtables,f'SQLite/MySQL table parity ({len(tables)}/{len(mtables)})')
 ck("VALUES('app_version','20.1'" in mysql and "VALUES('schema_version','28'" in mysql,'MySQL metadata current')
 # Docs/policies/current runtime
-ck('# MeteoNexa Architecture — 20.1' in (root/'readme.md').read_text(),'Architecture current')
-ck('# MeteoNexa Security — 20.1' in (root/'readme.md').read_text(),'Security current')
-priv=(root/'privacy.html').read_text();cookie=(root/'cookie-policy.html').read_text()
+ck('# MeteoNexa Architecture — 20.1' in (root/'readme.md').read_text(encoding='utf-8'),'Architecture current')
+ck('# MeteoNexa Security — 20.1' in (root/'readme.md').read_text(encoding='utf-8'),'Security current')
+priv=(root/'privacy.html').read_text(encoding='utf-8');cookie=(root/'cookie-policy.html').read_text(encoding='utf-8')
 ck('MeteoNexa 20.1' in priv and 'privacy.release.current' in priv and 'privacy.ai.orchestration' in priv,'Privacy current + AI orchestration disclosure')
 ck('MeteoNexa 20.1' in cookie and 'cookie.release.current' in cookie,'Cookie Policy current')
-ck("'version' => '20.1'" in (root/'api/config.php').read_text(),'API config version current')
-ck("const POLICY_VERSION = '20.1'" in (root/'modules/esm/domains/privacy.mjs').read_text(),'privacy runtime version current')
+ck("'version' => '20.1'" in (root/'api/config.php').read_text(encoding='utf-8'),'API config version current')
+ck("const POLICY_VERSION = '20.1'" in (root/'modules/esm/domains/privacy.mjs').read_text(encoding='utf-8'),'privacy runtime version current')
 # Core files
 for rel in ['api/ai/orchestrator.php','api/route/weather_engine.php','api/intelligence/decision_timeline_helpers.php','api/intelligence/probabilistic_nowcast_helpers.php','api/plans/watch_engine.php']:
  ck((root/rel).is_file(),f'core capability present: {rel}')
