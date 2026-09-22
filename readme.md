@@ -71,6 +71,11 @@ Il tag `v20.1.0` resta un atto Git successivo: non è incluso nel pacchetto ZIP 
 ### Remediation Deploy #30 — quoting SSH
 
 QA #30 ha validato integralmente lo SHA Final, ma il primo avvio del Production Deploy #30 si è fermato nel runner GitHub prima della connessione SSH per quoting Bash annidato nel comando remoto. Il workflow usa ora un heredoc quotato inviato a `bash -s` sul VPS, mantenendo i controlli di working tree pulita, sincronizzazione `origin/main`, fast-forward e verifica dell'esatto `DEPLOY_SHA`. Il gate `automatic_deploy_contract_smoke.py` protegge anche questa forma di invocazione.
+
+### Remediation Deploy #31 — preflight integrazioni opzionali
+
+QA #31 ha validato integralmente lo SHA Final e il quoting SSH del deploy. Il Production Deploy #31 ha raggiunto correttamente il VPS ma si è fermato nel preflight, prima di build/backup/maintenance, perché tre impostazioni opzionali erano state rese obbligatorie dal gate: `METEONEXA_PIPELINE_CRON_SECRET`, `METEONEXA_PUSH_CRON_SECRET` e `METEONEXA_VAPID_SUBJECT`. Il worker production esegue pipeline e push via CLI; gli endpoint HTTP restano fail-closed senza cron key. Il subject VAPID usa `METEONEXA_BASE_URL` HTTPS come fallback. Il preflight e il live integration check sono quindi riallineati al comportamento effettivo del runtime, senza introdurre secret fittizi.
+
 <!-- METEONEXA_CURRENT_CONTRACT_END -->
 
 ## P1 release/documentation hardening — 20 settembre 2026

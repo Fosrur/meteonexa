@@ -2,15 +2,15 @@
 set -eu
 cd "$(dirname "$0")/.."
 
-# Secrets used by the worker/push paths must be present in the running containers.
-for service in web worker; do
-  docker compose exec -T "$service" sh -lc '
-    test -n "${METEONEXA_PIPELINE_CRON_SECRET:-}" &&
-    test -n "${METEONEXA_PUSH_CRON_SECRET:-}" &&
-    test -n "${METEONEXA_VAPID_SUBJECT:-}"
-  ' || { echo "[FAIL] $service: secret worker/push mancanti" >&2; exit 1; }
-  echo "[OK] $service: secret worker/push presenti"
+# Pipeline and push dispatch are executed by the production worker through CLI.
+# Their HTTP cron secrets are optional; when absent, the public HTTP paths must
+# still fail closed. VAPID subject also has the HTTPS application base URL as a
+# safe runtime fallback.
+for endpoint in /api/pipeline/worker.php /api/push/dispatch.php; do
+  code="$(docker compose exec -T web curl -sS -o /dev/null -w '%{http_code}' -X POST "http://127.0.0.1${endpoint}")"
+  [ "$code" = "403" ] || { echo "[FAIL] $endpoint non fail-closed senza cron key (HTTP $code)" >&2; exit 1; }
 done
+echo '[OK] endpoint cron HTTP fail-closed senza chiave'
 
 AUTH_JSON="$(docker compose exec -T web curl -fsS http://127.0.0.1/api/auth/status.php)"
 printf '%s' "$AUTH_JSON" | grep -q '"smtpConfigured":true' || { echo '[FAIL] SMTP effettivo non configurato' >&2; exit 1; }
