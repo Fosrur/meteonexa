@@ -2,7 +2,7 @@
 from pathlib import Path
 import sys
 ROOT=Path(__file__).resolve().parents[1]
-script=(ROOT/'docker/release-preflight.sh').read_text(); env=(ROOT/'.env.example').read_text()
+script=(ROOT/'docker/release-preflight.sh').read_text(encoding='utf-8'); env=(ROOT/'.env.example').read_text(encoding='utf-8')
 checks={
  'legal identity is optional and never blocks technical deploy':all(x in script for x in ('optional METEONEXA_LEGAL_CONTROLLER_NAME','optional METEONEXA_LEGAL_CONTROLLER_ADDRESS','optional METEONEXA_PRIVACY_CONTACT_EMAIL')),
  'DPO defaults to not-appointed and appointed still requires contact':'${METEONEXA_DPO_STATUS:-not-appointed}' in script and 'appointed) need METEONEXA_DPO_EMAIL' in script and 'METEONEXA_DPO_STATUS=not-appointed' in env,

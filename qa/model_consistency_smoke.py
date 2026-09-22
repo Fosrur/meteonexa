@@ -2,7 +2,7 @@
 from pathlib import Path
 import re,sys
 root=Path(__file__).resolve().parents[1]; errors=[]
-app=(root/'js/app.js').read_text();suite=(root/'js/suite.js').read_text();fusion=(root/'api/weather/fusion.php').read_text();quality=(root/'api/intelligence/quality_helpers.php').read_text();summary=(root/'api/intelligence/summary.php').read_text()
+app=(root/'js/app.js').read_text(encoding='utf-8');suite=(root/'js/suite.js').read_text(encoding='utf-8');fusion=(root/'api/weather/fusion.php').read_text(encoding='utf-8');quality=(root/'api/intelligence/quality_helpers.php').read_text(encoding='utf-8');summary=(root/'api/intelligence/summary.php').read_text(encoding='utf-8')
 if re.search(r'modelsExpected\s*:\s*5\b|modelsExpected\s*\|\|\s*5\b',app): errors.append('legacy five-model denominator in app')
 if '(5 - rows.length)' in suite: errors.append('legacy five-model confidence arithmetic')
 if "suite.canonicalConsensus?.modelsExpected || rows.length" not in suite: errors.append('client confidence expected count is not server-consensus-driven')

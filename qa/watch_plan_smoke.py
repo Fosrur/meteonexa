@@ -3,7 +3,7 @@ from pathlib import Path
 import re,sys
 root=Path(__file__).resolve().parents[1];fail=[]
 def ck(v,m): print(('PASS' if v else 'FAIL')+': '+m);fail.append(m) if not v else None
-def t(p): return (root/p).read_text()
+def t(p): return (root/p).read_text(encoding='utf-8')
 def compact(source): return re.sub(r'\s+', '', source)
 api=t('api/plans/watch.php');helpers=t('api/plans/watch_helpers.php');engine=t('api/plans/watch_engine.php');html=t('index.html');css=t('css/watch-plan.css');js=t('modules/esm/features/watch-plan.mjs')
 ck('assert_same_origin()' in api and 'require_authenticated_device_session' in api,'plan API requires same-origin authenticated device session')

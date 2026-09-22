@@ -18,7 +18,7 @@ assert(/openShareChannel, updateThreshold,/.test(app), 'app shell binds updateTh
 for (const dep of ['ai','auth','copilot','guestAccess','intelligence','security']) assert(suiteAssistant.includes(`'${dep}'`), `suite assistant declares ${dep}`);
 assert(!suiteAssistant.includes('SERVICES.get('), 'suite assistant has no service-locator calls');
 assert(lifecycle.includes("dependencies = Object.freeze(['security'])") && !lifecycle.includes('SERVICES.get('), 'app lifecycle security dependency is explicit');
-assert(sw.includes("SHELL_REVISION = '20.1-final-04-assistant-runtime-radar'"), 'final P3 service-worker revision');
+assert(sw.includes("SHELL_REVISION = '20.1-final-05-release'"), 'final P3 service-worker revision');
 assert(readme.includes('**Stato P3: COMPLETATO.**'), 'README marks P3 complete');
 assert(architecture.includes('**P3 status: COMPLETE.**'), 'architecture marks P3 complete');
 console.log(`P3 FINAL PASS (app ${appLines}, suite ${suiteLines})`);

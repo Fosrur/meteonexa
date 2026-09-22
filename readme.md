@@ -53,6 +53,14 @@ Il gate `qa/release_audit.py` apre esplicitamente in UTF-8 tutti i file testuali
 La 20.1 è promossa da RC2 / Final Candidate a **20.1 Final**. Il badge pubblico e `APP_RELEASE_LABEL` espongono `20.1 Final`; il deploy emette `DEPLOY_FINAL_PASS`; il gate release è `qa/release_final_smoke.py`. Il pulsante `guest-login` mantiene il testo centrato dal primo frame: la copia italiana di fallback è già presente nell'HTML, l'i18n la sostituisce senza cambiare geometria e il chevron è posizionato indipendentemente dal testo. La revisione Service Worker `20.1-final-05-release` forza l'aggiornamento della shell installata.
 
 La promozione non cambia schema né API version: database **schema 28**, applicazione **20.1**, package **20.1.0**. Il tag Git `v20.1.0` deve essere creato soltanto dopo QA e deploy production verdi dello SHA di promozione Final.
+
+### Final gate Service Worker allineato
+
+I gate architetturali P2/P3 della 20.1 Final verificano la revisione Service Worker corrente `20.1-final-05-release`, coerente con `js/sw.js` e con `qa/release_final_smoke.py`. Il precedente riferimento `20.1-final-04-assistant-runtime-radar` apparteneva al candidato precedente e non è più un contratto attivo della release Final.
+
+### QA Python UTF-8 cross-platform
+
+I gate Python della 20.1 Final leggono esplicitamente in UTF-8 i file di repository. In questo modo la suite usa lo stesso contratto di testo su Windows e Linux e non dipende dall'encoding locale di Python/Windows (per esempio cp1252).
 <!-- METEONEXA_CURRENT_CONTRACT_END -->
 
 ## P1 release/documentation hardening — 20 settembre 2026

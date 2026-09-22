@@ -7,21 +7,21 @@ def require(cond,msg):
     if not cond:
         raise SystemExit('Roadmap 20.1 completion smoke FAIL: '+msg)
 
-manifest=(root/'api/manifest.php').read_text()
+manifest=(root/'api/manifest.php').read_text(encoding='utf-8')
 for token in ["'shortcuts'", "../#radar", "../#intelligence", "../#alerts", "../#route"]:
     require(token in manifest, f'manifest missing {token}')
 
-summary=(root/'api/intelligence/summary.php').read_text()
+summary=(root/'api/intelligence/summary.php').read_text(encoding='utf-8')
 require("sun_cloud_helpers.php" in summary and "'sunCloudWindow'=>$sunCloudWindow" in summary,'sun cloud response not wired')
-engine=(root/'api/intelligence/engine_helpers.php').read_text()
+engine=(root/'api/intelligence/engine_helpers.php').read_text(encoding='utf-8')
 for field in ['is_day','sunshine_duration','shortwave_radiation']:
     require(field in engine, f'weather evidence missing {field}')
 
-push=(root/'api/push/dispatch.php').read_text()
+push=(root/'api/push/dispatch.php').read_text(encoding='utf-8')
 require('$quietNow = meteonexa_intelligence_quiet' in push,'quiet hours not evaluated')
 require("!== 'red'" in push,'red severity quiet-hours override missing')
 
-workflow=(root/'.github/workflows/meteonexa-tests.yml').read_text()
+workflow=(root/'.github/workflows/meteonexa-tests.yml').read_text(encoding='utf-8')
 require('browser: [chromium, firefox]' in workflow,'Chromium/Firefox matrix missing')
 
 for removed in ['analytics.js','product-metrics.js','api/metrics/product.php']:

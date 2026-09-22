@@ -3,7 +3,7 @@ from pathlib import Path
 import re, sys
 root=Path(__file__).resolve().parents[1]; fail=[]
 def ck(v,m): print(('PASS' if v else 'FAIL')+': '+m); fail.append(m) if not v else None
-def t(p): return (root/p).read_text()
+def t(p): return (root/p).read_text(encoding='utf-8')
 def compact(source): return re.sub(r'\s+', '', source)
 html=t('index.html'); app=t('js/app.js'); advanced=t('js/advanced.js'); suite=t('js/suite.js')
 quality=t('api/intelligence/quality_helpers.php'); radar=t('qa/radar3_production_gate_smoke.php')

@@ -3,7 +3,7 @@ from pathlib import Path
 import sys
 root=Path(__file__).resolve().parents[1];fail=[]
 def ck(v,m): print(('PASS' if v else 'FAIL')+': '+m);fail.append(m) if not v else None
-def t(p): return (root/p).read_text()
+def t(p): return (root/p).read_text(encoding='utf-8')
 orch=t('api/ai/orchestrator.php'); chat=t('api/ai/chat.php'); route=t('api/route/weather_engine.php'); endpoint=t('api/route/weather.php'); suite=t('js/suite.js'); suite_assistant=t('modules/esm/domains/suite-assistant.mjs'); suite_support=t('modules/esm/domains/suite-support.mjs'); cop=t('modules/esm/features/copilot.mjs'); css=t('css/copilot.css'); html=t('index.html')
 ck('deterministicDecision' in orch and "'status' =>" in orch and "'confidence' =>" in orch and 'meteonexa_copilot_decision_summary' in orch,'Copilot creates deterministic decision before language explanation')
 ck('meteonexa_intelq_fetch_models' in orch and 'meteonexa_intelq_canonical_consensus' in orch,'Copilot uses server-owned canonical model evidence')
