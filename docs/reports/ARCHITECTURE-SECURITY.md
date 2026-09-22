@@ -1,15 +1,17 @@
-# MeteoNexa 20.1 — Architecture & Security Status
+# MeteoNexa 20.1.1 — Architecture & Security Status
 
 > Evidence/report document. The authoritative product contract remains `readme.md`.
 
 ## Release snapshot
 
-- Release line: **20.1 Final**
+- Release line: **20.1.1**
 - Database: **schema 28**, 47 application tables
 - i18n: **4,645 semantic keys × 5 locales = 23,225 translations**
 - Backend: PHP API; MySQL 8.4 production; SQLite baseline/QA compatibility
 - Containers: web + worker as `33:33`, read-only root filesystem
 - Release: exact-SHA GitHub Actions success required before production deploy
+- Immutable baseline: `v20.1.0` → `d7273b1f1e2fa3ab65be0b4935b9260f4d1595fd`
+- Patch delta: active-session maintenance awareness, browser-flake hardening and immutable GitHub Action pins
 
 ## Repository architecture
 
@@ -55,6 +57,8 @@ Deployment sequence:
 
 Browser navigations receive `api/maintenance.php` with HTTP **503**, `Retry-After: 120`, no-store headers and the translated `maintenance.html`. API calls and health checks are not rewritten merely because maintenance is active. If deployment fails after maintenance activation, the mode remains active by design until rollback or remediation is verified; the deploy script prints the explicit recovery command.
 
+From 20.1.1, already-open SPA/PWA sessions also observe maintenance. `api/system/maintenance-status.php` is a DB-independent, no-store probe of the same shared flag; the application checks it every five seconds while visible and immediately on foreground/focus/pageshow. A positive result forces a fresh HTML navigation, so the server returns the same 503 maintenance surface. The maintenance page keeps its existing 15-second recovery probe and returns to the application automatically after maintenance is released.
+
 Manual VPS controls:
 
 ```bash
@@ -76,7 +80,7 @@ bash docker/maintenance-mode.sh off
 
 ## Current remediation status
 
-P0, P1 and P2 remediation remain closed. This restructuring adds an explicit repository-layout contract and deployment maintenance contract without changing weather-domain behavior or schema version. Remote GitHub CI, staging and live smoke remain the final external evidence required before naming the artifact `20.1 Final`.
+The immutable 20.1.0 baseline completed its QA/deploy freeze. The 20.1.1 patch keeps schema 28 and weather-domain behavior unchanged while extending the deployment maintenance contract to already-open sessions and pinning CI actions to immutable SHAs. Remote QA, staging, browser regression and live deploy remain the external evidence required for the exact SHA that will receive `v20.1.1`.
 
 ### Remote CI feedback — browser preflight
 

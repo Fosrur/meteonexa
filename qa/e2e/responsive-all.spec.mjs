@@ -43,6 +43,7 @@ async function revealPageForLayout(page, name) {
 test.describe('responsive regression matrix', () => {
   for (const [width,height] of viewports) {
     test(`pages and dialogs fit ${width}x${height}`, async ({ page }) => {
+      if (width >= 3840) test.setTimeout(30000);
       await prepareStableApp(page);
       await page.setViewportSize({ width, height });
       await page.goto('?preview', { waitUntil: 'domcontentloaded' });

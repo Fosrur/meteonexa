@@ -4,7 +4,7 @@ import json,sys
 ROOT=Path(sys.argv[1]).resolve() if len(sys.argv)>1 else Path(__file__).resolve().parents[1]
 errors=[]
 def text(rel): return (ROOT/rel).read_text(encoding='utf-8')
-ht=text('.htaccess'); deploy=text('docker/deploy-production.sh'); mode=text('docker/maintenance-mode.sh'); html=text('maintenance.html'); js=text('js/maintenance.js')
+ht=text('.htaccess'); deploy=text('docker/deploy-production.sh'); mode=text('docker/maintenance-mode.sh'); html=text('maintenance.html'); js=text('js/maintenance.js'); lifecycle=text('modules/esm/domains/app-lifecycle.mjs'); status_api=text('api/system/maintenance-status.php'); browser_router=text('qa/php-browser-router.php'); workflow=text('.github/workflows/meteonexa-tests.yml')
 for needle in ['/var/lib/meteonexa/maintenance.flag','api/maintenance.php']:
     if needle not in ht: errors.append(f'.htaccess missing {needle}')
 if 'Service-Worker-Allowed' not in ht or '/js/sw.js' not in ht: errors.append('service worker root scope header missing')
@@ -12,6 +12,18 @@ build=deploy.find('docker compose build --pull web worker'); drill=deploy.find('
 if not (0 <= build < drill < on < up < off): errors.append('deploy sequence must be build -> restore drill -> maintenance on -> container replacement -> off')
 if "trap 'echo \"ERRORE: deploy interrotto con maintenance mode ancora ATTIVA" not in deploy: errors.append('deploy failure maintenance trap missing')
 if 'maintenance.flag' not in mode: errors.append('maintenance helper missing shared flag contract')
+if '/var/lib/meteonexa/maintenance.flag' not in status_api or "'maintenance' => is_file($flag)" not in status_api:
+    errors.append('maintenance status endpoint does not expose shared flag state')
+if 'Cache-Control: no-store' not in status_api:
+    errors.append('maintenance status endpoint must be no-store')
+for needle in ('api/system/maintenance-status.php','checkMaintenanceMode','maintenance_enter','setInterval'):
+    if needle not in lifecycle: errors.append('active-session maintenance lifecycle missing '+needle)
+if '}, 5000);' not in lifecycle:
+    errors.append('active-session maintenance poll must remain bounded to 5 seconds')
+if 'METEONEXA_MAINTENANCE_FLAG' not in browser_router or 'api/maintenance.php' not in browser_router:
+    errors.append('browser QA router does not mirror maintenance flag/503 surface')
+for needle in ('qa/php-browser-router.php','METEONEXA_TEST_MAINTENANCE_FLAG','METEONEXA_MAINTENANCE_FLAG'):
+    if needle not in workflow: errors.append('browser QA workflow missing real maintenance contract '+needle)
 if 'data-i18n="maintenance.title"' not in html or 'js/maintenance.js' not in html or 'css/maintenance.css' not in html: errors.append('maintenance page assets/i18n wiring missing')
 for asset in ('css/maintenance\\.css','js/maintenance\\.js','assets/logo-full\\.png','assets/icons/(?:favicon-32\\.png|favicon\\.ico|apple-touch-icon\\.png|icon-192\\.png)','assets/i18n/'):
     if asset not in ht: errors.append('maintenance rewrite does not exempt '+asset)

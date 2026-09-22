@@ -74,7 +74,7 @@ if 'ensureRadar, setRadarFrame, stopRadarAnimation' not in app:
     fail('js/app.js does not bind radar runtime functions from visualization')
 
 sw = text('js/sw.js')
-for marker in ('CRITICAL_SHELL', 'OPTIONAL_SHELL', 'WARM_OPTIONAL_SHELL', "cache: immutableAssetRequest(url) ? 'force-cache' : 'reload'", "SHELL_REVISION = '20.1-final-05-release'"):
+for marker in ('CRITICAL_SHELL', 'OPTIONAL_SHELL', 'WARM_OPTIONAL_SHELL', "cache: immutableAssetRequest(url) ? 'force-cache' : 'reload'", "SHELL_REVISION = '20.1.1-maintenance-active-session'"):
     if marker not in sw:
         fail(f'service worker performance contract missing: {marker}')
 install_match = re.search(r"addEventListener\('install'.{0,500}", sw, re.S)
@@ -96,9 +96,9 @@ for marker in (
 ):
     if marker not in navigation:
         fail(f'navigation synchronous service publication missing: {marker}')
-if "const APP_RELEASE_LABEL = '20.1 Final';" not in app:
+if "const APP_RELEASE_LABEL = '20.1.1';" not in app:
     fail('Final release label is missing from js/app.js')
-if 'id="login-version-badge">v20.1 Final</span>' not in index:
+if 'id="login-version-badge">v20.1.1</span>' not in index:
     fail('login version badge does not expose Final channel')
 
 if '#guest-login{position:relative' not in welcome_styles or '#guest-login .i18n-text{display:block;width:100%;text-align:center' not in welcome_styles or '#guest-login>svg{position:absolute;right:19px' not in welcome_styles or '#guest-login{position:relative' not in styles or '#guest-login .i18n-text{display:block;width:100%;text-align:center' not in styles or '#guest-login>svg{position:absolute;right:19px' not in styles:
@@ -106,7 +106,7 @@ if '#guest-login{position:relative' not in welcome_styles or '#guest-login .i18n
 if 'data-i18n-key="home.guest_login.continue_as_guest">Continua come ospite</span>' not in index:
     fail('guest-login first-paint fallback copy missing')
 readme = text('readme.md')
-if '# MeteoNexa 20.1 — Final' not in readme:
+if '# MeteoNexa 20.1.1 — Patch release' not in readme:
     fail('README does not document the 20.1 Final release')
 
 print(f'Final release smoke: PASS (pre-app ESM {pre_app_bytes} bytes; blocking CSS {blocking_bytes} bytes; suite ESM deferred {len(suite)} modules)')

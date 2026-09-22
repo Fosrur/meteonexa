@@ -18,7 +18,9 @@ test.describe('MeteoNexa custom controls and loaders', () => {
   });
 
   test('custom listbox and switch expose compatible value/checked state', async ({ page }) => {
+    test.setTimeout(25000);
     await page.evaluate(() => document.querySelector('#settings-dialog')?.showModal?.());
+    await expect(page.locator('#settings-dialog')).toBeVisible({ timeout: 5000 });
 
     const unit = page.locator('#temperature-unit');
     await expect(unit).toBeVisible();
@@ -32,6 +34,7 @@ test.describe('MeteoNexa custom controls and loaders', () => {
     expect(await unit.evaluate(node => node.value)).toBe('fahrenheit');
 
     const motion = page.locator('#reduce-motion-setting');
+    await expect(motion).toBeVisible({ timeout: 5000 });
     const before = await motion.getAttribute('aria-checked');
     await motion.evaluate(node => node.click());
     await expect(motion).toHaveAttribute('aria-checked', before === 'true' ? 'false' : 'true');

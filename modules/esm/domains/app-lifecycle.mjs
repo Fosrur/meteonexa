@@ -15,10 +15,53 @@ function factory(window, deps, provided) {
                 saveRemotePreferences, CACHE_SENTINEL, STORAGE, SESSION_FLAGS, apiRequest, hasUsableLocation, showWelcome
             } = context;
             if (!state || typeof $ !== 'function') throw new Error('METEONEXA_APP_LIFECYCLE_CONTEXT_INVALID');
+
+            let maintenanceCheckInFlight = null;
+            let maintenanceRedirecting = false;
+            let lastMaintenanceCheckAt = 0;
+
+            async function checkMaintenanceMode({ force = false } = {}) {
+                if (maintenanceRedirecting || document.hidden || !state.bootComplete)
+                    return false;
+
+                const now = Date.now();
+                if (!force && now - lastMaintenanceCheckAt < 3500)
+                    return false;
+                if (maintenanceCheckInFlight)
+                    return maintenanceCheckInFlight;
+
+                lastMaintenanceCheckAt = now;
+                maintenanceCheckInFlight = (async () => {
+                    try {
+                        const status = await apiRequest('api/system/maintenance-status.php', null, {
+                            timeout: 2500,
+                            notifyAuthRequired: false
+                        });
+                        if (status?.maintenance !== true)
+                            return false;
+
+                        maintenanceRedirecting = true;
+                        const target = new URL('/', location.origin);
+                        target.searchParams.set('maintenance_enter', String(Date.now()));
+                        location.replace(target.toString());
+                        return true;
+                    }
+                    catch (error) {
+                        console.debug('MAINTENANCE_STATUS_UNAVAILABLE', error?.message || error);
+                        return false;
+                    }
+                    finally {
+                        maintenanceCheckInFlight = null;
+                    }
+                })();
+                return maintenanceCheckInFlight;
+            }
+
             function bindGlobalLifecycleEvents() {
         document.addEventListener("visibilitychange", () => {
             if (document.hidden || !state.bootComplete)
                 return;
+            void checkMaintenanceMode({ force: true });
             updateLiveClocks();
             syncNotificationButton();
             synchronizeRemotePreferences();
@@ -33,6 +76,7 @@ function factory(window, deps, provided) {
         addEventListener('pageshow', event => {
             if (!state.bootComplete)
                 return;
+            void checkMaintenanceMode({ force: true });
             syncNotificationButton();
             updateLiveClocks();
             synchronizeRemotePreferences();
@@ -46,6 +90,7 @@ function factory(window, deps, provided) {
         addEventListener('focus', () => {
             if (!state.bootComplete)
                 return;
+            void checkMaintenanceMode({ force: true });
             updateLiveClocks();
             synchronizeRemotePreferences();
             void reconcileRemoteDeviceRevocation();
@@ -96,6 +141,11 @@ function factory(window, deps, provided) {
                 setWelcomeLanguageMenu(false);
             }
         });
+        window.setInterval(() => {
+            if (!document.hidden && state.bootComplete)
+                void checkMaintenanceMode();
+        }, 5000);
+
         matchMedia('(prefers-color-scheme: light)').addEventListener?.('change', () => {
             if (state.settings.theme !== 'system')
                 return;

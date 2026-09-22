@@ -1,7 +1,7 @@
 {
   "name": "meteonexa-qa",
   "private": true,
-  "version": "20.1.0",
+  "version": "20.1.1",
   "scripts": {
     "test:e2e": "playwright test"
   },

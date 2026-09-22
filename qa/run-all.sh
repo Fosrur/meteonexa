@@ -18,6 +18,7 @@ run_py feature_regression_smoke.py
 run_py runtime_lifecycle_guest_smoke.py
 run_py runtime_user_regressions_smoke.py
 run_py dependency_lock_smoke.py
+run_py workflow_supply_chain_smoke.py "$ROOT"
 run_py backup_restore_contract_smoke.py
 run_py release_flow_contract_smoke.py
 run_py release_preflight_contract_smoke.py

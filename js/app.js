@@ -4,7 +4,7 @@ const SERVICES = window.MeteoNexaServices;
 if (!SERVICES) throw new Error('METEONEXA_SERVICES_NOT_LOADED');
 const RUNTIME_API = SERVICES.require('runtimeApi');
 const APP_BUILD = '20.1';
-const APP_RELEASE_LABEL = '20.1 Final';
+const APP_RELEASE_LABEL = '20.1.1';
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const QUERY = new URLSearchParams(location.search);

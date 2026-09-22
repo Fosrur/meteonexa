@@ -1,6 +1,6 @@
-# MeteoNexa 20.1 — Final
+# MeteoNexa 20.1.1 — Patch release
 
-## P0 + P5/P6 stabilization — 21 settembre 2026
+## Snapshot storico 20.1.0 — P0 + P5/P6 stabilization — 21 settembre 2026
 
 La release **MeteoNexa 20.1 Final** promuove il candidato validato dopo QA completa, browser regression Chromium/Firefox, backup/restore drill, security scan e deploy production verificato. Lo schema DB resta **28** e la versione applicativa resta **20.1**; la promozione Final consolida il canale di release senza introdurre una nuova migrazione.
 
@@ -8,74 +8,35 @@ Il repository **non può modificare da solo il flag GitHub “Allow write access
 
 
 <!-- METEONEXA_CURRENT_CONTRACT_START -->
-## 20.1 Final — root organizzata, deploy verificabile e tooling cross-platform
+## 20.1.1 — maintenance session awareness, release evidence e supply-chain hardening
 
-La root del repository resta il **control plane + document root pubblico** della web app, ma non contiene più configurazioni quality non convenzionali sparse. Le pagine HTML pubbliche, `readme.md`, i file convenzionali di build/deploy e i metadati web restano in root; PHPStan, PHP-CS-Fixer e Semgrep sono centralizzati in `config/quality/`; le evidenze Markdown non normative sono in `docs/reports/`. I runtime JavaScript sono in `js/`, i bundle CSS in `css/`, gli ESM in `modules/esm/`, i partial CSS in `styles/` e gli endpoint/backend in `api/`. `qa/architecture_layout_smoke.py` protegge questa struttura. Lo spostamento dell'intero document root sotto `public/` resta volutamente fuori da questa stabilizzazione perché richiederebbe un refactoring coordinato di Apache, Dockerfile, Service Worker, fingerprint e QA.
+Questa patch parte dall'immutabile **`v20.1.0`**, tag annotato sul commit `d7273b1f1e2fa3ab65be0b4935b9260f4d1595fd`, già validato da MeteoNexa QA e Production Deploy sullo stesso SHA. Il tag `v20.1.0` non viene spostato né riscritto.
 
-Il catalogo i18n corrente è **4.645 chiavi × 5 lingue = 23.225 traduzioni**. Anche `maintenance.html` usa il contratto i18n condiviso e mantiene critical CSS/logo embedded per restare leggibile durante il cutover.
+Il contratto corrente del sorgente è **MeteoNexa 20.1.1**. La compatibilità applicativa/backend resta **20.1**, lo schema database resta **28**, le tabelle applicative restano **47** e il catalogo i18n resta **4.645 chiavi × 5 lingue = 23.225 traduzioni**. Il package root e il package QA sono `20.1.1`; la revisione Service Worker è `20.1.1-maintenance-active-session`.
 
-Il deploy production prepara il candidato **con il sito ancora online**: build delle immagini con SHA, backup del database/runtime e restore drill. `metadata.txt` registra `schema_source`; il restore deve riprodurre quello schema sorgente, non essere già allo schema target. Solo dopo questi gate viene attivato `/var/lib/meteonexa/maintenance.flag`, vengono ricreati `web` e `worker`, `/api/system/status.php` apre il DB ed esegue le migration necessarie fino allo schema corrente **28**, poi `verify-mysql.sh` richiede `MYSQL_SCHEMA_PASS`. Le immagini/container espongono la revisione Git tramite provenance OCI e il deploy deve verificare che la revisione corrisponda al `DEPLOY_SHA`. Nel workflow GitHub la maintenance resta attiva durante i controlli interni, viene rimossa prima dello smoke live esterno e viene ripristinata se quello smoke fallisce.
+### P0 — maintenance per sessioni già aperte
 
-## Contratto corrente della release — 21 settembre 2026
+La maintenance production continua a essere attivata solo durante il vero cutover, dopo build, backup e restore drill. Le nuove navigazioni HTML ricevono HTTP 503 tramite `api/maintenance.php`. In aggiunta, una sessione MeteoNexa già aperta interroga il leggero endpoint pubblico `api/system/maintenance-status.php` ogni 5 secondi quando visibile e immediatamente su `focus`, `pageshow` e ritorno in foreground. Se il flag condiviso `/var/lib/meteonexa/maintenance.flag` è attivo, la SPA forza una navigazione HTML cache-busted e passa alla pagina di manutenzione. Quando il flag viene rimosso, `js/maintenance.js` riporta automaticamente l'utente all'app.
 
-Questa è la sezione normativa per lo stato attuale del sorgente. **Versione applicazione: 20.1 Final; schema 28; tabelle applicative: 47; translation seed: `20.1-semantic-i18n-v2`; catalogo attivo: 4.645 chiavi × 5 lingue.** `readme.md` resta l'unica documentazione Markdown normativa; `docs/reports/*.md` contiene soltanto evidenze/audit e non può ridefinire il contratto corrente.
+L'endpoint di stato non dipende dal database né dal bootstrap applicativo, usa `Cache-Control: no-store` e legge soltanto lo stesso flag condiviso usato da Apache e dallo script di deploy. Il contratto è coperto sia dallo staging Docker reale sia da Playwright su una sessione già caricata.
 
-Il comando autorevole per rigenerare `SHA256SUMS.txt` è `npm run checksums:update`, implementato in Node e quindi utilizzabile anche su Windows senza WSL/Bash. Il controllo in CI resta `npm run checksums:verify`.
+Il primo deploy che introduce questa capacità non può modificare retroattivamente una tab 20.1.0 già caricata: l'auto-passaggio alla maintenance è garantito per le sessioni che hanno già caricato la 20.1.1 (e quindi per i cutover successivi). Nuove navigazioni durante il deploy 20.1.1 continuano comunque a ricevere subito la pagina 503 server-side.
 
-Evidenza prima di questa riorganizzazione: **MeteoNexa QA #21** e **MeteoNexa Production Deploy #21** sul commit `496e610a8d01c263e921ad9621894fba396e6a8a` sono terminati con successo; il deploy ha ricreato `web` e `worker`, portato/verificato MySQL a `schema_version=28`, stampato `MYSQL_SCHEMA_PASS actual=28 expected=28`, rimosso la maintenance e superato lo smoke live esterno. Ogni nuovo commit, inclusa questa pulizia della root, deve superare nuovamente gli stessi gate prima di essere considerato production-ready.
+### P1 — documentazione e stabilità browser
 
-### Checksum release cross-platform
+`readme.md` resta l'unico Markdown normativo; `docs/reports/ARCHITECTURE-SECURITY.md` resta evidenza tecnica non normativa. Le sezioni RC/Final Candidate più sotto sono conservate esclusivamente come cronologia e non ridefiniscono lo stato corrente.
 
-Il generatore `tools/update-release-checksums.mjs` calcola gli SHA-256 dai blob presenti nell'indice Git, non dai line ending del working tree locale. In questo modo `npm run checksums:update` produce lo stesso manifest su Windows e Linux ed evita differenze CRLF/LF nei file di configurazione.
+I due timeout occasionali osservati nel primo tentativo Chromium del freeze 20.1.0 sono trattati senza introdurre retry ciechi: il solo viewport 3840×2160 dispone di un budget dedicato e il test dei custom controls aspetta esplicitamente che dialog e switch siano realmente disponibili prima di leggerne lo stato.
 
-### Remediation QA punto 9
+### P2 — supply-chain CI
 
-La classificazione documentale del gate `qa/production_readiness_smoke.py` segue ora la struttura `docs/reports/`: `readme.md` resta l'unico Markdown normativo, mentre i file in `docs/reports/` sono esclusivamente evidenze non normative. Sono stati inoltre rimossi i riferimenti accidentali `docs/docs/reports/` introdotti durante la prima riorganizzazione della root.
+Le GitHub Actions usate dai workflow sono pin-nate a SHA immutabili; `qa/workflow_supply_chain_smoke.py` rifiuta nuovi `uses:` basati su tag o branch mobili. Semgrep/Trivy, PHPStan/ESLint, dependency audit, container non-root/read-only, exact-SHA deploy, backup/restore e provenance restano gate della release.
 
-### Remediation quality gate dopo riorganizzazione root
+La firma crittografica del tag è un'operazione Git/account, non viene simulata dal codice. Per `v20.1.1` va usato un tag annotato firmato SSH/GPG quando una signing key verificabile è configurata su GitHub; in assenza di signing key il rilascio non deve dichiarare una firma inesistente.
 
-I gate P4 sono stati riallineati alla nuova struttura `config/quality/`: `qa/p4_platform_hardening_smoke.py` verifica `config/quality/phpstan.neon` e `qa/p4_backend_maintainability_smoke.py` valida il finder PHP-CS-Fixer relativo alla root tramite `dirname(__DIR__, 2)`. Questo elimina gli ultimi riferimenti ai precedenti file quality collocati direttamente nella root.
+### Gate di freeze 20.1.1
 
-### Maintenance desktop compacta e auto-recovery
-
-La pagina di maintenance usa ora un layout desktop compatto entro la viewport: card massima di 600 px, spazi verticali ridotti e variante dedicata per viewport basse, evitando scroll sui normali schermi desktop. Su mobile e viewport eccezionalmente basse resta consentito lo scroll per non troncare i contenuti. Il critical CSS inline resta sincronizzato con `css/maintenance.css` e il relativo hash CSP viene aggiornato insieme al sorgente. Oltre al probe JavaScript ogni 15 secondi, la pagina dispone di refresh HTML di sicurezza e, quando il servizio torna disponibile, naviga verso una URL cache-busted per evitare di restare bloccata su una vecchia risposta 503.
-
-### Remediation syntax maintenance auto-recovery
-
-Corretto il redirect cache-busted della pagina di maintenance: il probe JavaScript usa `location.replace(`/?maintenance_release=${Date.now()}`)` con template literal valido. Il gate locale esegue ora esplicitamente `node --check` sul runtime maintenance e l'intero `qa/release_audit.py` prima della rigenerazione dei checksum.
-
-### Release audit UTF-8 cross-platform
-
-Il gate `qa/release_audit.py` apre esplicitamente in UTF-8 tutti i file testuali del repository. Questo rende l'audit riproducibile anche su Windows, dove l'encoding predefinito di Python può essere `cp1252`, senza alterare il comportamento Linux della CI.
-
-### Promozione 20.1 Final
-
-La 20.1 è promossa da RC2 / Final Candidate a **20.1 Final**. Il badge pubblico e `APP_RELEASE_LABEL` espongono `20.1 Final`; il deploy emette `DEPLOY_FINAL_PASS`; il gate release è `qa/release_final_smoke.py`. Il pulsante `guest-login` mantiene il testo centrato dal primo frame: la copia italiana di fallback è già presente nell'HTML, l'i18n la sostituisce senza cambiare geometria e il chevron è posizionato indipendentemente dal testo. La revisione Service Worker `20.1-final-05-release` forza l'aggiornamento della shell installata.
-
-La promozione non cambia schema né API version: database **schema 28**, applicazione **20.1**, package **20.1.0**. Il tag Git `v20.1.0` deve essere creato soltanto dopo QA e deploy production verdi dello SHA di promozione Final.
-
-### Final gate Service Worker allineato
-
-I gate architetturali P2/P3 della 20.1 Final verificano la revisione Service Worker corrente `20.1-final-05-release`, coerente con `js/sw.js` e con `qa/release_final_smoke.py`. Il precedente riferimento `20.1-final-04-assistant-runtime-radar` apparteneva al candidato precedente e non è più un contratto attivo della release Final.
-
-### QA Python UTF-8 cross-platform
-
-I gate Python della 20.1 Final leggono esplicitamente in UTF-8 i file di repository. In questo modo la suite usa lo stesso contratto di testo su Windows e Linux e non dipende dall'encoding locale di Python/Windows (per esempio cp1252).
-
-### Freeze finale 20.1 — gate conclusivi
-
-Il contratto corrente è **20.1 Final**. Lo SHA `daf326c7b1285ca003faeef6bbfa542ca5be0975` ha superato **MeteoNexa QA #32** e **Production Deploy #32** sullo stesso commit, inclusi Chromium/Firefox, backup/restore, security, schema 28, provenance container, autenticazione SMTP TLS, VAPID e smoke live esterno. Il preflight production richiede le credenziali SMTP; `METEONEXA_PIPELINE_CRON_SECRET` e `METEONEXA_PUSH_CRON_SECRET` restano opzionali perché il worker production esegue pipeline e push via CLI, mentre gli endpoint HTTP sono verificati fail-closed senza chiave. `METEONEXA_VAPID_SUBJECT` è opzionale e usa `METEONEXA_BASE_URL` HTTPS come fallback. Il marker live conclusivo è `LIVE_INTEGRATIONS_PASS smtp=auth vapid=ok cron_http=fail_closed`.
-
-Il tag `v20.1.0` viene creato soltanto dopo che anche il commit di freeze documentale supera MeteoNexa QA e Production Deploy sullo stesso SHA.
-
-### Remediation Deploy #30 — quoting SSH
-
-QA #30 ha validato integralmente lo SHA Final, ma il primo avvio del Production Deploy #30 si è fermato nel runner GitHub prima della connessione SSH per quoting Bash annidato nel comando remoto. Il workflow usa ora un heredoc quotato inviato a `bash -s` sul VPS, mantenendo i controlli di working tree pulita, sincronizzazione `origin/main`, fast-forward e verifica dell'esatto `DEPLOY_SHA`. Il gate `automatic_deploy_contract_smoke.py` protegge anche questa forma di invocazione.
-
-### Remediation Deploy #31 — preflight integrazioni opzionali
-
-QA #31 ha validato integralmente lo SHA Final e il quoting SSH del deploy. Il Production Deploy #31 ha raggiunto correttamente il VPS ma si è fermato nel preflight, prima di build/backup/maintenance, perché tre impostazioni opzionali erano state rese obbligatorie dal gate: `METEONEXA_PIPELINE_CRON_SECRET`, `METEONEXA_PUSH_CRON_SECRET` e `METEONEXA_VAPID_SUBJECT`. Il worker production esegue pipeline e push via CLI; gli endpoint HTTP restano fail-closed senza cron key. Il subject VAPID usa `METEONEXA_BASE_URL` HTTPS come fallback. Il preflight e il live integration check sono quindi riallineati al comportamento effettivo del runtime, senza introdurre secret fittizi.
-
+Lo SHA destinato al tag `v20.1.1` deve essere lo stesso SHA che supera MeteoNexa QA completa e Production Deploy. Il deploy deve verificare schema 28, provenance `web/worker`, integrazioni live, maintenance ON durante i controlli interni, maintenance OFF prima dello smoke esterno e HTTP/TLS finali. Il README non incorpora numeri di run futuri per evitare di rendere obsoleto il commit appena validato; l'evidenza esatta resta nei run GitHub associati allo SHA taggato.
 <!-- METEONEXA_CURRENT_CONTRACT_END -->
 
 ## P1 release/documentation hardening — 20 settembre 2026
