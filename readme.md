@@ -67,6 +67,10 @@ I gate Python della 20.1 Final leggono esplicitamente in UTF-8 i file di reposit
 Il contratto corrente è **20.1 Final**. Prima del tag `v20.1.0`, lo SHA finale deve superare nuovamente MeteoNexa QA e Production Deploy sullo stesso commit. Il deploy sincronizza sul VPS l'esatto SHA già validato dalla QA **prima** di avviare `docker/deploy-production.sh`, evitando che lo script di deploy aggiorni sé stesso mentre è già in esecuzione. Il preflight production richiede inoltre le credenziali SMTP e i secret worker/push, e il deploy esegue un controllo live delle integrazioni interne: configurazione SMTP effettiva, autenticazione SMTP TLS senza invio di messaggi, chiave VAPID disponibile e secret cron presenti in web/worker.
 
 Il tag `v20.1.0` resta un atto Git successivo: non è incluso nel pacchetto ZIP e va creato solo dopo QA #30 e Deploy #30 verdi sullo stesso SHA.
+
+### Remediation Deploy #30 — quoting SSH
+
+QA #30 ha validato integralmente lo SHA Final, ma il primo avvio del Production Deploy #30 si è fermato nel runner GitHub prima della connessione SSH per quoting Bash annidato nel comando remoto. Il workflow usa ora un heredoc quotato inviato a `bash -s` sul VPS, mantenendo i controlli di working tree pulita, sincronizzazione `origin/main`, fast-forward e verifica dell'esatto `DEPLOY_SHA`. Il gate `automatic_deploy_contract_smoke.py` protegge anche questa forma di invocazione.
 <!-- METEONEXA_CURRENT_CONTRACT_END -->
 
 ## P1 release/documentation hardening — 20 settembre 2026

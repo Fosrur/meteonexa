@@ -34,10 +34,14 @@ else:
     require(text, 'METEONEXA_VPS_SSH_KEY', 'dedicated VPS SSH secret missing')
     require(text, 'METEONEXA_VPS_KNOWN_HOSTS', 'pinned VPS host key secret missing')
     require(text, 'REPOSITORY: ${{ github.repository }}', 'GitHub repository identity must be exported by workflow')
-    require(text, "METEONEXA_GITHUB_REPOSITORY='$REPOSITORY'", 'deploy must pass repository identity to CI verifier on VPS')
+    require(text, 'METEONEXA_GITHUB_REPOSITORY="$REPOSITORY"', 'deploy must pass repository identity to CI verifier on VPS')
     require(text, 'git fetch --prune origin main', 'VPS must sync the validated SHA before starting the deploy script')
     require(text, 'git merge --ff-only', 'VPS sync must be fast-forward only')
-    require(text, r'test "\$(git rev-parse HEAD)" =', 'workflow must verify the exact SHA before starting deploy script')
+    require(text, 'bash -s -- "$DEPLOY_SHA" "$REPOSITORY" <<\'REMOTE\'', 'VPS deploy must use a quoted remote heredoc')
+    require(text, 'set -euo pipefail', 'remote deploy shell must fail fast')
+    if r'\$(git status --porcelain)' in text:
+        errors.append('legacy nested SSH quoting must be absent')
+    require(text, 'test "$(git rev-parse HEAD)" = "$DEPLOY_SHA"', 'workflow must verify the exact SHA before starting deploy script')
 
 if deploy.is_file():
     text = deploy.read_text(encoding='utf-8')
