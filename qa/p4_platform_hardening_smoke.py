@@ -25,7 +25,7 @@ checks = {
     'PHPStan is configured': 'phpstan/phpstan' in composer and (root / 'config/quality/phpstan.neon').is_file(),
     'PHP CS Fixer is configured': 'friendsofphp/php-cs-fixer' in composer and (root / 'config/quality/php-cs-fixer.php').is_file(),
     'Semgrep local rules are configured': 'meteonexa-php-eval' in semgrep and 'semgrep/semgrep:1.169.0' in workflow,
-    'Trivy scans source and production image': workflow.count('aquasecurity/trivy-action@v0.36.0') >= 2 and 'image-ref: meteonexa:ci' in workflow,
+    'Trivy scans source and production image': len(re.findall(r'uses:\s*aquasecurity/trivy-action@[0-9a-f]{40}\b', workflow)) >= 2 and 'image-ref: meteonexa:ci' in workflow,
     'CI executes broader real-MySQL integration': 'qa/mysql_full_integration.php' in workflow and (root / 'qa/mysql_full_integration.php').is_file(),
     'hardened image is built in CI': 'docker build -t meteonexa:ci .' in workflow,
 }
