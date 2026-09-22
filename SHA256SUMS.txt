@@ -271,7 +271,7 @@ d93445dfdd56d222c4b82ed7ab43a0b0b1f1b36c84cad6cb4c96d33aa66f9ac8  ./docker/resto
 8653549838a3c4054cff56087806e02dbd63aec6eb6ca3b94be140a7e96812a8  ./docker/staging-up.sh
 6c0e9fef4b27383a8dde5aa004f9812a9139250c672cbbb093380f02e4aa020f  ./docker/verify-backup-restore.sh
 7ddeeb1cc81776bb61947514db350974b0ef78a0698ec0615adb65a458ad9723  ./docker/verify-ci-green.sh
-2b9a7b32a1d6c2303dd4ea4de92cdcf0123a4a1392e91035a0f5d9183ac68a44  ./docker/verify-live-integrations.sh
+ecb62c47ea3e0eed98dca7e07ad680a6664e5d0e71391de69d10eaa4cd1edb1b  ./docker/verify-live-integrations.sh
 97e11019c15b57a833a7abfbaaa2b180d6df385240856d5617a438f8f428badb  ./docker/verify-mysql.sh
 d15a7978c3879d9ec12453dd7ad14ed751c0ec6dd410ceae9ffa8f58c4d89840  ./docker/worker-loop.sh
 ce0a01f1360c214fd56abbf1ba1952d8782d1e0868f5bc556127da0372c2b70a  ./docs/reports/ARCHITECTURE-SECURITY.md
@@ -437,7 +437,7 @@ a8a371909493ba6c6d60609d7f129e29b9e98d3665139c23bf2b9a288a11cd15  ./qa/severe_we
 d5fc7977d7a8c02e974f739e92e4a15d42d81e89285b9425da872f4c161b76b8  ./qa/traffic_analytics_removed_smoke.py
 ae2aa6a4b58e201bdb43538a36849cc28aef98e4be875d0b73f542f1d125b425  ./qa/watch_plan_smoke.py
 1fb008a987f994ccb396d0e343ca7958341089fca8bce1be03e617f359d070fc  ./qa/weather_replay_smoke.php
-19351022659d41b3d3b2d99ce3989b29d7717fcaf5e92a9256d6d8aeb869027a  ./readme.md
+9ba9664f0edba80610e989e86047706f9c7aaf76bab868e8afb8de2fcc30ad54  ./readme.md
 0c367e68ca08bca538114b116d62e65b31a04d399c161003a701aa83018ca468  ./robots.txt
 052f935d8b31949e141bfcaf29ec057a4357cceaec0a95ec92544df95952123d  ./sitemap.xml
 7f9ce627144060a6719a5c48c5e8ed2bc744ab708572b0c8f0f70dc9bcffebac  ./styles/main/00-foundation.css

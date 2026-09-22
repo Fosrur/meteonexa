@@ -62,11 +62,11 @@ I gate architetturali P2/P3 della 20.1 Final verificano la revisione Service Wor
 
 I gate Python della 20.1 Final leggono esplicitamente in UTF-8 i file di repository. In questo modo la suite usa lo stesso contratto di testo su Windows e Linux e non dipende dall'encoding locale di Python/Windows (per esempio cp1252).
 
-### Freeze finale 20.1 — gate QA #30 / Deploy #30
+### Freeze finale 20.1 — gate conclusivi
 
-Il contratto corrente è **20.1 Final**. Prima del tag `v20.1.0`, lo SHA finale deve superare nuovamente MeteoNexa QA e Production Deploy sullo stesso commit. Il deploy sincronizza sul VPS l'esatto SHA già validato dalla QA **prima** di avviare `docker/deploy-production.sh`, evitando che lo script di deploy aggiorni sé stesso mentre è già in esecuzione. Il preflight production richiede inoltre le credenziali SMTP e i secret worker/push, e il deploy esegue un controllo live delle integrazioni interne: configurazione SMTP effettiva, autenticazione SMTP TLS senza invio di messaggi, chiave VAPID disponibile e secret cron presenti in web/worker.
+Il contratto corrente è **20.1 Final**. Lo SHA `daf326c7b1285ca003faeef6bbfa542ca5be0975` ha superato **MeteoNexa QA #32** e **Production Deploy #32** sullo stesso commit, inclusi Chromium/Firefox, backup/restore, security, schema 28, provenance container, autenticazione SMTP TLS, VAPID e smoke live esterno. Il preflight production richiede le credenziali SMTP; `METEONEXA_PIPELINE_CRON_SECRET` e `METEONEXA_PUSH_CRON_SECRET` restano opzionali perché il worker production esegue pipeline e push via CLI, mentre gli endpoint HTTP sono verificati fail-closed senza chiave. `METEONEXA_VAPID_SUBJECT` è opzionale e usa `METEONEXA_BASE_URL` HTTPS come fallback. Il marker live conclusivo è `LIVE_INTEGRATIONS_PASS smtp=auth vapid=ok cron_http=fail_closed`.
 
-Il tag `v20.1.0` resta un atto Git successivo: non è incluso nel pacchetto ZIP e va creato solo dopo QA #30 e Deploy #30 verdi sullo stesso SHA.
+Il tag `v20.1.0` viene creato soltanto dopo che anche il commit di freeze documentale supera MeteoNexa QA e Production Deploy sullo stesso SHA.
 
 ### Remediation Deploy #30 — quoting SSH
 

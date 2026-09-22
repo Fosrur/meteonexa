@@ -99,4 +99,4 @@ fclose($s);
 echo "[OK] SMTP TLS authentication live PASS\n";
 PHP
 
-echo 'LIVE_INTEGRATIONS_PASS smtp=auth vapid=ok worker_secrets=ok'
+echo 'LIVE_INTEGRATIONS_PASS smtp=auth vapid=ok cron_http=fail_closed'
