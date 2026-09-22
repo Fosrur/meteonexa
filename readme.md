@@ -24,6 +24,8 @@ Il primo deploy che introduce questa capacità non può modificare retroattivame
 
 La 20.1.1 corregge inoltre il lifecycle di registrazione PWA: se il bootstrap termina dopo l'evento `window.load`, il Service Worker viene registrato immediatamente invece di attendere un evento già trascorso. La browser QA replica anche l'header production `Service-Worker-Allowed: /`, così Chromium e Firefox verificano realmente il percorso root-scoped PWA prima del ciclo maintenance.
 
+Il passaggio maintenance conserva inoltre la destinazione della tab in `sessionStorage`: al termine del cutover l'utente torna alla stessa route/query/hash da cui era stato spostato, con un parametro `maintenance_release` cache-busting. Il valore viene consumato e cancellato al rientro ed è validato same-origin, evitando sia la perdita del contesto di navigazione sia redirect esterni.
+
 ### P1 — documentazione e stabilità browser
 
 `readme.md` resta l'unico Markdown normativo; `docs/reports/ARCHITECTURE-SECURITY.md` resta evidenza tecnica non normativa. Le sezioni RC/Final Candidate più sotto sono conservate esclusivamente come cronologia e non ridefiniscono lo stato corrente.

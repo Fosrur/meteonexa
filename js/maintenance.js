@@ -19,6 +19,29 @@
     })
     .catch(() => null);
 
+  const MAINTENANCE_RETURN_KEY = 'meteonexa_maintenance_return_v1';
+  const releaseTarget = () => {
+    let stored = '';
+    try {
+      stored = sessionStorage.getItem(MAINTENANCE_RETURN_KEY) || '';
+      sessionStorage.removeItem(MAINTENANCE_RETURN_KEY);
+    } catch { }
+
+    let target;
+    try {
+      target = new URL(stored || '/', location.origin);
+    } catch {
+      target = new URL('/', location.origin);
+    }
+    if (target.origin !== location.origin) target = new URL('/', location.origin);
+
+    target.searchParams.delete('maintenance_enter');
+    target.searchParams.delete('maintenance_probe');
+    target.searchParams.delete('maintenance_release');
+    target.searchParams.set('maintenance_release', String(Date.now()));
+    return target.toString();
+  };
+
   let checking = false;
   const button = document.getElementById('maintenance-retry');
   const checkRelease = async ({ reloadOnFailure = false } = {}) => {
@@ -32,7 +55,7 @@
         headers: { Accept: 'text/html' },
       });
       if (response.ok) {
-        location.replace(`/?maintenance_release=${Date.now()}`);
+        location.replace(releaseTarget());
         return;
       }
       if (reloadOnFailure) location.reload();

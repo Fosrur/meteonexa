@@ -46,6 +46,12 @@ if '@media(min-width:621px)' not in html or 'max-height:calc(100dvh - 36px)' not
 if '@media(max-width:620px),(max-height:560px)' not in html or 'body{overflow:auto}' not in html: errors.append('maintenance small-viewport scroll fallback missing')
 if 'http-equiv="refresh"' not in html: errors.append('maintenance HTML refresh fallback missing')
 if 'maintenance_release=' not in js or 'location.replace' not in js: errors.append('maintenance cache-busting release navigation missing')
+if 'meteonexa_maintenance_return_v1' not in lifecycle or 'sessionStorage.setItem' not in lifecycle:
+    errors.append('active-session maintenance does not preserve the current app destination')
+if 'meteonexa_maintenance_return_v1' not in js or 'releaseTarget' not in js or 'sessionStorage.removeItem' not in js:
+    errors.append('maintenance release does not restore and clear the saved app destination')
+if "target.origin !== location.origin" not in js:
+    errors.append('maintenance return target must remain same-origin')
 if 'METEONEXA_KEEP_MAINTENANCE' not in deploy: errors.append('deploy cannot retain maintenance through internal replacement checks')
 if 'api/system/status.php' not in deploy: errors.append('deploy must gate release on dynamic system status/schema migration endpoint')
 seed=json.loads(text('api/install/translations.json'))['rows']

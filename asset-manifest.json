@@ -38,7 +38,7 @@
   "modules/esm/domains/account.mjs": "./dist/modules/esm/domains/account.d9416e7c1ed8.mjs",
   "modules/esm/domains/ai.mjs": "./dist/modules/esm/domains/ai.0e82194c2394.mjs",
   "modules/esm/domains/alerts.mjs": "./dist/modules/esm/domains/alerts.69d33d9d7a52.mjs",
-  "modules/esm/domains/app-lifecycle.mjs": "./dist/modules/esm/domains/app-lifecycle.9d61b8116160.mjs",
+  "modules/esm/domains/app-lifecycle.mjs": "./dist/modules/esm/domains/app-lifecycle.acb7593f7678.mjs",
   "modules/esm/domains/app-utilities.mjs": "./dist/modules/esm/domains/app-utilities.1aceb5def012.mjs",
   "modules/esm/domains/auth-flow.mjs": "./dist/modules/esm/domains/auth-flow.39da06565fa9.mjs",
   "modules/esm/domains/auth.mjs": "./dist/modules/esm/domains/auth.7736e7236e81.mjs",

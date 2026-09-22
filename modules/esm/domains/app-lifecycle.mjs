@@ -41,6 +41,12 @@ function factory(window, deps, provided) {
                             return false;
 
                         maintenanceRedirecting = true;
+                        try {
+                            sessionStorage.setItem(
+                                'meteonexa_maintenance_return_v1',
+                                `${location.pathname}${location.search}${location.hash}`
+                            );
+                        } catch { }
                         const target = new URL('/', location.origin);
                         target.searchParams.set('maintenance_enter', String(Date.now()));
                         location.replace(target.toString());

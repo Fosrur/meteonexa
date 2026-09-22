@@ -59,6 +59,12 @@ test.describe('deployment maintenance active session', () => {
     await page.waitForURL(/maintenance_release=\d+/, { timeout: 7000 });
     await waitForMeteoNexaReady(page, 12000);
     await expect(page.locator('#weather-app')).toBeVisible();
+
+    const releasedUrl = new URL(page.url());
+    expect(releasedUrl.searchParams.has('preview')).toBe(true);
+    expect(releasedUrl.searchParams.has('maintenance_enter')).toBe(false);
+    expect(releasedUrl.searchParams.has('maintenance_release')).toBe(true);
+    expect(await page.evaluate(() => sessionStorage.getItem('meteonexa_maintenance_return_v1'))).toBeNull();
     expect(await page.evaluate(() => localStorage.getItem('qa-maintenance-session-marker'))).toBe('preserve');
   });
 });
