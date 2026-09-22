@@ -5,6 +5,17 @@ $path = (string)(parse_url((string)($_SERVER['REQUEST_URI'] ?? '/'), PHP_URL_PAT
 $accept = strtolower((string)($_SERVER['HTTP_ACCEPT'] ?? ''));
 $flag = trim((string)(getenv('METEONEXA_MAINTENANCE_FLAG') ?: ''));
 
+// Mirror the production Apache contract for the root-scoped Service Worker.
+// PHP's built-in server does not read .htaccess, so browser QA must serve the
+// worker explicitly with the same Service-Worker-Allowed response header.
+if ($path === '/js/sw.js') {
+    header('Content-Type: application/javascript; charset=utf-8');
+    header('Service-Worker-Allowed: /');
+    header('Cache-Control: no-cache');
+    readfile(dirname(__DIR__) . '/js/sw.js');
+    return true;
+}
+
 $exempt = [
     '/maintenance.html',
     '/api/maintenance.php',

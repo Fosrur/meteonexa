@@ -29,7 +29,10 @@ test.describe('deployment maintenance active session', () => {
 
     await page.evaluate(async () => {
       if (!('serviceWorker' in navigator)) throw new Error('SERVICE_WORKER_UNAVAILABLE');
-      await navigator.serviceWorker.ready;
+      await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise((_, reject) => setTimeout(() => reject(new Error('SERVICE_WORKER_READY_TIMEOUT')), 10000)),
+      ]);
       localStorage.setItem('qa-maintenance-session-marker', 'preserve');
     });
 

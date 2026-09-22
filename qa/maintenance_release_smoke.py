@@ -4,7 +4,7 @@ import json,sys
 ROOT=Path(sys.argv[1]).resolve() if len(sys.argv)>1 else Path(__file__).resolve().parents[1]
 errors=[]
 def text(rel): return (ROOT/rel).read_text(encoding='utf-8')
-ht=text('.htaccess'); deploy=text('docker/deploy-production.sh'); mode=text('docker/maintenance-mode.sh'); html=text('maintenance.html'); js=text('js/maintenance.js'); lifecycle=text('modules/esm/domains/app-lifecycle.mjs'); status_api=text('api/system/maintenance-status.php'); browser_router=text('qa/php-browser-router.php'); workflow=text('.github/workflows/meteonexa-tests.yml')
+ht=text('.htaccess'); deploy=text('docker/deploy-production.sh'); mode=text('docker/maintenance-mode.sh'); html=text('maintenance.html'); js=text('js/maintenance.js'); lifecycle=text('modules/esm/domains/app-lifecycle.mjs'); status_api=text('api/system/maintenance-status.php'); browser_router=text('qa/php-browser-router.php'); workflow=text('.github/workflows/meteonexa-tests.yml'); notifications=text('modules/esm/domains/notifications.mjs')
 for needle in ['/var/lib/meteonexa/maintenance.flag','api/maintenance.php']:
     if needle not in ht: errors.append(f'.htaccess missing {needle}')
 if 'Service-Worker-Allowed' not in ht or '/js/sw.js' not in ht: errors.append('service worker root scope header missing')
@@ -22,6 +22,10 @@ if '}, 5000);' not in lifecycle:
     errors.append('active-session maintenance poll must remain bounded to 5 seconds')
 if 'METEONEXA_MAINTENANCE_FLAG' not in browser_router or 'api/maintenance.php' not in browser_router:
     errors.append('browser QA router does not mirror maintenance flag/503 surface')
+if "header('Service-Worker-Allowed: /')" not in browser_router or "$path === '/js/sw.js'" not in browser_router:
+    errors.append('browser QA router does not mirror production Service-Worker-Allowed root scope')
+if "document.readyState === 'complete'" not in notifications or "void registerServiceWorker()" not in notifications or "{ once: true }" not in notifications:
+    errors.append('PWA registration can miss window.load when application bootstrap completes late')
 for needle in ('qa/php-browser-router.php','METEONEXA_TEST_MAINTENANCE_FLAG','METEONEXA_MAINTENANCE_FLAG'):
     if needle not in workflow: errors.append('browser QA workflow missing real maintenance contract '+needle)
 if 'data-i18n="maintenance.title"' not in html or 'js/maintenance.js' not in html or 'css/maintenance.css' not in html: errors.append('maintenance page assets/i18n wiring missing')

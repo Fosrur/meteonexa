@@ -48,7 +48,7 @@
   "modules/esm/domains/locations.mjs": "./dist/modules/esm/domains/locations.ae51eac83bb5.mjs",
   "modules/esm/domains/model-intelligence.mjs": "./dist/modules/esm/domains/model-intelligence.bff4b937dd9f.mjs",
   "modules/esm/domains/navigation.mjs": "./dist/modules/esm/domains/navigation.be87504a3843.mjs",
-  "modules/esm/domains/notifications.mjs": "./dist/modules/esm/domains/notifications.60a248af42b2.mjs",
+  "modules/esm/domains/notifications.mjs": "./dist/modules/esm/domains/notifications.86a69f10184f.mjs",
   "modules/esm/domains/privacy.mjs": "./dist/modules/esm/domains/privacy.cbed423fdfd9.mjs",
   "modules/esm/domains/radar-controller.mjs": "./dist/modules/esm/domains/radar-controller.adf0e5c5448b.mjs",
   "modules/esm/domains/radar-motion.mjs": "./dist/modules/esm/domains/radar-motion.e46075fb59f3.mjs",

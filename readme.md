@@ -22,6 +22,8 @@ L'endpoint di stato non dipende dal database né dal bootstrap applicativo, usa 
 
 Il primo deploy che introduce questa capacità non può modificare retroattivamente una tab 20.1.0 già caricata: l'auto-passaggio alla maintenance è garantito per le sessioni che hanno già caricato la 20.1.1 (e quindi per i cutover successivi). Nuove navigazioni durante il deploy 20.1.1 continuano comunque a ricevere subito la pagina 503 server-side.
 
+La 20.1.1 corregge inoltre il lifecycle di registrazione PWA: se il bootstrap termina dopo l'evento `window.load`, il Service Worker viene registrato immediatamente invece di attendere un evento già trascorso. La browser QA replica anche l'header production `Service-Worker-Allowed: /`, così Chromium e Firefox verificano realmente il percorso root-scoped PWA prima del ciclo maintenance.
+
 ### P1 — documentazione e stabilità browser
 
 `readme.md` resta l'unico Markdown normativo; `docs/reports/ARCHITECTURE-SECURITY.md` resta evidenza tecnica non normativa. Le sezioni RC/Final Candidate più sotto sono conservate esclusivamente come cronologia e non ridefiniscono lo stato corrente.

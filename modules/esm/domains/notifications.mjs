@@ -399,7 +399,7 @@ export function install(services, host = globalThis) {
                 function registerPWA() {
                     const serviceWorker = navigator.serviceWorker;
                     if (serviceWorker && typeof serviceWorker.register === 'function') {
-                        addEventListener('load', async () => {
+                        const registerServiceWorker = async () => {
                             try {
                                 const registration = await serviceWorker.register(`./js/sw.js?v=${APP_BUILD}`, { scope: '/', updateViaCache: 'none' });
                                 await registration.update().catch(() => null);
@@ -411,7 +411,11 @@ export function install(services, host = globalThis) {
                             catch (error) {
                                 console.warn(meteonexaText('log.sw.register_failed'), error);
                             }
-                        });
+                        };
+                        if (document.readyState === 'complete')
+                            void registerServiceWorker();
+                        else
+                            addEventListener('load', () => { void registerServiceWorker(); }, { once: true });
                         if (typeof serviceWorker.addEventListener === 'function') serviceWorker.addEventListener('message', event => {
                             if (event.data?.type === 'METEONEXA_SAFE_SYNC') {
                                 updateNetworkStatus();
