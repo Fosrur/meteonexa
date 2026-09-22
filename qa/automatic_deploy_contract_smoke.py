@@ -35,10 +35,17 @@ else:
     require(text, 'METEONEXA_VPS_KNOWN_HOSTS', 'pinned VPS host key secret missing')
     require(text, 'REPOSITORY: ${{ github.repository }}', 'GitHub repository identity must be exported by workflow')
     require(text, "METEONEXA_GITHUB_REPOSITORY='$REPOSITORY'", 'deploy must pass repository identity to CI verifier on VPS')
+    require(text, 'git fetch --prune origin main', 'VPS must sync the validated SHA before starting the deploy script')
+    require(text, 'git merge --ff-only', 'VPS sync must be fast-forward only')
+    require(text, r'test "\$(git rev-parse HEAD)" =', 'workflow must verify the exact SHA before starting deploy script')
 
 if deploy.is_file():
     text = deploy.read_text(encoding='utf-8')
     require(text, 'METEONEXA_KEEP_MAINTENANCE', 'deploy script cannot retain maintenance for external smoke')
+    require(text, 'docker/verify-live-integrations.sh', 'deploy must verify real runtime integrations before maintenance release')
+    require(text, 'DEPLOY_FINAL_PASS', 'deploy must emit the Final marker')
+    if 'DEPLOY_RC2_PASS' in text:
+        errors.append('legacy RC2 deploy marker must be absent')
 else:
     errors.append('canonical deploy script missing')
 

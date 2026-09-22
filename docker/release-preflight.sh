@@ -10,6 +10,7 @@ optional(){ eval "v=\${$1:-}"; if [ -z "$v" ]; then echo "[INFO] $1 non configur
 need MYSQL_DATABASE; need MYSQL_USER; need MYSQL_PASSWORD; need MYSQL_ROOT_PASSWORD
 need METEONEXA_BASE_URL
 need METEONEXA_SMTP_USERNAME; need METEONEXA_SMTP_PASSWORD; need METEONEXA_SMTP_FROM_EMAIL
+need METEONEXA_PIPELINE_CRON_SECRET; need METEONEXA_PUSH_CRON_SECRET; need METEONEXA_VAPID_SUBJECT
 optional METEONEXA_LEGAL_CONTROLLER_NAME; optional METEONEXA_LEGAL_CONTROLLER_ADDRESS; optional METEONEXA_PRIVACY_CONTACT_EMAIL
 status="${METEONEXA_DPO_STATUS:-not-appointed}"
 case "$status" in appointed) need METEONEXA_DPO_EMAIL ;; not-appointed) echo '[OK] METEONEXA_DPO_STATUS=not-appointed (default consentito)' ;; *) echo '[FAIL] METEONEXA_DPO_STATUS deve essere appointed oppure not-appointed' >&2; fail=1 ;; esac

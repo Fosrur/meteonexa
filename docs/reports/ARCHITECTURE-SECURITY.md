@@ -4,7 +4,7 @@
 
 ## Release snapshot
 
-- Release line: **20.1 RC2 / Final Candidate**
+- Release line: **20.1 Final**
 - Database: **schema 28**, 47 application tables
 - i18n: **4,645 semantic keys × 5 locales = 23,225 translations**
 - Backend: PHP API; MySQL 8.4 production; SQLite baseline/QA compatibility

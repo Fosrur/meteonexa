@@ -18,7 +18,7 @@ Il deploy production prepara il candidato **con il sito ancora online**: build d
 
 ## Contratto corrente della release — 21 settembre 2026
 
-Questa è la sezione normativa per lo stato attuale del sorgente. **Versione applicazione: 20.1 RC2 / Final Candidate; schema 28; tabelle applicative: 47; translation seed: `20.1-semantic-i18n-v2`; catalogo attivo: 4.645 chiavi × 5 lingue.** `readme.md` resta l'unica documentazione Markdown normativa; `docs/reports/*.md` contiene soltanto evidenze/audit e non può ridefinire il contratto corrente.
+Questa è la sezione normativa per lo stato attuale del sorgente. **Versione applicazione: 20.1 Final; schema 28; tabelle applicative: 47; translation seed: `20.1-semantic-i18n-v2`; catalogo attivo: 4.645 chiavi × 5 lingue.** `readme.md` resta l'unica documentazione Markdown normativa; `docs/reports/*.md` contiene soltanto evidenze/audit e non può ridefinire il contratto corrente.
 
 Il comando autorevole per rigenerare `SHA256SUMS.txt` è `npm run checksums:update`, implementato in Node e quindi utilizzabile anche su Windows senza WSL/Bash. Il controllo in CI resta `npm run checksums:verify`.
 
@@ -61,6 +61,12 @@ I gate architetturali P2/P3 della 20.1 Final verificano la revisione Service Wor
 ### QA Python UTF-8 cross-platform
 
 I gate Python della 20.1 Final leggono esplicitamente in UTF-8 i file di repository. In questo modo la suite usa lo stesso contratto di testo su Windows e Linux e non dipende dall'encoding locale di Python/Windows (per esempio cp1252).
+
+### Freeze finale 20.1 — gate QA #30 / Deploy #30
+
+Il contratto corrente è **20.1 Final**. Prima del tag `v20.1.0`, lo SHA finale deve superare nuovamente MeteoNexa QA e Production Deploy sullo stesso commit. Il deploy sincronizza sul VPS l'esatto SHA già validato dalla QA **prima** di avviare `docker/deploy-production.sh`, evitando che lo script di deploy aggiorni sé stesso mentre è già in esecuzione. Il preflight production richiede inoltre le credenziali SMTP e i secret worker/push, e il deploy esegue un controllo live delle integrazioni interne: configurazione SMTP effettiva, autenticazione SMTP TLS senza invio di messaggi, chiave VAPID disponibile e secret cron presenti in web/worker.
+
+Il tag `v20.1.0` resta un atto Git successivo: non è incluso nel pacchetto ZIP e va creato solo dopo QA #30 e Deploy #30 verdi sullo stesso SHA.
 <!-- METEONEXA_CURRENT_CONTRACT_END -->
 
 ## P1 release/documentation hardening — 20 settembre 2026

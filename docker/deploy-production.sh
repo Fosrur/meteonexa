@@ -83,6 +83,7 @@ WORKER_SHA="$(docker inspect -f '{{ index .Config.Labels "org.opencontainers.ima
 printf 'CONTAINER_PROVENANCE_PASS web=%s worker=%s expected=%s\n' "$WEB_SHA" "$WORKER_SHA" "$DEPLOY_SHA"
 
 bash docker/verify-mysql.sh
+bash docker/verify-live-integrations.sh
 docker compose ps
 
 if [ "${METEONEXA_KEEP_MAINTENANCE:-0}" = "1" ]; then
