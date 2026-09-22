@@ -1,6 +1,6 @@
 'use strict';
 const BUILD = '20.1';
-const SHELL_REVISION = '20.1-final-04-assistant-runtime-radar';
+const SHELL_REVISION = '20.1-final-05-release';
 const SHELL_CACHE = `meteonexa-shell-v${BUILD}-${SHELL_REVISION}`;
 const RUNTIME_CACHE = `meteonexa-runtime-v${BUILD}`;
 const BACKGROUND_CONFIG_KEY = './__meteonexa_background_config__';

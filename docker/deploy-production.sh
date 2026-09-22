@@ -93,4 +93,4 @@ else
 fi
 trap - ERR
 
-echo "DEPLOY_RC2_PASS sha=$DEPLOY_SHA backup=$BACKUP_DIR maintenance=${MAINTENANCE_ACTIVE:-0}"
+echo "DEPLOY_FINAL_PASS sha=$DEPLOY_SHA backup=$BACKUP_DIR maintenance=${MAINTENANCE_ACTIVE:-0}"

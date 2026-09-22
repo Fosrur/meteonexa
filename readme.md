@@ -1,14 +1,14 @@
-# MeteoNexa 20.1 — Final Candidate
+# MeteoNexa 20.1 — Final
 
 ## P0 + P5/P6 stabilization — 21 settembre 2026
 
-Questa revisione mantiene la release **20.1 RC2 / Final Candidate** e aggiunge hardening/affidabilità senza cambiare lo schema DB: CSP reporting first-party (`/api/csp-report.php`), verifica live dei relativi header, audit dipendenze schedulato indipendentemente dai deploy, runbook di rotazione chiavi, contratto che mantiene il worker fuori dalla rete pubblica `proxy`, test production-like della maintenance 503 con asset CSS/JS/logo/i18n, fallback maintenance leggibile anche in caso di failure degli asset, correzione del menu lingua login senza overlay sul CTA ospite, guardrail performance in browser reale e una lane PHPStan incrementale a livello 4 sul driver DB.
+La release **MeteoNexa 20.1 Final** promuove il candidato validato dopo QA completa, browser regression Chromium/Firefox, backup/restore drill, security scan e deploy production verificato. Lo schema DB resta **28** e la versione applicativa resta **20.1**; la promozione Final consolida il canale di release senza introdurre una nuova migrazione.
 
 Il repository **non può modificare da solo il flag GitHub “Allow write access” di una deploy key**: il requisito read-only è documentato in `docs/reports/ARCHITECTURE-SECURITY.md` (sezione Key rotation runbook) e va verificato una volta nelle impostazioni GitHub del repository. La rotazione VAPID è esplicitamente trattata come operazione che richiede nuova sottoscrizione push dei client.
 
 
 <!-- METEONEXA_CURRENT_CONTRACT_START -->
-## 20.1 RC2 — root organizzata, deploy verificabile e tooling cross-platform
+## 20.1 Final — root organizzata, deploy verificabile e tooling cross-platform
 
 La root del repository resta il **control plane + document root pubblico** della web app, ma non contiene più configurazioni quality non convenzionali sparse. Le pagine HTML pubbliche, `readme.md`, i file convenzionali di build/deploy e i metadati web restano in root; PHPStan, PHP-CS-Fixer e Semgrep sono centralizzati in `config/quality/`; le evidenze Markdown non normative sono in `docs/reports/`. I runtime JavaScript sono in `js/`, i bundle CSS in `css/`, gli ESM in `modules/esm/`, i partial CSS in `styles/` e gli endpoint/backend in `api/`. `qa/architecture_layout_smoke.py` protegge questa struttura. Lo spostamento dell'intero document root sotto `public/` resta volutamente fuori da questa stabilizzazione perché richiederebbe un refactoring coordinato di Apache, Dockerfile, Service Worker, fingerprint e QA.
 
@@ -47,6 +47,12 @@ Corretto il redirect cache-busted della pagina di maintenance: il probe JavaScri
 ### Release audit UTF-8 cross-platform
 
 Il gate `qa/release_audit.py` apre esplicitamente in UTF-8 tutti i file testuali del repository. Questo rende l'audit riproducibile anche su Windows, dove l'encoding predefinito di Python può essere `cp1252`, senza alterare il comportamento Linux della CI.
+
+### Promozione 20.1 Final
+
+La 20.1 è promossa da RC2 / Final Candidate a **20.1 Final**. Il badge pubblico e `APP_RELEASE_LABEL` espongono `20.1 Final`; il deploy emette `DEPLOY_FINAL_PASS`; il gate release è `qa/release_final_smoke.py`. Il pulsante `guest-login` mantiene il testo centrato dal primo frame: la copia italiana di fallback è già presente nell'HTML, l'i18n la sostituisce senza cambiare geometria e il chevron è posizionato indipendentemente dal testo. La revisione Service Worker `20.1-final-05-release` forza l'aggiornamento della shell installata.
+
+La promozione non cambia schema né API version: database **schema 28**, applicazione **20.1**, package **20.1.0**. Il tag Git `v20.1.0` deve essere creato soltanto dopo QA e deploy production verdi dello SHA di promozione Final.
 <!-- METEONEXA_CURRENT_CONTRACT_END -->
 
 ## P1 release/documentation hardening — 20 settembre 2026
@@ -292,7 +298,7 @@ Questa revisione è la **Release Candidate consigliata per il collaudo pre-produ
 
 ### Correzione runtime bloccante prima della release
 
-L'audit della RC ha rilevato un problema non intercettato dai precedenti smoke test: `visualization.mjs` usava ancora un identificatore `SERVICES` non dichiarato quando costruiva il controller radar e `js/app.js` utilizzava funzioni radar non restituite dalla factory. In browser questo poteva produrre `ReferenceError` durante il bootstrap o all'apertura Radar. La RC corregge il contratto: `visualization` dichiara `radarMotion` e `radarController` nel dependency graph, usa `deps.*` e restituisce esplicitamente le funzioni radar consumate da `js/app.js`. Il gate `qa/release_candidate_smoke.py` impedisce la regressione.
+L'audit della RC ha rilevato un problema non intercettato dai precedenti smoke test: `visualization.mjs` usava ancora un identificatore `SERVICES` non dichiarato quando costruiva il controller radar e `js/app.js` utilizzava funzioni radar non restituite dalla factory. In browser questo poteva produrre `ReferenceError` durante il bootstrap o all'apertura Radar. La RC corregge il contratto: `visualization` dichiara `radarMotion` e `radarController` nel dependency graph, usa `deps.*` e restituisce esplicitamente le funzioni radar consumate da `js/app.js`. Il gate `qa/release_final_smoke.py` impedisce la regressione.
 
 ### Critical path più leggero
 
@@ -2288,7 +2294,7 @@ sorgenti ESM
 
 La RC mantiene il service registry/DI P3-P5 ma distingue il caricamento in tre livelli: Core + `PRE_APP_ESM` necessari a `js/app.js`, `SUITE_ESM` caricati dopo il bootstrap principale, e feature post-app. I CSS delle feature non sono render-blocking e vengono applicati dopo il primo paint. Il Service Worker separa `CRITICAL_SHELL` da `OPTIONAL_SHELL`; quest'ultima viene warmata in idle dall'app con concorrenza limitata. `visualization` dipende esplicitamente da `radarMotion`/`radarController`, senza service locator impliciti.
 
-Budget RC: pre-app ESM sorgente <= 450 KB; CSS render-blocking sorgente <= 450 KB. Questi limiti sono protetti da `qa/release_candidate_smoke.py`.
+Budget RC: pre-app ESM sorgente <= 450 KB; CSS render-blocking sorgente <= 450 KB. Questi limiti sono protetti da `qa/release_final_smoke.py`.
 
 ## Architectural principles
 
@@ -2656,7 +2662,7 @@ RC1 consolida la roadmap P0→P5 in un candidato da provare in staging e, dopo i
 
 Durante il controllo runtime pre-release è emerso che `visualization.mjs` conservava un riferimento implicito a `SERVICES` e costruiva le funzioni Radar senza restituirle ad `js/app.js`. La sintassi era valida e i vecchi smoke test non lo rilevavano, ma in browser poteva causare `ReferenceError` nel percorso Radar/bootstrap.
 
-RC1 corregge il contratto con DI esplicita (`radarMotion`, `radarController`) e binding esplicito delle funzioni Radar. `qa/release_candidate_smoke.py` protegge la correzione.
+RC1 corregge il contratto con DI esplicita (`radarMotion`, `radarController`) e binding esplicito delle funzioni Radar. `qa/release_final_smoke.py` protegge la correzione.
 
 ## Performance percepita
 
