@@ -45,7 +45,8 @@ if 'maintenance_probe=' not in js or 'setInterval' not in js: errors.append('mai
 if '@media(min-width:621px)' not in html or 'max-height:calc(100dvh - 36px)' not in html or 'width:min(100%,600px)' not in html: errors.append('maintenance desktop compact no-scroll contract missing')
 if '@media(max-width:620px),(max-height:560px)' not in html or 'body{overflow:auto}' not in html: errors.append('maintenance small-viewport scroll fallback missing')
 if 'http-equiv="refresh"' not in html: errors.append('maintenance HTML refresh fallback missing')
-if 'maintenance_release=' not in js or 'location.replace' not in js: errors.append('maintenance cache-busting release navigation missing')
+if "searchParams.set('maintenance_release'" not in js or 'location.replace(releaseTarget())' not in js:
+    errors.append('maintenance cache-busting release navigation missing')
 if 'meteonexa_maintenance_return_v1' not in lifecycle or 'sessionStorage.setItem' not in lifecycle:
     errors.append('active-session maintenance does not preserve the current app destination')
 if 'meteonexa_maintenance_return_v1' not in js or 'releaseTarget' not in js or 'sessionStorage.removeItem' not in js:
