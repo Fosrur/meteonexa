@@ -109,7 +109,7 @@ checks = {
     'Playwright lock is exact': qa_pkgs.get('node_modules/@playwright/test', {}).get('version') == '1.55.0' and qa_pkgs.get('node_modules/playwright', {}).get('version') == '1.55.0',
     'browser CI covers Chromium + Firefox': browser_ci_monolithic or browser_ci_matrix,
     'MySQL CI is real 8.4': 'image: mysql:8.4' in workflow and 'qa/mysql_full_integration.php' in workflow,
-    'security CI includes Semgrep and Trivy': 'semgrep/semgrep:1.169.0' in workflow and workflow.count('aquasecurity/trivy-action@v0.36.0') >= 2,
+    'security CI includes Semgrep and Trivy': 'semgrep/semgrep:1.169.0' in workflow and len(re.findall(r'uses:\s*aquasecurity/trivy-action@[0-9a-f]{40}\b', workflow)) >= 2,
     'production env template exposes legal identity': all(re.search(rf'^{re.escape(k)}=', env, re.M) for k in ['METEONEXA_PRIVACY_CONTACT_EMAIL','METEONEXA_LEGAL_CONTROLLER_NAME','METEONEXA_LEGAL_CONTROLLER_ADDRESS','METEONEXA_DPO_STATUS','METEONEXA_DPO_EMAIL','METEONEXA_LEGAL_SITE_URL']),
 }
 
