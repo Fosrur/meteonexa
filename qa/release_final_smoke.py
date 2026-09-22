@@ -107,6 +107,6 @@ if 'data-i18n-key="home.guest_login.continue_as_guest">Continua come ospite</spa
     fail('guest-login first-paint fallback copy missing')
 readme = text('readme.md')
 if '# MeteoNexa 20.1.1 — Patch release' not in readme:
-    fail('README does not document the 20.1 Final release')
+    fail('README does not document the 20.1.1 patch release')
 
 print(f'Final release smoke: PASS (pre-app ESM {pre_app_bytes} bytes; blocking CSS {blocking_bytes} bytes; suite ESM deferred {len(suite)} modules)')

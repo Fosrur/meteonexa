@@ -36,7 +36,7 @@ for needle in ["default-src 'self'", "script-src 'self'", 'Strict-Transport-Secu
     if needle not in ht: fail('security header missing '+needle)
 
 sw=(ROOT/'js/sw.js').read_text(encoding='utf-8')
-if "SHELL_REVISION = '20.1-final-05-release'" not in sw: fail('service-worker revision not bumped')
+if "SHELL_REVISION = '20.1.1-maintenance-active-session'" not in sw: fail('service-worker revision not bumped')
 
 seed=json.loads((ROOT/'api/install/translations.json').read_text(encoding='utf-8'))
 if seed.get('version')!='20.1-semantic-i18n-v2': fail('translation seed version mismatch')

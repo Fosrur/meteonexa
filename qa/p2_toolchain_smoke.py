@@ -38,7 +38,7 @@ checks={
     'esm assets fingerprinted': all(k in manifest for k in ['modules/esm/bootstrap.mjs','modules/esm/core/service-registry.mjs','modules/esm/core/runtime-api.mjs',*core_esm,*domain_esm,*feature_esm]),
     'index uses native esm bootstrap only': index.find('js/asset-manifest.js') < index.find(manifest['modules/esm/bootstrap.mjs'].removeprefix('./')) and 'type="module"' in index and all(manifest[path].removeprefix('./') not in index for path in domain_esm+feature_esm),
     'service worker caches full esm graph': all(f"asset('{path}')" in sw for path in ['modules/esm/bootstrap.mjs','modules/esm/core/service-registry.mjs','modules/esm/core/runtime-api.mjs',*core_esm,*domain_esm,*feature_esm]),
-    'service worker cache revision final': "const SHELL_REVISION = '20.1-final-05-release';" in sw,
+    'service worker cache revision final': "const SHELL_REVISION = '20.1.1-maintenance-active-session';" in sw,
     'mjs mime configured': 'AddType text/javascript .mjs' in htaccess,
     'readme documents p2 final': '## 20.1 — P2 finale: domini/feature ESM e service registry interno' in readme and '**Stato P2: COMPLETATO.**' in readme,
     'architecture documents p2 final': '## P2 final — ESM domains/features and internal service registry' in architecture,
