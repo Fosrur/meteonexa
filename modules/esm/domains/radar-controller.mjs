@@ -962,8 +962,14 @@ export function install(services, host = globalThis) {
                 async function ensureRadar(force = false, options = {}) {
                     initRadarMap();
                     renderRadarMap();
+                    // A layer selection can arrive while the initial radar bootstrap is
+                    // still loading. Returning the in-flight promise is essential: callers
+                    // such as setAdvancedRadarLayer() must wait for that bootstrap to finish
+                    // before re-applying the user's explicit live/forecast selection.
+                    // Returning immediately here created a Firefox-visible race where the
+                    // late bootstrap reset forecast back to the persisted live mode.
                     if (state.radar.loading)
-                        return;
+                        return state.radar.loadingPromise || Promise.resolve();
                     if (state.radar.loaded && !force)
                         return;
                     state.radar.loading = true;
@@ -1016,19 +1022,29 @@ export function install(services, host = globalThis) {
                             if (force && !options.silent)
                             showToast(liveOk || forecastOk ? "" + meteonexaText("radar.task.radar_updated") : "" + meteonexaText("radar.task.radar_unavailable"), liveOk ? "" + meteonexaText("radar.new_live_frames_loaded") : forecastOk ? meteonexaText("radar.12_hour_forecast_available_live_radar_will_retried") : "" + meteonexaText("radar.check_connection_try_again"), liveOk ? 'success' : 'warning');
                     };
-                    try {
-                        if (options.silent)
-                            await task();
-                        else
-                            await withLoader(force ? "" + meteonexaText("radar.task.radar_update") : "" + meteonexaText("radar.task.radar_connection"), "" + meteonexaText("radar.loading_precipitation_observations_forecast"), task, 620);
-                    }
-                    catch (error) {
-                        deps.radar?.fail?.(error);
+                    const loadingPromise = (async () => {
+                        try {
+                            if (options.silent)
+                                await task();
+                            else
+                                await withLoader(force ? "" + meteonexaText("radar.task.radar_update") : "" + meteonexaText("radar.task.radar_connection"), "" + meteonexaText("radar.loading_precipitation_observations_forecast"), task, 620);
+                        }
+                        catch (error) {
+                            deps.radar?.fail?.(error);
                             throw error;
+                        }
+                        finally {
+                            state.radar.loading = false;
+                            $('#radar-refresh').classList.remove('loading');
+                        }
+                    })();
+                    state.radar.loadingPromise = loadingPromise;
+                    try {
+                        return await loadingPromise;
                     }
                     finally {
-                        state.radar.loading = false;
-                        $('#radar-refresh').classList.remove('loading');
+                        if (state.radar.loadingPromise === loadingPromise)
+                            state.radar.loadingPromise = null;
                     }
                 }
                 function setRadarFrame(index) {

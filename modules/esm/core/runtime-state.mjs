@@ -113,6 +113,7 @@ export function createRuntimeState({
             initialized: false,
             loaded: false,
             loading: false,
+            loadingPromise: null,
             liveAvailable: false,
             forecastAvailable: false,
             renderToken: 0,
