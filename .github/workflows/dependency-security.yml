@@ -22,17 +22,39 @@ jobs:
         with:
           node-version: '20'
           cache: npm
+
+      - name: Prepare security reports
+        shell: bash
+        run: mkdir -p security-reports
+
       - name: Root npm vulnerability audit
-        run: npm audit --audit-level=high --omit=optional
+        id: root_npm_audit
+        continue-on-error: true
+        shell: bash
+        run: npm audit --audit-level=high --omit=optional --json > security-reports/root-npm-audit.json
+
       - name: Browser QA npm vulnerability audit
+        id: qa_npm_audit
+        continue-on-error: true
         working-directory: qa
-        run: npm audit --audit-level=high --omit=optional
-      - name: Composer dependency audit
+        shell: bash
+        run: npm audit --audit-level=high --omit=optional --json > ../security-reports/qa-npm-audit.json
+
+      - name: Install Composer audit client
+        shell: bash
         run: |
           sudo apt-get update
           sudo apt-get install -y composer
-          composer audit --locked --no-interaction
+
+      - name: Composer dependency audit
+        id: composer_audit
+        continue-on-error: true
+        shell: bash
+        run: composer audit --locked --no-interaction --format=json > security-reports/composer-audit.json
+
       - name: Trivy repository vulnerability, secret and misconfiguration audit
+        id: trivy_audit
+        continue-on-error: true
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: fs
@@ -40,4 +62,31 @@ jobs:
           severity: HIGH,CRITICAL
           scanners: vuln,secret,misconfig
           ignore-unfixed: true
+          format: json
+          output: security-reports/trivy-fs.json
           exit-code: '1'
+
+      - name: Upload dependency security evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: dependency-security-reports
+          path: security-reports/
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Enforce dependency security gate
+        if: always()
+        shell: bash
+        env:
+          ROOT_NPM: ${{ steps.root_npm_audit.outcome }}
+          QA_NPM: ${{ steps.qa_npm_audit.outcome }}
+          COMPOSER: ${{ steps.composer_audit.outcome }}
+          TRIVY: ${{ steps.trivy_audit.outcome }}
+        run: |
+          printf 'root npm: %s\nqa npm: %s\ncomposer: %s\ntrivy: %s\n' \
+            "$ROOT_NPM" "$QA_NPM" "$COMPOSER" "$TRIVY"
+          test "$ROOT_NPM" = success
+          test "$QA_NPM" = success
+          test "$COMPOSER" = success
+          test "$TRIVY" = success

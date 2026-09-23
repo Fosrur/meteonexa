@@ -41,19 +41,19 @@ set +a
 bash docker/release-preflight.sh "$ENV_FILE"
 bash docker/prepare-runtime.sh "${METEONEXA_RUNTIME_DIR:-./runtime}"
 
-# Prepare the candidate completely while production is still serving traffic.
-# A build/backup/restore-drill failure must not put the public site in maintenance.
+# From this point the release is user-visible: every browser session (guest or
+# authenticated) must be held on the shared 503 maintenance surface until all
+# replacement and validation gates are complete. The flag lives on the shared
+# runtime volume, so it survives the web-container replacement.
+bash docker/maintenance-mode.sh on
+MAINTENANCE_ACTIVE=1
+trap 'echo "ERRORE: deploy interrotto con maintenance mode ancora ATTIVA. Dopo rollback/verifica: bash docker/maintenance-mode.sh off" >&2' ERR
+
 METEONEXA_BUILD_SHA="$DEPLOY_SHA" docker compose build --pull web worker
 
 BACKUP_DIR="${METEONEXA_BACKUP_DIR:-./backups}/predeploy-$(date -u +%Y%m%dT%H%M%SZ)"
 bash docker/backup-production.sh "$BACKUP_DIR"
 bash docker/verify-backup-restore.sh "$BACKUP_DIR"
-
-# Enter maintenance only for the actual container replacement and post-deploy checks.
-# On failure after this point maintenance intentionally remains active until rollback/fix.
-bash docker/maintenance-mode.sh on
-MAINTENANCE_ACTIVE=1
-trap 'echo "ERRORE: deploy interrotto con maintenance mode ancora ATTIVA. Dopo rollback/verifica: bash docker/maintenance-mode.sh off" >&2' ERR
 
 docker compose up -d --remove-orphans
 

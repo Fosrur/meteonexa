@@ -59,7 +59,7 @@ jobs:
           printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/meteonexa_prod ~/.ssh/known_hosts
 
-      - name: Deploy exact SHA with maintenance retained
+      - name: Deploy exact SHA with maintenance from release start
         id: deploy
         shell: bash
         run: |
@@ -77,11 +77,20 @@ jobs:
           git checkout main
           git merge --ff-only "$DEPLOY_SHA"
           test "$(git rev-parse HEAD)" = "$DEPLOY_SHA"
+          # Block both new navigations and already-open guest/auth sessions before
+          # the release script starts building/replacing the candidate.
+          bash docker/maintenance-mode.sh on
           METEONEXA_GITHUB_REPOSITORY="$REPOSITORY" \
             METEONEXA_KEEP_MAINTENANCE=1 \
             bash docker/deploy-production.sh "$DEPLOY_SHA"
           REMOTE
-      - name: Release maintenance for external live smoke
+
+      - name: External live production security smoke under maintenance
+        id: live_smoke
+        shell: bash
+        run: python3 qa/live_security_check.py https://www.meteonexa.com/ --allow-maintenance
+
+      - name: Release maintenance after every deployment gate
         shell: bash
         run: |
           PORT="${VPS_PORT:-22}"
@@ -89,23 +98,9 @@ jobs:
             "$VPS_USER@$VPS_HOST" \
             "cd /opt/apps/meteonexa && bash docker/maintenance-mode.sh off"
 
-      - name: External live production security smoke
-        id: live_smoke
-        shell: bash
-        run: python3 qa/live_security_check.py https://www.meteonexa.com/
-
-      - name: Restore maintenance on failed live smoke
-        if: failure() && steps.deploy.outcome == 'success'
+      - name: Preserve maintenance on failed deployment
+        if: failure()
         shell: bash
         run: |
-          PORT="${VPS_PORT:-22}"
-          ssh -i ~/.ssh/meteonexa_prod -o IdentitiesOnly=yes -o BatchMode=yes -p "$PORT" \
-            "$VPS_USER@$VPS_HOST" \
-            "cd /opt/apps/meteonexa && bash docker/maintenance-mode.sh on"
-
-      - name: Keep maintenance state on failed deployment
-        if: failure() && steps.deploy.outcome != 'success'
-        shell: bash
-        run: |
-          echo "Production deployment failed before the external live smoke."
-          echo "The deploy script keeps maintenance active only if it had already entered maintenance mode."
+          echo "Production deployment/security validation failed."
+          echo "Maintenance remains active by design; release it only after rollback or remediation has been verified."

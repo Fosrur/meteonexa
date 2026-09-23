@@ -4562,7 +4562,8 @@ async function init() {
         const appVisible = $('#weather-app')?.hidden === false;
         const welcomeVisible = $('#welcome')?.hidden === false;
         if (!appVisible && !welcomeVisible) recoverRootViewAfterBootFailure(new Error('BOOT_WATCHDOG_RECOVERY'));
-    }, 6000);
+        document.documentElement.classList.remove('app-boot-pending');
+    }, 12000);
     try {
         await detectExternalCacheEvictionAndForceLogin();
         enforceAuthenticationStorageCoherence();
@@ -4643,6 +4644,7 @@ async function init() {
     finally {
         clearTimeout(bootDeadline);
         document.documentElement.classList.remove('fresh-build');
+        document.documentElement.classList.remove('app-boot-pending');
         state.loaderDepth = 0;
         setLoader(false);
     }

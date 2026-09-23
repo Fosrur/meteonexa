@@ -21,16 +21,17 @@ else:
     require(text, "github.event.workflow_run.head_branch == 'main'", 'deploy must be main-only')
     require(text, 'METEONEXA_KEEP_MAINTENANCE=1', 'automatic deploy must retain maintenance through internal deploy checks')
     require(text, 'docker/deploy-production.sh', 'workflow must use canonical deploy script')
-    require(text, 'qa/live_security_check.py https://www.meteonexa.com/', 'external production smoke missing')
-    require(text, 'Release maintenance for external live smoke', 'maintenance must be released before the public live smoke')
+    require(text, 'qa/live_security_check.py https://www.meteonexa.com/ --allow-maintenance', 'maintenance-aware external production smoke missing')
+    require(text, 'Release maintenance after every deployment gate', 'maintenance must be released only after all deployment gates')
     require(text, 'docker/maintenance-mode.sh off', 'maintenance release step missing')
-    require(text, 'Restore maintenance on failed live smoke', 'failed public live smoke must restore maintenance')
-    require(text, "if: failure() && steps.deploy.outcome == 'success'", 'maintenance restore must be conditional on a completed deploy')
-    require(text, 'docker/maintenance-mode.sh on', 'maintenance restore command missing')
-    release_pos = text.find('Release maintenance for external live smoke')
-    smoke_pos = text.find('External live production security smoke')
-    if release_pos < 0 or smoke_pos < 0 or release_pos > smoke_pos:
-        errors.append('maintenance must be released before external live smoke')
+    require(text, 'Preserve maintenance on failed deployment', 'failed deployment must preserve maintenance')
+    require(text, 'if: failure()', 'maintenance preservation message must be conditional on workflow failure')
+    require(text, 'bash docker/maintenance-mode.sh on', 'workflow must activate maintenance before canonical deploy')
+    deploy_pos = text.find('bash docker/deploy-production.sh')
+    smoke_pos = text.find('External live production security smoke under maintenance')
+    release_pos = text.find('Release maintenance after every deployment gate')
+    if min(deploy_pos, smoke_pos, release_pos) < 0 or not (deploy_pos < smoke_pos < release_pos):
+        errors.append('maintenance must stay active through deploy and external security smoke, with release last')
     require(text, 'METEONEXA_VPS_SSH_KEY', 'dedicated VPS SSH secret missing')
     require(text, 'METEONEXA_VPS_KNOWN_HOSTS', 'pinned VPS host key secret missing')
     require(text, 'REPOSITORY: ${{ github.repository }}', 'GitHub repository identity must be exported by workflow')
@@ -42,6 +43,11 @@ else:
     if r'\$(git status --porcelain)' in text:
         errors.append('legacy nested SSH quoting must be absent')
     require(text, 'test "$(git rev-parse HEAD)" = "$DEPLOY_SHA"', 'workflow must verify the exact SHA before starting deploy script')
+    require(text, 'qa/live_security_check.py https://www.meteonexa.com/ --allow-maintenance', 'external security gate must validate the real maintenance response')
+    on_pos = text.find('bash docker/maintenance-mode.sh on')
+    script_pos = text.find('bash docker/deploy-production.sh')
+    if on_pos < 0 or script_pos < 0 or on_pos > script_pos:
+        errors.append('automatic deploy must activate maintenance before the canonical deploy script starts')
 
 if deploy.is_file():
     text = deploy.read_text(encoding='utf-8')

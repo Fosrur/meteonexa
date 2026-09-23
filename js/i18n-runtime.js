@@ -229,6 +229,7 @@
         loader?.setAttribute('aria-hidden', 'true');
         document.body?.classList.remove('operation-loading');
         document.documentElement.classList.remove('fresh-build');
+        document.documentElement.classList.remove('app-boot-pending');
     };
     const markReady = () => {
         if (!Object.keys(state.catalog).length) return false;

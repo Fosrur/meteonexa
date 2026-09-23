@@ -9,7 +9,7 @@ for needle in ['/var/lib/meteonexa/maintenance.flag','api/maintenance.php']:
     if needle not in ht: errors.append(f'.htaccess missing {needle}')
 if 'Service-Worker-Allowed' not in ht or '/js/sw.js' not in ht: errors.append('service worker root scope header missing')
 build=deploy.find('docker compose build --pull web worker'); drill=deploy.find('bash docker/verify-backup-restore.sh'); on=deploy.find('bash docker/maintenance-mode.sh on'); up=deploy.find('docker compose up -d'); off=deploy.rfind('bash docker/maintenance-mode.sh off')
-if not (0 <= build < drill < on < up < off): errors.append('deploy sequence must be build -> restore drill -> maintenance on -> container replacement -> off')
+if not (0 <= on < build < drill < up < off): errors.append('deploy sequence must be maintenance on -> build -> restore drill -> container replacement -> off')
 if "trap 'echo \"ERRORE: deploy interrotto con maintenance mode ancora ATTIVA" not in deploy: errors.append('deploy failure maintenance trap missing')
 if 'maintenance.flag' not in mode: errors.append('maintenance helper missing shared flag contract')
 if '/var/lib/meteonexa/maintenance.flag' not in status_api or "'maintenance' => is_file($flag)" not in status_api:
@@ -61,6 +61,8 @@ if "target.origin !== location.origin" not in js:
     errors.append('maintenance return target must remain same-origin')
 if 'METEONEXA_KEEP_MAINTENANCE' not in deploy: errors.append('deploy cannot retain maintenance through internal replacement checks')
 if 'api/system/status.php' not in deploy: errors.append('deploy must gate release on dynamic system status/schema migration endpoint')
+if 'app-boot-pending' not in text('index.html') or "document.documentElement.classList.remove('app-boot-pending')" not in text('js/app.js'):
+    errors.append('refresh boot gate missing: login/app surfaces can flash before auth reconciliation')
 seed=json.loads(text('api/install/translations.json'))['rows']
 keys={r['text_key'] for r in seed}; locales={r['locale'] for r in seed if r['text_key'].startswith('maintenance.')}
 required={'maintenance.kicker','maintenance.title','maintenance.message','maintenance.note','maintenance.retry','maintenance.page_title'}

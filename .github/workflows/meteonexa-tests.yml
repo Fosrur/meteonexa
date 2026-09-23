@@ -100,11 +100,17 @@ jobs:
           npm run build:production
           npm run check:p4:build
           npm run check:p4:i18n
+      - name: Prepare quality/security evidence
+        run: mkdir -p security-reports
       - name: Semgrep local security rules
-        run: docker run --rm -v "$PWD:/src" semgrep/semgrep:1.169.0 semgrep scan --config /src/config/quality/semgrep.yml --error --metrics=off /src/api /src/install /src/modules/esm
+        id: semgrep_security
+        continue-on-error: true
+        run: docker run --rm -v "$PWD:/src" semgrep/semgrep:1.169.0 semgrep scan --config /src/config/quality/semgrep.yml --error --metrics=off --json-output /src/security-reports/semgrep.json /src/api /src/install /src/modules/esm
       - name: Build hardened production image
         run: docker build -t meteonexa:ci .
       - name: Trivy filesystem scan
+        id: trivy_filesystem
+        continue-on-error: true
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: fs
@@ -112,15 +118,41 @@ jobs:
           severity: HIGH,CRITICAL
           scanners: vuln,secret,misconfig
           ignore-unfixed: true
+          format: json
+          output: security-reports/trivy-filesystem.json
           exit-code: '1'
       - name: Trivy production image scan
+        id: trivy_image
+        continue-on-error: true
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: meteonexa:ci
           severity: HIGH,CRITICAL
           scanners: vuln,secret,misconfig
           ignore-unfixed: true
+          format: json
+          output: security-reports/trivy-image.json
           exit-code: '1'
+      - name: Upload quality/security evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: quality-security-reports
+          path: security-reports/
+          if-no-files-found: warn
+          retention-days: 14
+      - name: Enforce security scan gate
+        if: always()
+        shell: bash
+        env:
+          SEMGREP: ${{ steps.semgrep_security.outcome }}
+          TRIVY_FS: ${{ steps.trivy_filesystem.outcome }}
+          TRIVY_IMAGE: ${{ steps.trivy_image.outcome }}
+        run: |
+          printf 'semgrep: %s\ntrivy fs: %s\ntrivy image: %s\n' "$SEMGREP" "$TRIVY_FS" "$TRIVY_IMAGE"
+          test "$SEMGREP" = success
+          test "$TRIVY_FS" = success
+          test "$TRIVY_IMAGE" = success
 
   backup-restore-drill:
     runs-on: ubuntu-latest

@@ -115,7 +115,7 @@ header('Content-Type: text/html; charset=utf-8');
 </main>
 <div class="diag-loader" id="diag-loader" aria-hidden="true"><span class="diag-spinner" aria-hidden="true"></span><strong data-i18n-key="diag.loading.test"></strong></div>
 <script defer src="../dist/js/security-runtime.b4dbf8677d9d.js"></script>
-<script defer src="../dist/js/i18n-runtime.8c5df08eb812.js"></script>
+<script defer src="../dist/js/i18n-runtime.7a8eb94d7015.js"></script>
 <script defer src="../dist/diagnostics/diagnostics.834385d4e357.js"></script>
 </body>
 </html>

@@ -48,12 +48,13 @@ Deployment sequence:
 1. clean Git checkout + `origin/main`/expected SHA validation;
 2. successful `MeteoNexa QA` workflow for the exact SHA;
 3. release preflight and runtime ownership check;
-4. build `web`/`worker` images with the exact Git SHA while production is still online;
-5. pre-deploy backup with `schema_source` + real restore drill against MySQL 8.4;
-6. activate `docker/maintenance-mode.sh on` only for the cutover window;
+4. activate `docker/maintenance-mode.sh on` before the user-visible release work begins (the automatic workflow activates it immediately after exact-SHA alignment on the VPS);
+5. build `web`/`worker` images with the exact Git SHA while every browser session is held on maintenance;
+6. pre-deploy backup with `schema_source` + real restore drill against MySQL 8.4 while maintenance remains active;
 7. replace containers and call `/api/system/status.php` so required DB migrations run to the current schema;
-8. verify hardened containers, OCI revision provenance and `MYSQL_SCHEMA_PASS`;
-9. keep maintenance active through internal checks, release it before the external live security smoke, and restore it if that smoke fails.
+8. verify hardened containers, OCI revision provenance, `MYSQL_SCHEMA_PASS` and real runtime integrations;
+9. execute the external HTTPS/TLS/security smoke against the intentional HTTP 503 maintenance surface;
+10. deactivate maintenance as the final production workflow operation only after every gate has passed.
 
 Browser navigations receive `api/maintenance.php` with HTTP **503**, `Retry-After: 120`, no-store headers and the translated `maintenance.html`. API calls and health checks are not rewritten merely because maintenance is active. If deployment fails after maintenance activation, the mode remains active by design until rollback or remediation is verified; the deploy script prints the explicit recovery command.
 
@@ -92,7 +93,7 @@ The production privacy page was already correct and referenced `dist/js/privacy-
 
 Production delivery is now a separate workflow, `.github/workflows/deploy-production.yml`, triggered by `workflow_run` only after **MeteoNexa QA** has completed successfully for a push to `main`. Keeping CD separate from QA is intentional: `docker/deploy-production.sh` verifies that the QA workflow for the exact SHA is already completed/successful, avoiding a circular "current workflow is still in progress" gate.
 
-The deploy job rejects stale successful runs when `origin/main` has moved, authenticates to the VPS with a dedicated SSH key and pinned `known_hosts`, and invokes the canonical deploy script with the exact tested SHA. The deploy keeps maintenance active through internal replacement and health checks, then releases maintenance immediately before the external live security smoke so the public probe can receive HTTP 200. If that live smoke fails after a successful internal deploy, the workflow restores maintenance automatically. If the remote deploy fails earlier, the deploy script preserves the safe maintenance state only when it had already entered maintenance.
+The deploy job rejects stale successful runs when `origin/main` has moved, authenticates to the VPS with a dedicated SSH key and pinned `known_hosts`, aligns the exact tested SHA, and activates maintenance **before** invoking the canonical deploy script. The shared flag remains active across image build, backup/restore drill, container replacement, migrations, internal integration checks and the external HTTPS/TLS/security smoke. That external smoke understands the intentional HTTP 503 maintenance response and still validates the security headers, TLS/certificate and branded maintenance surface. `maintenance-mode.sh off` is the final workflow operation; any earlier failure leaves maintenance active by design.
 
 Required GitHub production secrets: `METEONEXA_VPS_HOST`, `METEONEXA_VPS_USER`, `METEONEXA_VPS_PORT` (optional/22), `METEONEXA_VPS_SSH_KEY`, `METEONEXA_VPS_KNOWN_HOSTS`. The SSH key must be dedicated to GitHub Actions and should authorize only the `deploy` account.
 
@@ -101,6 +102,8 @@ Required GitHub production secrets: `METEONEXA_VPS_HOST`, `METEONEXA_VPS_USER`, 
 `meteonexa:ready` keeps its historical meaning: the main application state/UI has initialized. It is deliberately **not** delayed by the deferred Suite/Assistant bootstrap, because changing that public contract caused Chromium and Firefox to time out globally in GitHub Actions.
 
 A second, stronger contract is now emitted by `modules/esm/bootstrap.mjs`: `meteonexa:interactive-ready` (and `window.__METEONEXA_INTERACTIVE_READY__`). Only tests or consumers that require the full deferred interaction layer, such as the guest Assistant tests, wait for this event. This removes the Assistant early-click race without serializing or blocking unrelated browser tests.
+
+The initial paint now has a separate `app-boot-pending` gate. `meteonexa:i18n-ready` may reveal translated content internally, but login/app surfaces stay hidden behind the branded splash until the authoritative email-session reconciliation and `reconcileRootView()` complete. This prevents an authenticated refresh from briefly exposing the login screen before returning to the application. A dedicated Playwright regression holds `api/auth/status.php` in flight to assert the intermediate paint.
 
 ## Maintenance visual contract
 
@@ -117,7 +120,7 @@ The maintenance document now mirrors the main app favicon contract (`favicon-32.
 
 - CSP reporting is first-party through `/api/csp-report.php`, with `Reporting-Endpoints`, `Report-To`, `report-uri` and `report-to`. The endpoint caps payload size and logs only sanitized directive/URL-path signals without query strings or custom client identifiers.
 - The production live security smoke now verifies the CSP reporting contract in addition to HTTPS/TLS/HSTS/CSP/frame/nosniff/referrer/permissions headers.
-- `.github/workflows/dependency-security.yml` runs a separate nightly/manual dependency security lane (root npm, QA npm, Composer and Trivy) independently from deployment.
+- `.github/workflows/dependency-security.yml` runs a separate nightly/manual dependency security lane (root npm, QA npm, Composer and Trivy) independently from deployment. Each scanner writes a JSON report, the reports are uploaded even on failure, and a final aggregate gate fails the workflow after all scanner outcomes are visible.
 - the **Key rotation runbook** section in this document documents separate rotation of VPS→GitHub read-only deploy key, GitHub Actions→VPS SSH key, cron secrets, VAPID and application/SMTP/database secrets.
 - The worker remains attached only to `backend`, never to the public `proxy` network; P0/P6 tests lock this architecture in.
 - Production-like staging now activates `maintenance.flag`, requires HTTP 503 for HTML, and requires HTTP 200 for maintenance CSS, JS, logo and i18n assets before cleanup.

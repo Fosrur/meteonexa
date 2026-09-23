@@ -67,4 +67,54 @@ test.describe('@maintenance-exclusive deployment maintenance active session', ()
     expect(await page.evaluate(() => sessionStorage.getItem('meteonexa_maintenance_return_v1'))).toBeNull();
     expect(await page.evaluate(() => localStorage.getItem('qa-maintenance-session-marker'))).toBe('preserve');
   });
+
+  test('an already-open authenticated session is blocked by maintenance too', async ({ page }) => {
+    test.setTimeout(40000);
+    await setMaintenance(false);
+    await page.addInitScript(() => {
+      localStorage.setItem('meteonexa_suite_device_id', 'device-maintenance-1234567890');
+      localStorage.setItem('meteonexa_suite_device_key', 'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB');
+      localStorage.setItem('meteonexa_v3_session', JSON.stringify({
+        type: 'email',
+        name: 'Maintenance User',
+        verified: true,
+        at: Date.now(),
+      }));
+      sessionStorage.removeItem('meteonexa_force_auth_v1');
+    });
+    await prepareStableApp(page);
+    await page.route('**/api/auth/status.php', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          ok: true,
+          authenticated: true,
+          displayName: 'Maintenance User',
+          email: 'maintenance@example.test',
+          diagnosticsAllowed: false,
+          smtpConfigured: true,
+        }),
+      });
+    });
+
+    await page.goto('./', { waitUntil: 'domcontentloaded' });
+    await waitForMeteoNexaReady(page);
+    await expect(page.locator('#weather-app')).toBeVisible();
+    await expect(page.locator('#welcome')).toBeHidden();
+
+    await setMaintenance(true);
+    await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+
+    await page.waitForURL(/maintenance_enter=\d+/, { timeout: 7000 });
+    await expect(page.locator('.maintenance-card')).toBeVisible();
+
+    await setMaintenance(false);
+    await page.locator('#maintenance-retry').click();
+    await page.waitForURL(/maintenance_release=\d+/, { timeout: 7000 });
+    await waitForMeteoNexaReady(page, 12000);
+    await expect(page.locator('#weather-app')).toBeVisible();
+    await expect(page.locator('#welcome')).toBeHidden();
+  });
+
 });
