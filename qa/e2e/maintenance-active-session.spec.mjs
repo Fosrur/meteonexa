@@ -68,59 +68,69 @@ test.describe('@maintenance-exclusive deployment maintenance active session', ()
     expect(await page.evaluate(() => localStorage.getItem('qa-maintenance-session-marker'))).toBe('preserve');
   });
 
-  test('an already-open authenticated session is blocked by maintenance too', async ({ page }) => {
+  test('an already-open authenticated session is blocked by maintenance too', async ({ browser }) => {
     test.setTimeout(40000);
     await setMaintenance(false);
-    await page.addInitScript(() => {
-      localStorage.setItem('meteonexa_suite_device_id', 'device-maintenance-1234567890');
-      localStorage.setItem('meteonexa_suite_device_key', 'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB');
-      localStorage.setItem('meteonexa_v3_session', JSON.stringify({
-        type: 'email',
-        name: 'Maintenance User',
-        verified: true,
-        at: Date.now(),
-      }));
-      sessionStorage.removeItem('meteonexa_force_auth_v1');
+
+    // page.route() cannot reliably intercept Service Worker installation/update
+    // requests. Use a dedicated context with Service Workers truly disabled for
+    // this auth-continuity test. The preceding guest test deliberately keeps the
+    // real PWA/Service Worker path enabled and covered end-to-end.
+    const context = await browser.newContext({
+      baseURL: process.env.METEONEXA_TEST_BASE_URL || 'http://127.0.0.1:8088/',
+      serviceWorkers: 'block',
     });
-    await prepareStableApp(page);
-    // This test validates authenticated-session continuity across the maintenance
-    // navigation. The preceding guest test already exercises the real PWA/Service
-    // Worker path. Blocking SW registration here keeps auth/status.php observable
-    // by Playwright after the maintenance round-trip instead of letting an active
-    // worker bypass the browser-route mock and hit the unauthenticated QA backend.
-    await page.route('**/js/sw.js*', route => route.abort());
-    await page.route('**/api/auth/status.php', async route => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          ok: true,
-          authenticated: true,
-          displayName: 'Maintenance User',
-          email: 'maintenance@example.test',
-          diagnosticsAllowed: false,
-          smtpConfigured: true,
-        }),
+    const page = await context.newPage();
+
+    try {
+      await context.addInitScript(() => {
+        localStorage.setItem('meteonexa_suite_device_id', 'device-maintenance-1234567890');
+        localStorage.setItem('meteonexa_suite_device_key', 'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB');
+        localStorage.setItem('meteonexa_v3_session', JSON.stringify({
+          type: 'email',
+          name: 'Maintenance User',
+          verified: true,
+          at: Date.now(),
+        }));
+        sessionStorage.removeItem('meteonexa_force_auth_v1');
       });
-    });
+      await prepareStableApp(page);
+      await context.route('**/api/auth/status.php', async route => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            ok: true,
+            authenticated: true,
+            displayName: 'Maintenance User',
+            email: 'maintenance@example.test',
+            diagnosticsAllowed: false,
+            smtpConfigured: true,
+          }),
+        });
+      });
 
-    await page.goto('./', { waitUntil: 'domcontentloaded' });
-    await waitForMeteoNexaReady(page);
-    await expect(page.locator('#weather-app')).toBeVisible();
-    await expect(page.locator('#welcome')).toBeHidden();
+      await page.goto('./', { waitUntil: 'domcontentloaded' });
+      await waitForMeteoNexaReady(page);
+      await expect(page.locator('#weather-app')).toBeVisible();
+      await expect(page.locator('#welcome')).toBeHidden();
+      expect(await page.evaluate(() => Boolean(navigator.serviceWorker?.controller))).toBe(false);
 
-    await setMaintenance(true);
-    await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+      await setMaintenance(true);
+      await page.evaluate(() => window.dispatchEvent(new Event('focus')));
 
-    await page.waitForURL(/maintenance_enter=\d+/, { timeout: 7000 });
-    await expect(page.locator('.maintenance-card')).toBeVisible();
+      await page.waitForURL(/maintenance_enter=\d+/, { timeout: 7000 });
+      await expect(page.locator('.maintenance-card')).toBeVisible();
 
-    await setMaintenance(false);
-    await page.locator('#maintenance-retry').click();
-    await page.waitForURL(/maintenance_release=\d+/, { timeout: 7000 });
-    await waitForMeteoNexaReady(page, 12000);
-    await expect(page.locator('#weather-app')).toBeVisible();
-    await expect(page.locator('#welcome')).toBeHidden();
+      await setMaintenance(false);
+      await page.locator('#maintenance-retry').click();
+      await page.waitForURL(/maintenance_release=\d+/, { timeout: 7000 });
+      await waitForMeteoNexaReady(page, 12000);
+      await expect(page.locator('#weather-app')).toBeVisible();
+      await expect(page.locator('#welcome')).toBeHidden();
+    } finally {
+      await context.close();
+    }
   });
 
 });
