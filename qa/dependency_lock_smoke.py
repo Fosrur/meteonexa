@@ -15,7 +15,7 @@ root_pkgs=root.get('packages',{}); qa_pkgs=qa.get('packages',{}); dev={p.get('na
 checks={
  'root npm lock v3 is non-trivial and exact':root.get('lockfileVersion')==3 and len(root_pkgs)>=100 and root_pkgs.get('node_modules/esbuild',{}).get('version')=='0.28.2' and root_pkgs.get('node_modules/eslint',{}).get('version')=='10.10.0',
  'root npm lock contains registry integrity metadata':all(root_pkgs.get(k,{}).get('integrity') and root_pkgs.get(k,{}).get('resolved') for k in ('node_modules/esbuild','node_modules/eslint')),
- 'qa Playwright lock is exact':qa_pkgs.get('node_modules/@playwright/test',{}).get('version')=='1.55.0' and qa_pkgs.get('node_modules/playwright',{}).get('version')=='1.55.0',
+ 'qa Playwright lock is exact':qa_pkgs.get('node_modules/@playwright/test',{}).get('version')=='1.55.1' and qa_pkgs.get('node_modules/playwright',{}).get('version')=='1.55.1',
  'composer direct tools are exact':dev.get('friendsofphp/php-cs-fixer')=='v3.95.25' and dev.get('phpstan/phpstan')=='2.2.13',
  'composer lock content hash matches composer.json':comp.get('content-hash')==content_hash,
 }

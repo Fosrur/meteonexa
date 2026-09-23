@@ -134,3 +134,13 @@ Prima chiudere P0 e rendere il deploy dimostrabilmente sicuro. Poi P1/P2, perchÃ
 - ECMWF AIFS Ensemble operational announcement: https://www.ecmwf.int/en/about/media-centre/news/2025/ecmwfs-ensemble-ai-forecasts-become-operational
 - EUMETSAT Meteosat Third Generation / Lightning Imager: https://www.eumetsat.int/meteosat-third-generation
 - MeteoAlarm API / OGC EDR: https://api.meteoalarm.org/edr/v1
+
+## P0 closure patch â€” browser/security follow-up
+
+The QA #45 failure was narrowed to two browser-test issues, while PHPStan, ESLint, Semgrep, Trivy filesystem/image, MySQL integration, release gates, staging compose and backup/restore all passed. The closure patch:
+
+- makes the authenticated maintenance round-trip test deterministic by disabling Service Worker registration only in that test; the guest maintenance test continues to exercise the real PWA/Service Worker path;
+- removes the external radar-frame availability assertion from the radar hit-target regression while preserving the actionable-control and forecast-mode checks;
+- updates `@playwright/test`, `playwright` and `playwright-core` from 1.55.0 to 1.55.1, the patched release for GHSA-7mvr-c777-76hp.
+
+P0 is considered operationally closed only after the pushed commit completes MeteoNexa QA successfully and the automatically triggered Production Deploy completes through maintenance ON, deploy, external security smoke and maintenance OFF.

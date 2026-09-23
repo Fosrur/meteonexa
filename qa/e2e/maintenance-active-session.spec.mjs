@@ -83,6 +83,12 @@ test.describe('@maintenance-exclusive deployment maintenance active session', ()
       sessionStorage.removeItem('meteonexa_force_auth_v1');
     });
     await prepareStableApp(page);
+    // This test validates authenticated-session continuity across the maintenance
+    // navigation. The preceding guest test already exercises the real PWA/Service
+    // Worker path. Blocking SW registration here keeps auth/status.php observable
+    // by Playwright after the maintenance round-trip instead of letting an active
+    // worker bypass the browser-route mock and hit the unauthenticated QA backend.
+    await page.route('**/js/sw.js*', route => route.abort());
     await page.route('**/api/auth/status.php', async route => {
       await route.fulfill({
         status: 200,

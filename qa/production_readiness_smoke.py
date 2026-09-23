@@ -106,7 +106,7 @@ checks = {
     'root npm lock is exact': root_pkgs.get('node_modules/esbuild', {}).get('version') == '0.28.2' and root_pkgs.get('node_modules/eslint', {}).get('version') == '10.10.0',
     'composer lock is present and non-empty': bool(composer_lock.get('packages-dev')),
     'CI and Docker build use npm ci without npm install fallback': workflow.count('npm ci') >= 2 and 'npm ci --ignore-scripts --no-audit --no-fund' in dockerfile and 'npm install ' not in dockerfile,
-    'Playwright lock is exact': qa_pkgs.get('node_modules/@playwright/test', {}).get('version') == '1.55.0' and qa_pkgs.get('node_modules/playwright', {}).get('version') == '1.55.0',
+    'Playwright lock is exact': qa_pkgs.get('node_modules/@playwright/test', {}).get('version') == '1.55.1' and qa_pkgs.get('node_modules/playwright', {}).get('version') == '1.55.1',
     'browser CI covers Chromium + Firefox': browser_ci_monolithic or browser_ci_matrix,
     'MySQL CI is real 8.4': 'image: mysql:8.4' in workflow and 'qa/mysql_full_integration.php' in workflow,
     'security CI includes Semgrep and Trivy': 'semgrep/semgrep:1.169.0' in workflow and len(re.findall(r'uses:\s*aquasecurity/trivy-action@[0-9a-f]{40}\b', workflow)) >= 2,
