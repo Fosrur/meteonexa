@@ -151,6 +151,30 @@ CREATE TABLE IF NOT EXISTS model_skill_samples (
   KEY idx_model_skill_metric(device_id,location_key,metric,horizon_hours,verified_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS ensemble_verification_samples (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  device_id VARCHAR(191) NOT NULL,
+  location_key VARCHAR(191) NOT NULL,
+  model_id VARCHAR(80) NOT NULL,
+  metric VARCHAR(24) NOT NULL,
+  horizon_hours INT NOT NULL,
+  target_time VARCHAR(40) NOT NULL,
+  member_count INT NOT NULL DEFAULT 0,
+  members_json MEDIUMTEXT NOT NULL,
+  p10 DOUBLE NULL,
+  p50 DOUBLE NULL,
+  p90 DOUBLE NULL,
+  observed_value DOUBLE NULL,
+  crps DOUBLE NULL,
+  status VARCHAR(24) NOT NULL DEFAULT 'pending',
+  issued_at VARCHAR(40) NOT NULL,
+  verified_at VARCHAR(40) NOT NULL DEFAULT '',
+  created_at VARCHAR(40) NOT NULL,
+  UNIQUE KEY uq_ensemble_verify(device_id,location_key,model_id,metric,horizon_hours,target_time),
+  KEY idx_ensemble_verify_pending(device_id,location_key,status,target_time),
+  KEY idx_ensemble_verify_skill(device_id,location_key,model_id,metric,horizon_hours,status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS forecast_run_snapshots (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
   device_id VARCHAR(191) NOT NULL,
@@ -621,7 +645,7 @@ CREATE TABLE IF NOT EXISTS radar_frame_quality (
   KEY idx_radar_quality_checked(checked_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO app_metadata(meta_key,meta_value,updated_at) VALUES('schema_version','28',UTC_TIMESTAMP(6))
+INSERT INTO app_metadata(meta_key,meta_value,updated_at) VALUES('schema_version','29',UTC_TIMESTAMP(6))
 ON DUPLICATE KEY UPDATE meta_value=VALUES(meta_value),updated_at=VALUES(updated_at);
 INSERT INTO app_metadata(meta_key,meta_value,updated_at) VALUES('app_version','20.1',UTC_TIMESTAMP(6))
 ON DUPLICATE KEY UPDATE meta_value=VALUES(meta_value),updated_at=VALUES(updated_at);

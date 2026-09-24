@@ -34,6 +34,7 @@ run_php engine_smoke.php
 run_php severe_weather_engine_smoke.php
 run_php intelligence_quality_smoke.php
 run_php forecast_reliability_smoke.php
+run_php probabilistic_ensemble_smoke.php
 run_php nowcast_fusion_smoke.php
 run_php probabilistic_nowcast_smoke.php
 run_php radar3_production_gate_smoke.php

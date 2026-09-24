@@ -26,8 +26,8 @@ ck(con.execute('pragma foreign_key_check').fetchall()==[],'SQLite foreign keys')
 meta=dict(con.execute("select meta_key,meta_value from app_metadata where meta_key in ('app_version','schema_version','translation_seed_version')"))
 tables={r[0] for r in con.execute("select name from sqlite_master where type='table' and name not like 'sqlite_%'")}
 tr=con.execute('select count(*),count(distinct text_key),count(distinct locale) from translations').fetchone();con.close()
-ck(meta=={'app_version':'20.1','schema_version':'28','translation_seed_version':'20.1-semantic-i18n-v2'},'SQLite metadata 20.1/schema28/current seed')
-ck(len(tables)==47,'SQLite has 47 application tables')
+ck(meta=={'app_version':'20.1','schema_version':'29','translation_seed_version':'20.1-semantic-i18n-v2'},'SQLite metadata 20.1/schema29/current seed')
+ck(len(tables)==48,'SQLite has 48 application tables')
 ck(tr[2]==5 and tr[0]==tr[1]*5,f'i18n complete ({tr[1]} keys x 5 = {tr[0]})')
 # packaged translations
 seed=json.loads((root/'api/install/translations.json').read_text(encoding='utf-8')); rows=seed['rows']; locales={r['locale'] for r in rows}; keys={r['text_key'] for r in rows}
@@ -39,7 +39,7 @@ for k in ['ai.system.tool_orchestration','privacy.release.current','cookie.relea
 mysql=(root/'api/install/mysql-schema.sql').read_text(errors='replace')
 mtables=set(re.findall(r'CREATE TABLE IF NOT EXISTS\s+`?([A-Za-z0-9_]+)`?',mysql,re.I))
 ck(tables==mtables,f'SQLite/MySQL table parity ({len(tables)}/{len(mtables)})')
-ck("VALUES('app_version','20.1'" in mysql and "VALUES('schema_version','28'" in mysql,'MySQL metadata current')
+ck("VALUES('app_version','20.1'" in mysql and "VALUES('schema_version','29'" in mysql,'MySQL metadata current')
 # Docs/policies/current runtime
 ck('# MeteoNexa Architecture — 20.1' in (root/'readme.md').read_text(encoding='utf-8'),'Architecture current')
 ck('# MeteoNexa Security — 20.1' in (root/'readme.md').read_text(encoding='utf-8'),'Security current')

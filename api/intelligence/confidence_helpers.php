@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-function meteonexa_weather_confidence(array $analysis, array $consensus, array $reliability, array $nowcast) : array {
+function meteonexa_weather_confidence(array $analysis, array $consensus, array $reliability, array $nowcast, array $probabilisticEnsemble =[]) : array {
     $parts =[];
     $sum = 0;
     $total = 0;
@@ -24,6 +24,12 @@ function meteonexa_weather_confidence(array $analysis, array $consensus, array $
     $trend = (string)($run['trend']??'unknown');
     $add('stability', $trend==='stable' ? 92 :($trend==='changing' ? 66 :($trend==='volatile' ? 38 : null)), .15, $trend);
     $add('nowcast', !empty($nowcast['available']) ?($nowcast['confidence']??null) : null, .15, !empty($nowcast['available']) ? 'live' : 'unavailable');
+    $ensembleUncertainty = (array)($probabilisticEnsemble['uncertainty']??[]);
+    if (!empty($probabilisticEnsemble['available'])&&!empty($ensembleUncertainty['available'])) {
+        $ensembleScore = $ensembleUncertainty['score']??null;
+        $ensembleStatus = !is_numeric($ensembleScore) ? 'unavailable' : ((float)$ensembleScore>=75 ? 'strong' : ((float)$ensembleScore>=50 ? 'mixed' : 'weak'));
+        $add('ensemble', $ensembleScore, .12, $ensembleStatus);
+    }
     $score = $total ? (int)round($sum / $total) : 0;
-    return['available'=>$total > 0, 'score'=>$score, 'level'=>$score>=85 ? 'very_high' :($score>=72 ? 'high' :($score>=55 ? 'medium' : 'low')), 'maturity'=>$samples>=100 ? 'consolidated' :($samples>=30 ? 'building' :($samples>=10 ? 'preliminary' : 'learning')), 'verified'=>$samples>=30, 'parts'=>$parts, 'samples'=>$samples, 'method'=>'deterministic-evidence-confidence-v1', 'generatedAt'=>gmdate('c')];
+    return['available'=>$total > 0, 'score'=>$score, 'level'=>$score>=85 ? 'very_high' :($score>=72 ? 'high' :($score>=55 ? 'medium' : 'low')), 'maturity'=>$samples>=100 ? 'consolidated' :($samples>=30 ? 'building' :($samples>=10 ? 'preliminary' : 'learning')), 'verified'=>$samples>=30, 'parts'=>$parts, 'samples'=>$samples, 'ensembleEvidence'=>!empty($probabilisticEnsemble['available']), 'method'=>'deterministic-evidence-confidence-v2', 'generatedAt'=>gmdate('c')];
 }

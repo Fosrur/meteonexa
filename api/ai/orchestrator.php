@@ -6,6 +6,7 @@ require_once dirname(__DIR__) . '/intelligence/quality_helpers.php';
 require_once dirname(__DIR__) . '/intelligence/reliability_helpers.php';
 require_once dirname(__DIR__) . '/intelligence/nowcast_helpers.php';
 require_once dirname(__DIR__) . '/intelligence/confidence_helpers.php';
+require_once dirname(__DIR__) . '/intelligence/ensemble_helpers.php';
 require_once dirname(__DIR__) . '/intelligence/intelligence_extensions.php';
 require_once dirname(__DIR__) . '/intelligence/decision_timeline_helpers.php';
 require_once dirname(__DIR__) . '/intelligence/severe_outlook_helpers.php';
@@ -48,6 +49,7 @@ function meteonexa_copilot_selected_tools(string $message, bool $hasRoutePlan = 
     $tools = ['current_forecast', 'confidence'];
     if ($has(['piogg', 'rain', 'tempor', 'storm', 'grand', 'hail', 'neve', 'snow', 'radar', 'arriv', 'finisc', 'when', 'quando'])) $tools[] = 'nowcast';
     if ($has(['affid', 'confiden', 'sicuro', 'accur', 'modello', 'model', 'cambi', 'change', 'perché', 'why'])) $tools[] = 'forecast_change';
+    if ($has(['probabil', 'ensemble', 'incertezz', 'uncert', 'scenario', 'range', 'p10', 'p50', 'p90'])) $tools[] = 'probabilistic_ensemble';
     if (meteonexa_copilot_activity($message) !== null || $has(['attivit', 'activity', 'quando conviene', 'best window'])) $tools[] = 'decision';
     if ($hasRoutePlan || $has(['percorso', 'route', 'viaggio', 'travel', 'partire', 'departure', 'tratta'])) $tools[] = 'route';
     return array_values(array_unique($tools));
@@ -200,11 +202,28 @@ function meteonexa_copilot_orchestrate(PDO $pdo, array $config, string $deviceId
         $sources[] = ['id' => $id, 'label' => $model['label'] ?? $id, 'type' => $id === 'aifs' ? 'ai-weather-model' : 'nwp', 'available' => !empty($model['available']), 'retrievedAt' => $model['retrievedAt'] ?? null];
     }
 
+    $probabilisticEnsemble = ['available'=>false];
+    if (in_array('probabilistic_ensemble', $selected, true)) {
+        $probabilisticEnsemble = meteonexa_probabilistic_ensemble($lat, $lon, (array)($models['ecmwf'] ?? []), [], 360);
+        if (!empty($probabilisticEnsemble['available'])) {
+            $tools['probabilistic_ensemble'] = [
+                'model'=>$probabilisticEnsemble['model'] ?? 'ECMWF AIFS ENS',
+                'memberCount'=>$probabilisticEnsemble['memberCount'] ?? 0,
+                'headline24h'=>$probabilisticEnsemble['headline24h'] ?? null,
+                'uncertainty'=>$probabilisticEnsemble['uncertainty'] ?? null,
+                'physicsComparison'=>$probabilisticEnsemble['physicsComparison'] ?? null,
+                'extendedScenarios'=>$probabilisticEnsemble['extendedScenarios'] ?? [],
+                'policy'=>$probabilisticEnsemble['policy'] ?? [],
+            ];
+            $sources[] = ['id'=>'ecmwf-aifs-ens','label'=>$probabilisticEnsemble['model'] ?? 'ECMWF AIFS ENS','type'=>'probabilistic-ai-weather-ensemble','available'=>true,'retrievedAt'=>$probabilisticEnsemble['freshness']['fetchedAt'] ?? null];
+        }
+    }
+
     $freshness = meteonexa_intelq_source_freshness($models, [], [], [], [], []);
     $primary = (array)($consensus['primary'] ?? []);
     $analysis = ['confidence' => (int)($primary['weightedAgreementPct'] ?? $primary['agreementPct'] ?? 60)];
     $reliability = ['metricVerifiedSamples' => (int)($skill['verifiedSamples'] ?? 0), 'observationQualityScore' => null, 'runStability' => meteonexa_forecast_run_stability($pdo, $deviceId, $locationKey)];
-    $baseConfidence = meteonexa_weather_confidence($analysis, $consensus, $reliability, ['available' => false]);
+    $baseConfidence = meteonexa_weather_confidence($analysis, $consensus, $reliability, ['available' => false], $probabilisticEnsemble);
     $confidence = meteonexa_confidence_timeline($consensus, $baseConfidence, $freshness, $skillV2, ['available' => false]);
     $tools['confidence'] = $confidence;
 

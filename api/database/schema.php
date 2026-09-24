@@ -128,7 +128,7 @@ function meteonexa_sync_current_metadata(PDO $pdo) : void {
     $sql = meteonexa_pdo_driver($pdo)==='mysql' ? "INSERT INTO app_metadata(meta_key,meta_value,updated_at) VALUES(:key,:value,:updated) ON DUPLICATE KEY UPDATE meta_value=VALUES(meta_value),updated_at=VALUES(updated_at)" : "INSERT INTO app_metadata(meta_key,meta_value,updated_at) VALUES(:key,:value,:updated) ON CONFLICT(meta_key) DO UPDATE SET meta_value=excluded.meta_value,updated_at=excluded.updated_at";
     $meta = $pdo->prepare($sql);
     $now = gmdate('c');
-    foreach (['schema_version'=>'28', 'app_version'=>'20.1', 'translation_seed_version'=>'20.1-semantic-i18n-v2'] as $key=>$value) {
+    foreach (['schema_version'=>'29', 'app_version'=>'20.1', 'translation_seed_version'=>'20.1-semantic-i18n-v2'] as $key=>$value) {
         $meta->execute([':key'=>$key, ':value'=>$value, ':updated'=>$now]);
     }
 }

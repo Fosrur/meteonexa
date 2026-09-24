@@ -15,11 +15,11 @@ def fail(message: str) -> None:
 
 
 migration_dir = ROOT / "api" / "database" / "migrations"
-expected_versions = list(range(16, 29))
+expected_versions = list(range(16, 30))
 revision_files = sorted(migration_dir.glob("[0-9][0-9][0-9][0-9]_*.php"))
 versions = [int(path.name[:4]) for path in revision_files]
 if versions != expected_versions:
-    fail(f"expected migration files 0016..0027, got {versions}")
+    fail(f"expected migration files 0016..0029, got {versions}")
 
 legacy_sqlite = migration_dir / "legacy_sqlite_upgrade.php"
 if not legacy_sqlite.is_file():
@@ -56,7 +56,7 @@ try:
     contract = json.loads(probe.stdout)
 except json.JSONDecodeError as exc:
     fail(f"migration registry probe returned invalid JSON: {exc}")
-if contract.get("current") != 28 or contract.get("count") != 13:
+if contract.get("current") != 29 or contract.get("count") != 14:
     fail(f"unexpected migration registry contract: {contract}")
 manifest_versions = [int(value) for value in contract.get("manifest", {}).keys()]
 if manifest_versions != expected_versions:

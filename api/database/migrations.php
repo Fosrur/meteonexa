@@ -4,14 +4,14 @@ declare(strict_types=1);
 /**
  * Versioned database migration registry.
  *
- * Revisions 16..26 live in one file per schema revision under
+ * Revisions 16..29 live in one file per schema revision under
  * api/database/migrations/. SQLite installations older than revision 16 still
  * pass through the quarantined legacy compatibility upgrader; all new schema
  * revisions must be added as standalone migration descriptors.
  */
 function meteonexa_current_schema_version(): int
 {
-    return 28;
+    return 29;
 }
 
 /** @return list<array{version:int,name:string,drivers:list<string>,up:Closure}> */

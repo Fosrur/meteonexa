@@ -8,50 +8,41 @@ Il repository **non può modificare da solo il flag GitHub “Allow write access
 
 
 <!-- METEONEXA_CURRENT_CONTRACT_START -->
-## 20.1.1 — maintenance session awareness, release evidence e supply-chain hardening
+## MeteoNexa 20.1.1 — contratto corrente P0/P1 + P2 probabilistico
 
-Questa patch parte dall'immutabile **`v20.1.0`**, tag annotato sul commit `d7273b1f1e2fa3ab65be0b4935b9260f4d1595fd`, già validato da MeteoNexa QA e Production Deploy sullo stesso SHA. Il tag `v20.1.0` non viene spostato né riscritto.
+Il contratto corrente del sorgente resta **MeteoNexa 20.1.1**. La compatibilità applicativa/backend resta **20.1**; con P2 lo schema database passa a **29** e le tabelle applicative a **48**. Il catalogo i18n resta **4.645 chiavi × 5 lingue = 23.225 traduzioni**. Il package root e il package QA restano `20.1.1`.
 
-Il contratto corrente del sorgente è **MeteoNexa 20.1.1**. La compatibilità applicativa/backend resta **20.1**, lo schema database resta **28**, le tabelle applicative restano **47** e il catalogo i18n resta **4.645 chiavi × 5 lingue = 23.225 traduzioni**. Il package root e il package QA sono `20.1.1`; la revisione Service Worker è `20.1.1-maintenance-active-session`.
+### P0 — release/bootstrap reliability
 
-### P0 — maintenance per sessioni già aperte
+P0 resta chiuso sul percorso di release corrente: maintenance condivisa durante il deploy, sessioni già aperte instradate alla 503, refresh autenticato protetto da `app-boot-pending`, checksum/provenance deterministici e browser regression Chromium/Firefox. Il fix del refresh autenticato è stato validato dalla **MeteoNexa QA #58** e dal **Production Deploy #60** sullo stesso SHA `c16338828fb64308632e61a198cacd5aa90cab65`.
 
-La maintenance production viene ora attivata **prima dell'avvio del rilascio user-visible**: nell'autodeploy il flag condiviso viene acceso appena il VPS ha verificato e allineato l'esatto SHA già validato da QA, prima di invocare lo script canonico; nel deploy manuale viene acceso dopo CI/preflight/runtime check e **prima di build, backup, restore drill e sostituzione container**. Da quel momento resta attiva fino alla conclusione di tutti i gate interni ed esterni. Le nuove navigazioni HTML ricevono HTTP 503 tramite `api/maintenance.php`. In aggiunta, una sessione MeteoNexa già aperta, sia guest sia autenticata, interroga il leggero endpoint pubblico `api/system/maintenance-status.php` ogni 5 secondi quando visibile e immediatamente su `focus`, `pageshow` e ritorno in foreground. Se il flag `/var/lib/meteonexa/maintenance.flag` è attivo, la SPA forza una navigazione HTML cache-busted e passa alla stessa pagina 503. `maintenance off` è l'ultima operazione del workflow di produzione, eseguita solo dopo lo smoke HTTPS/TLS/security esterno effettuato mentre la maintenance è ancora attiva.
+### P1 — Weather Reliability Engine 2.0
 
-L'endpoint di stato non dipende dal database né dal bootstrap applicativo, usa `Cache-Control: no-store` e legge soltanto lo stesso flag condiviso usato da Apache e dallo script di deploy. Il contratto è coperto sia dallo staging Docker reale sia da Playwright su sessioni già caricate **guest e autenticate**. Se un gate fallisce dopo l'attivazione, la maintenance resta deliberatamente attiva fino a rollback/remediation verificati.
+P1 è completato con pesi per metrica/località/lead time/stagione, decay temporale, shrinkage con pochi campioni, reliability diagram/Brier e torneo **champion/challenger** in shadow mode. Un challenger può diventare attivo soltanto nel singolo bucket che supera guardrail deterministici su evidenza, holdout, Brier, calibrazione, copertura e concentrazione dei pesi; in ogni altro caso resta il champion. Lo stesso tournament viene usato da summary, calibrazione e diagnostica AI. P1.2 è stato validato dalla **MeteoNexa QA #59** e dal **Production Deploy #61** sullo SHA `6247ac4e29ae6e4e706a676c7052ceeea7faf114`.
 
-Il primo deploy che introduce questa capacità non può modificare retroattivamente una tab 20.1.0 già caricata: l'auto-passaggio alla maintenance è garantito per le sessioni che hanno già caricato la 20.1.1 (e quindi per i cutover successivi). Nuove navigazioni durante il deploy 20.1.1 continuano comunque a ricevere subito la pagina 503 server-side.
+### P2 — ensemble probabilistico e incertezza
 
-La 20.1.1 corregge inoltre il lifecycle di registrazione PWA: se il bootstrap termina dopo l'evento `window.load`, il Service Worker viene registrato immediatamente invece di attendere un evento già trascorso. La browser QA replica anche l'header production `Service-Worker-Allowed: /`, così Chromium e Firefox verificano realmente il percorso root-scoped PWA prima del ciclo maintenance.
+P2 integra l'ensemble reale come evidenza probabilistica separata dal consensus deterministico. La fonte primaria è **ECMWF AIFS ENS 0.25°**; se non disponibile, il backend può degradare su **ECMWF IFS ENS 0.25°**. I membri ensemble non sostituiscono ECMWF IFS deterministico né gli altri modelli NWP: l'IFS resta un riferimento fisico indipendente e le contraddizioni fra mediana ensemble e IFS vengono esposte come evidenza, non appianate.
 
-Il passaggio maintenance conserva inoltre la destinazione della tab in `sessionStorage`: al termine del cutover l'utente torna alla stessa route/query/hash da cui era stato spostato, con un parametro `maintenance_release` cache-busting. Il valore viene consumato e cancellato al rientro ed è validato same-origin, evitando sia la perdita del contesto di navigazione sia redirect esterni.
+Il payload `probabilisticEnsemble` espone P10/P50/P90 e spread per temperatura, precipitazione e raffiche, probabilità di superamento soglia, copertura dei membri, freshness e confronto con IFS. Le prime 72 ore mantengono i punti disponibili alla risoluzione nativa del modello; per **8–15 giorni** vengono pubblicati soltanto scenari/range giornalieri aggregati per membro, evitando falsa precisione oraria. Lo spread P10–P90 entra come fattore separato del Weather Confidence Engine senza cambiare direttamente severità o forecast deterministico.
 
-### P0 — refresh autenticato senza flash della login
+Lo schema **29** introduce `ensemble_verification_samples`: conserva in modo limitato le distribuzioni emesse ai lead time 6/24/48/72 h e le verifica successivamente soltanto contro osservazioni indipendenti. Il punteggio CRPS empirico viene calcolato per temperatura e raffiche; la precipitazione resta probabilistica/range finché non è disponibile una ground truth temporalmente omogenea con l'accumulo nativo dell'ensemble. I campioni vengono mantenuti con retention limitata e non contengono coordinate in chiaro oltre alla `location_key` già usata dal motore di affidabilità.
 
-Il first paint usa ora due gate distinti: `i18n-pending` per impedire la comparsa di chiavi di traduzione grezze e `app-boot-pending` per impedire che login o applicazione diventino visibili prima della decisione sullo stato autenticato. Anche se il catalogo i18n è già pronto, lo splash MeteoNexa resta visibile finché il bootstrap non ha completato credenziale dispositivo, `api/auth/status.php` e `reconcileRootView()`. `meteonexa:ready` rimuove il gate; il watchdog lo rimuove solo dopo la recovery. Il test `qa/e2e/auth-refresh-no-flash.spec.mjs` mantiene volutamente in attesa la verifica server e controlla che la login non venga mai mostrata durante un refresh di sessione email valida.
+Il Copilot dispone inoltre del tool deterministico `probabilistic_ensemble` quando la domanda riguarda probabilità, ensemble, incertezza, scenari, range o percentili. All'LLM vengono passati soltanto statistiche/range già calcolati dal backend, mai i membri grezzi come fonte di decisione autonoma.
 
-### Security CI — evidenza del gate che fallisce
+### Gate P2
 
-I due percorsi security (`quality-security` della QA principale e `MeteoNexa Dependency Security`) mantengono le soglie **HIGH/CRITICAL** e non introducono ignore aggiuntivi. Semgrep, Trivy filesystem, Trivy immagine, npm root/QA e Composer producono report machine-readable caricati come artifact GitHub Actions anche quando un singolo scanner fallisce; un gate aggregato chiude comunque il job in errore se almeno uno scanner non è `success`. In questo modo il prossimo fallimento security è diagnosticabile dal report preciso invece di perdere i risultati dei controlli successivi.
-
-### P1 — documentazione e stabilità browser
-
-`readme.md` resta l'unico Markdown normativo; `docs/reports/ARCHITECTURE-SECURITY.md` resta evidenza tecnica non normativa. Le sezioni RC/Final Candidate più sotto sono conservate esclusivamente come cronologia e non ridefiniscono lo stato corrente.
-
-I due timeout occasionali osservati nel primo tentativo Chromium del freeze 20.1.0 sono trattati senza introdurre retry ciechi: il solo viewport 3840×2160 dispone di un budget dedicato e il test dei custom controls aspetta esplicitamente che dialog e switch siano realmente disponibili prima di leggerne lo stato.
-
-Il test Playwright della maintenance è deliberatamente **esclusivo**: modifica lo stesso flag filesystem usato dal web server QA e quindi non può condividere il pool parallelo con i test responsive/UI. Chromium e Firefox eseguono prima la suite browser ordinaria in parallelo e poi `maintenance-active-session.spec.mjs` da solo con `--workers=1`. Questo evita che una pagina di un altro test riceva legittimamente HTTP 503 mentre il test maintenance sta simulando il cutover.
-
-### P2 — supply-chain CI
-
-Le GitHub Actions usate dai workflow sono pin-nate a SHA immutabili; `qa/workflow_supply_chain_smoke.py` rifiuta nuovi `uses:` basati su tag o branch mobili. Semgrep/Trivy, PHPStan/ESLint, dependency audit, container non-root/read-only, exact-SHA deploy, backup/restore e provenance restano gate della release.
-
-La firma crittografica del tag è un'operazione Git/account, non viene simulata dal codice. Per `v20.1.1` va usato un tag annotato firmato SSH/GPG quando una signing key verificabile è configurata su GitHub; in assenza di signing key il rilascio non deve dichiarare una firma inesistente.
-
-### Gate di freeze 20.1.1
-
-Lo SHA destinato al tag `v20.1.1` deve essere lo stesso SHA che supera MeteoNexa QA completa e Production Deploy. Il deploy deve verificare schema 28, provenance `web/worker`, integrazioni live, maintenance ON durante i controlli interni, maintenance OFF prima dello smoke esterno e HTTP/TLS finali. Il README non incorpora numeri di run futuri per evitare di rendere obsoleto il commit appena validato; l'evidenza esatta resta nei run GitHub associati allo SHA taggato.
+P2 è considerato chiuso operativamente soltanto quando lo SHA che contiene questa implementazione supera MeteoNexa QA completa, MySQL 8.4 con migrazione 15→29, Chromium + Firefox e Production Deploy dello stesso SHA. Fino a quel momento il codice rappresenta il candidato P2 e non un risultato live dichiarato.
 <!-- METEONEXA_CURRENT_CONTRACT_END -->
+
+## Sviluppi successivi / Roadmap
+
+- **P3 — Nowcast severo 0–120 minuti / Radar4 shadow:** optical flow e object tracking multi-frame, probabilità separate di rain start/peak/end, ETA della cella, growth/decay score e fusione radar + fulmini + satellite + osservazioni + warning ufficiali. Radar3 resta authority finché il backtest non supera soglie predefinite.
+- **P4 — Official Warning Hub:** normalizzazione CAP/GeoJSON, lifecycle issued/updated/cancelled/expired, deduplica per evento/versione/area, geofencing polygon-based e separazione visiva/semantica fra warning ufficiale e previsione MeteoNexa.
+- **P5 — AI Meteorologist 2.0:** decision object deterministico prima del testo LLM, tool contract tipizzato, `asOf`/fonti/confidence/limiti obbligatori, eval suite anti-hallucination e fallback template deterministico.
+- **P6 — Hyperlocal / Personal Weather Twin:** assimilazione di stazioni personali con quality score/outlier detection, bias correction locale e notification policy basata su cambiamenti materiali della decisione.
+- **P7 — osservabilità meteo/release:** SLO per forecast/nowcast/warning/AI, drift dashboard, golden locations europee e canary release con confronto delle metriche prima/dopo.
+
 
 ## P1 release/documentation hardening — 20 settembre 2026
 
@@ -1776,7 +1767,7 @@ METEONEXA_PRIVACY_CONTACT_EMAIL=privacy@dominio.tld
 - PHP 8.3+ consigliato
 - estensioni `pdo_sqlite`, `sqlite3`, `curl`, `openssl`, `mbstring`
 
-La baseline distribuita corrente è già **schema 28** ed è sanitizzata:
+La baseline distribuita corrente è già **schema 29** ed è sanitizzata:
 
 ```text
 api/install/meteonexa-baseline.sqlite
@@ -2111,7 +2102,7 @@ Il `Dockerfile` non usa più `COPY . /var/www/html`: l'immagine contiene solo en
 
 Sono aggiunti `composer.json`, `phpstan.neon`, `config/quality/php-cs-fixer.php` e `config/quality/semgrep.yml`. La CI installa PHPStan/PHP-CS-Fixer, esegue ESLint + verifica esbuild, esegue Semgrep 1.169.0 con regole locali e Trivy `v0.36.0` sia sul filesystem sia sull'immagine Docker finale. La scansione Trivy blocca finding HIGH/CRITICAL non ignorati.
 
-Il job MySQL 8.4 esegue ora sia `qa/mysql_auth_integration.php` sia `qa/mysql_full_integration.php`: quest'ultimo ricrea lo schema reale, verifica le 47 tabelle, attraversa la catena di upgrade da schema 15 fino allo schema **28** e applica i capability sync idempotenti e verifica i trigger di revisione traduzioni.
+Il job MySQL 8.4 esegue ora sia `qa/mysql_auth_integration.php` sia `qa/mysql_full_integration.php`: quest'ultimo ricrea lo schema reale, verifica le 48 tabelle, attraversa la catena di upgrade da schema 15 fino allo schema **29** e applica i capability sync idempotenti e verifica i trigger di revisione traduzioni.
 
 `qa/p4_platform_hardening_smoke.py` protegge questi contratti anche nella suite zero-dependency locale. `npm run check:p4` espone lo stesso gate.
 
@@ -2477,7 +2468,7 @@ Production ESM assets are built by pinned esbuild 0.28.2 into `.build/esbuild-pr
 
 ## P5 audit correction and startup performance
 
-The current release contract is schema **28** with `20.1-semantic-i18n-v2`. A second semantic migration (`0028_semantic_i18n_residual.php`) removes the 96 hash-like `html.*`, `attr.*` and `meta.*` keys that were not covered by the original `ui/code` matcher. Active catalogs now contain **4,639 semantic keys in five locales** and the QA rule rejects any retained migration-key reference in runtime sources.
+The current release contract is schema **29** with `20.1-semantic-i18n-v2`. A second semantic migration (`0028_semantic_i18n_residual.php`) removes the 96 hash-like `html.*`, `attr.*` and `meta.*` keys that were not covered by the original `ui/code` matcher. Active catalogs now contain **4,639 semantic keys in five locales** and the QA rule rejects any retained migration-key reference in runtime sources.
 
 Privacy/legal deployment identity is explicit configuration, never hardcoded application identity: controller legal name, address, privacy mailbox and optional DPO mailbox are safe public fields exposed by `api/ui-config.php`. Missing controller identity is rendered as a localized deployment warning. The configured external AI provider is exposed only as the non-secret provider name so the privacy page can show the matching provider notice.
 
@@ -2581,7 +2572,7 @@ The application does not hardcode or infer the legal identity of the data contro
 
 ## Architettura
 
-- schema corrente 28 / 47 tabelle SQLite-MySQL;
+- schema corrente 29 / 48 tabelle SQLite-MySQL;
 - ESM + internal service registry + dependency injection;
 - singolo runtime state frontend;
 - migration per revisione fino a 0028;
@@ -2715,7 +2706,7 @@ Questa checklist è il percorso consigliato per provare e rilasciare la RC senza
 - valorizzare `METEONEXA_LEGAL_CONTROLLER_NAME`, `METEONEXA_LEGAL_CONTROLLER_ADDRESS` e `METEONEXA_PRIVACY_CONTACT_EMAIL`; `METEONEXA_DPO_EMAIL` solo se applicabile;
 - verificare che nessun secret sia committato nel repository;
 - eseguire backup DB e volume runtime prima dell'upgrade;
-- verificare che la migration DB arrivi a schema **28**.
+- verificare che la migration DB arrivi a schema **29**.
 
 ## 2. Gate di build/QA
 

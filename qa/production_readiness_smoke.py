@@ -90,7 +90,7 @@ checks = {
     'single authoritative Markdown source of truth': authoritative_markdown == ['readme.md'],
     'report Markdown is isolated as non-authoritative evidence': all(path.startswith(REPORT_MARKDOWN_PREFIX) for path in report_markdown),
     'README has an explicit current-contract block': bool(current_contract),
-    'schema 28 is the current contract': ('schema **28**' in current_contract or 'schema 28' in current_contract) and not re.search(r'schema\s+(?:\*\*)?(?:26|27)(?:\*\*)?', current_contract, re.I),
+    'schema 29 is the current contract': ('schema **29**' in current_contract or 'schema 29' in current_contract) and not re.search(r'schema\s+(?:\*\*)?(?:26|27|28)(?:\*\*)?', current_contract, re.I),
     'runtime bind mount is explicit and staging-parameterized': compose.count('${METEONEXA_RUNTIME_DIR:-./runtime}:/var/lib/meteonexa') >= 2,
     'staging can isolate all fixed container names': all(x in compose for x in ['METEONEXA_DB_CONTAINER_NAME', 'METEONEXA_WEB_CONTAINER_NAME', 'METEONEXA_WORKER_CONTAINER_NAME']),
     'legal controller fields reach web and worker': all(x in compose for x in ['METEONEXA_LEGAL_CONTROLLER_NAME', 'METEONEXA_LEGAL_CONTROLLER_ADDRESS', 'METEONEXA_DPO_STATUS', 'METEONEXA_DPO_EMAIL', 'METEONEXA_LEGAL_SITE_URL']),

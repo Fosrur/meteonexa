@@ -32,7 +32,7 @@ checks={
     'database facade stays thin': len(dbfacade.splitlines()) <= 35 and "database/connection.php" in dbfacade and "database/migrations.php" in dbfacade,
     'database responsibilities split': all((root/'api/database'/name).is_file() for name in ['driver.php','crypto.php','schema.php','migrations.php','connection.php','metadata.php','smtp.php','ai.php','security.php']),
     'connection delegates migration execution': 'meteonexa_run_mysql_migrations' in connection and 'meteonexa_run_sqlite_migrations' in connection and 'meteonexa_current_schema_version()' in connection,
-    'migration manifest reaches schema 28': 'return 28;' in migrations and migration_versions == list(range(16,29)),
+    'migration manifest reaches schema 29': 'return 29;' in migrations and migration_versions == list(range(16,30)),
     'readme documents p1': '## 20.1 — P1 refactoring di manutenibilità' in readme and 'Stato frontend autorevole' in readme and 'P1 fase 2 — i18n, account, auth e radar predittivo' in readme and 'P1 fase 3 — controller radar, MapLibre e playback' in readme and 'P1 fase 4 — località, ricerca, preferiti e navigazione' in readme and 'P1 finale — notification center, push e PWA' in readme and 'P1 completato' in readme and 'Backend database modulare' in readme,
 }
 failed=[]
