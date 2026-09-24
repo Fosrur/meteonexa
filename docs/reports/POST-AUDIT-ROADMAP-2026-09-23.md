@@ -144,3 +144,24 @@ The QA #45 failure was narrowed to two browser-test issues, while PHPStan, ESLin
 - updates `@playwright/test`, `playwright` and `playwright-core` from 1.55.0 to 1.55.1, the patched release for GHSA-7mvr-c777-76hp.
 
 P0 is considered operationally closed only after the pushed commit completes MeteoNexa QA successfully and the automatically triggered Production Deploy completes through maintenance ON, deploy, external security smoke and maintenance OFF.
+
+## Aggiornamento 24 settembre 2026 — P0 refresh + avvio P1.1
+
+### P0 — refresh autenticato senza flash login
+
+La regressione osservata su refresh di una sessione email già autenticata era ancora possibile oltre il precedente watchdog di 12 secondi: sia `js/app.js` sia `js/i18n-runtime.js` potevano rimuovere `app-boot-pending` mentre la riconciliazione server o l'idratazione iniziale erano ancora in corso. In quella finestra la login poteva diventare visibile e venire subito sostituita dall'app autenticata.
+
+Correzione: `app-boot-pending` è ora un gate atomico di bootstrap. I watchdog possono soltanto liberare un loader operativo rimasto bloccato; non possono più scegliere la vista root né mostrare login/app. Il gate viene rilasciato soltanto dal percorso terminale del bootstrap applicativo. Il test Playwright autenticato attraversa esplicitamente il vecchio limite dei 12 secondi con auth ancora pendente.
+
+### P1.1 — Weather Reliability Engine 2.0 foundation
+
+Avviata la prima tranche P1 sopra lo schema già esistente `model_skill_samples`, senza migrazioni DB:
+
+- pesi ancora distinti per metrica, località e lead time, ora anche specializzati per stagione;
+- decadimento temporale esponenziale con half-life di 30 giorni, così l'evidenza recente pesa più di quella storica;
+- shrinkage più conservativo con pochi campioni effettivi, calcolato dopo il decay;
+- fallback progressivo dallo skill stagionale allo skill all-season quando i campioni della stagione corrente sono insufficienti;
+- reliability diagram deterministico per `rain`, `storm` e `snow`, con bin probabilistici, observed rate, Brier Score, effective sample count e calibration gap;
+- metadata espliciti nel payload reliability per `season`, `decayHalfLifeDays`, modalità `seasonal-decayed-skill-shrunk` e separazione fra freschezza del model run e freschezza cache/fetch.
+
+Restano nelle tranche P1 successive: champion/challenger in shadow mode, promozione automatica con soglie minime di evidenza, e CRPS/quantili quando saranno disponibili ensemble probabilistici reali.

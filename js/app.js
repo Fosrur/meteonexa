@@ -4557,12 +4557,13 @@ RUNTIME_API.publish({
 
 async function init() {
     const bootDeadline = setTimeout(() => {
-        document.documentElement.classList.remove('fresh-build');
+        // A slow authenticated cold boot must never expose the login surface while
+        // auth/status.php or the initial weather hydration is still in flight.
+        // Keep app-boot-pending as the atomic visibility gate; the terminal
+        // try/catch/finally path below is the only authority allowed to release it.
+        console.warn('BOOT_SLOW_PENDING_AUTH_RECONCILIATION');
+        state.loaderDepth = 0;
         setLoader(false);
-        const appVisible = $('#weather-app')?.hidden === false;
-        const welcomeVisible = $('#welcome')?.hidden === false;
-        if (!appVisible && !welcomeVisible) recoverRootViewAfterBootFailure(new Error('BOOT_WATCHDOG_RECOVERY'));
-        document.documentElement.classList.remove('app-boot-pending');
     }, 12000);
     try {
         await detectExternalCacheEvictionAndForceLogin();

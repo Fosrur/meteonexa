@@ -16,16 +16,24 @@ async function seedRestoredEmailSession(page) {
 }
 
 test('authenticated refresh keeps the boot splash until server session reconciliation finishes', async ({ page }) => {
-  test.setTimeout(30000);
+  test.setTimeout(45000);
   await seedRestoredEmailSession(page);
   await prepareStableApp(page);
+
+  // Force a cold i18n bootstrap before auth so the authoritative session check
+  // is still in flight after the old 12-second boot watchdog boundary. This is
+  // the production race that used to reveal login and then jump back into app.
+  let catalogCalls = 0;
+  await page.route('**/assets/i18n/it.json*', async route => {
+    catalogCalls += 1;
+    await new Promise(resolve => setTimeout(resolve, 2400));
+    await route.continue();
+  });
 
   let statusCalls = 0;
   await page.route('**/api/auth/status.php', async route => {
     statusCalls += 1;
-    // Keep the authoritative session check in flight long enough to verify the
-    // intermediate paint. The login surface must never be exposed here.
-    await new Promise(resolve => setTimeout(resolve, 1400));
+    await new Promise(resolve => setTimeout(resolve, 10500));
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -43,13 +51,18 @@ test('authenticated refresh keeps the boot splash until server session reconcili
   await page.goto('./', { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => document.documentElement.classList.contains('i18n-ready'), null, { timeout: 8000 });
 
-  await expect.poll(() => statusCalls, { timeout: 8000 }).toBeGreaterThan(0);
+  await expect.poll(() => catalogCalls, { timeout: 8000 }).toBeGreaterThan(0);
+  await expect.poll(() => statusCalls, { timeout: 10000 }).toBeGreaterThan(0);
+
+  // Cross the former 12s watchdog boundary while auth is deliberately pending.
+  // Login and app must both remain atomically hidden behind the boot splash.
+  await page.waitForFunction(() => performance.now() >= 12200, null, { timeout: 15000 });
   await expect(page.locator('html')).toHaveClass(/app-boot-pending/);
   await expect(page.locator('#i18n-boot-splash')).toBeVisible();
   await expect(page.locator('#welcome')).toBeHidden();
   await expect(page.locator('#weather-app')).toBeHidden();
 
-  await waitForMeteoNexaReady(page, 15000);
+  await waitForMeteoNexaReady(page, 20000);
   await expect(page.locator('html')).not.toHaveClass(/app-boot-pending/);
   await expect(page.locator('#i18n-boot-splash')).toBeHidden();
   await expect(page.locator('#welcome')).toBeHidden();

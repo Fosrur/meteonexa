@@ -221,14 +221,19 @@
         }
     };
     let bootReady = false;
-    const releaseBootUi = () => {
-        if (bootReady) return;
-        bootReady = true;
+    const clearStaleOperationLoader = () => {
         const loader = document.getElementById('global-loader');
         loader?.classList.remove('active');
         loader?.setAttribute('aria-hidden', 'true');
         document.body?.classList.remove('operation-loading');
+    };
+    const releaseBootUi = () => {
+        if (bootReady) return;
+        bootReady = true;
+        clearStaleOperationLoader();
         document.documentElement.classList.remove('fresh-build');
+        // Authentication/root-view reconciliation owns this gate. i18n may clear
+        // stale loaders, but it must never reveal login/app before meteonexa:ready.
         document.documentElement.classList.remove('app-boot-pending');
     };
     const markReady = () => {
@@ -290,9 +295,10 @@
             if (node instanceof Element) applyDocument(node);
         })));
         if (document.body) observer.observe(document.body, { childList: true, subtree: true });
-        // The watchdog may release an operation loader, but never changes the
-        // i18n-pending state. Blank translated surfaces therefore cannot flash.
-        setTimeout(releaseBootUi, 12000);
+        // A slow auth/weather bootstrap may legitimately exceed 12 seconds. The
+        // watchdog can clear only a stale operation loader; app-boot-pending is
+        // released exclusively by the terminal meteonexa:ready event.
+        setTimeout(clearStaleOperationLoader, 12000);
     });
     document.addEventListener('meteonexa:ready', releaseBootUi, { once: true });
 })();
