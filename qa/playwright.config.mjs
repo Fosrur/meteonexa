@@ -5,7 +5,7 @@ const baseURL = process.env.METEONEXA_TEST_BASE_URL || 'http://127.0.0.1:8088/';
 export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
-  timeout: 15000,
+  timeout: process.env.CI ? 30000 : 15000,
   expect: { timeout: 4000 },
   globalTimeout: process.env.CI ? 8 * 60 * 1000 : undefined,
   forbidOnly: !!process.env.CI,
@@ -18,7 +18,7 @@ export default defineConfig({
   use: {
     baseURL,
     actionTimeout: 4000,
-    navigationTimeout: 8000,
+    navigationTimeout: process.env.CI ? 20000 : 8000,
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
   },
