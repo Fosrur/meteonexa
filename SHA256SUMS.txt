@@ -278,7 +278,7 @@ d15a7978c3879d9ec12453dd7ad14ed751c0ec6dd410ceae9ffa8f58c4d89840  ./docker/worke
 db1ef131e4261173902c5b6338b959379d835debfa83efd4a41f2209bd405e61  ./docs/reports/ARCHITECTURE-SECURITY.md
 2374172314716811e809e81c22c8790004a8bdcfe455f0d4e08916f44ae59109  ./docs/reports/POST-AUDIT-ROADMAP-2026-09-23.md
 d42455210fafdb406f41f7cc288d17ebc4345fd229fa0cc8f64c9ab4eebe1a26  ./eslint.config.mjs
-a7ef70936208f88fae3054720d02e6286404222500c3034eb3fd993751483a69  ./index.html
+977e3b039fbf489b7fe5ce8a44d8d32877583ae54bf25c57e2d886cff511812d  ./index.html
 7ae983d670ace66d4571fc70e60df8d093ec1948eb0e3f97108b5f1a548d1850  ./install/.htaccess
 c4630e47a01a92fff84e6e3c17548a78c95375c02125dd88d26447e6e4e9ba4b  ./install/ENABLE_INSTALL.example
 207b36410731acc61b029a500f47d407d7aa9e1f242b777e09179491cbd7337f  ./install/InstallerException.php
@@ -356,7 +356,7 @@ cde9e0e5d5dd90e8a005b554202f5064129f54eebde4c18aeb2fe8df5538380e  ./qa/copilot_o
 a10db06a7c38c06e88773c16fa45f8be4559f7fc959eaf83e82cb373904684bf  ./qa/decision_route_account_sync_smoke.php
 88f4649f0b6de0ec34bf5210ca718f2aca322f4fe7c2e33bb29e76fe391b3059  ./qa/dependency_lock_smoke.py
 ad283edc6f3e815848c57ca081bbc1af4f3929e629627af48758d57065ff4250  ./qa/e2e/auth-guest.spec.mjs
-c79080d371bcaa0335ae332cb6f21a864696a2d9d42ee3e37cd46161506ab2e9  ./qa/e2e/auth-refresh-no-flash.spec.mjs
+7bd97209cd27f8afc872586fad3438c2cfc759be950057d738e006a491ff2e8b  ./qa/e2e/auth-refresh-no-flash.spec.mjs
 0ccf0f06ec7591c8938ec4ab8190844f42d086e20154c60bf3250d7f8fadc99c  ./qa/e2e/bug-report.spec.mjs
 1e1fa13ea8574425c0bd4e3a47cd3249aea9cf3a9a16438eae1173f773edf3b3  ./qa/e2e/charts.spec.mjs
 a747fee0f85a498156057e674118d8a85675bcf41a04182ef989ac6e8ff6f1d6  ./qa/e2e/maintenance-active-session.spec.mjs
@@ -384,7 +384,7 @@ fc3d08d8818df67f32612f6a99f5baddf7db72a31b3b410341c2373cc2943458  ./qa/lifecycle
 8a27feda00df5ad7a34181dfaba47a6cb77dfdfe200fb5238fe728da35967a83  ./qa/live_security_check.py
 1dbcefee9d99691ba2b18cca8a67db123fdd9ad7c662ec8f449f74c335c124a2  ./qa/login_trust_weather_smoke.py
 c4f36902a83b37f4897ca6b2b7c22c14d462c6a09425afe3fc31d0455f1190ec  ./qa/maintenance_release_smoke.py
-ae4c19ab9092ae772846588089443a20dafc410de3a481a790adcfb31a736c25  ./qa/mobile_bootstrap_smoke.py
+f9da6dc7212b462712a7596e1b90145a96af383598cbef21630e998600d12b81  ./qa/mobile_bootstrap_smoke.py
 5b632ed809f9f237af337c615a357cdfae18bdfe32488493fd0afe17c3f96c7c  ./qa/mobile_guest_alerts_private_smoke.py
 d6725a9d477c01336c20834ad2306d25e9707ccc5932d96f09be8bb05fae131e  ./qa/model_consistency_smoke.py
 abdf95b7ab57c029df33a0a21e1303276caf2b8e4d5e9b1d76cc1d6b0d0eb865  ./qa/multidevice_auth_smoke.py
