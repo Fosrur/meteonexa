@@ -90,7 +90,7 @@ jobs:
         shell: bash
         run: python3 qa/live_security_check.py https://www.meteonexa.com/ --allow-maintenance
 
-      - name: Release maintenance after every deployment gate
+      - name: Release maintenance for final live validation
         shell: bash
         run: |
           PORT="${VPS_PORT:-22}"
@@ -98,9 +98,18 @@ jobs:
             "$VPS_USER@$VPS_HOST" \
             "cd /opt/apps/meteonexa && bash docker/maintenance-mode.sh off"
 
-      - name: Preserve maintenance on failed deployment
+      - name: External live production security smoke after release
+        id: live_release_smoke
+        shell: bash
+        run: python3 qa/live_security_check.py https://www.meteonexa.com/
+
+      - name: Restore maintenance on failed deployment validation
         if: failure()
         shell: bash
         run: |
           echo "Production deployment/security validation failed."
-          echo "Maintenance remains active by design; release it only after rollback or remediation has been verified."
+          echo "Re-enabling maintenance so a failed post-release validation cannot leave an unverified release exposed."
+          PORT="${VPS_PORT:-22}"
+          ssh -i ~/.ssh/meteonexa_prod -o IdentitiesOnly=yes -o BatchMode=yes -p "$PORT" \
+            "$VPS_USER@$VPS_HOST" \
+            "cd /opt/apps/meteonexa && bash docker/maintenance-mode.sh on" || true
