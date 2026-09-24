@@ -21,7 +21,16 @@ async function assertInteractiveChart(page, canvasSelector) {
   const hit = parent.locator('.chart-interaction-layer');
   await expect(hit).toBeVisible();
 
-  const box = await hit.boundingBox();
+  // App-ready intentionally fires before every background refresh completes.
+  // A refresh can legitimately move the viewport and the chart contract then
+  // dismisses a pinned tooltip. Do not test click-to-pin during that movement.
+  await expect(page.locator('#global-loader')).toBeHidden({ timeout: 8000 });
+  await hit.scrollIntoViewIfNeeded();
+  await page.evaluate(() => new Promise(resolve => {
+    requestAnimationFrame(() => requestAnimationFrame(resolve));
+  }));
+
+  let box = await hit.boundingBox();
   expect(box && box.width > 80 && box.height > 40).toBeTruthy();
 
   await hit.hover({
@@ -38,13 +47,16 @@ async function assertInteractiveChart(page, canvasSelector) {
   // Exercise the chart layer's real click handler directly. Playwright's
   // locator/page mouse actions can introduce actionability scrolling and
   // pointer/mousedown events; MeteoNexa deliberately dismisses chart tooltips
-  // on viewport movement/outside pointer-down. Those side effects are not part
-  // of the click-to-pin contract being asserted here.
+  // on viewport movement/outside pointer-down. Assert the handler atomically,
+  // before any later legitimate viewport movement can dismiss the tooltip.
+  box = await hit.boundingBox();
+  expect(box && box.width > 80 && box.height > 40).toBeTruthy();
   const clickPoint = {
     clientX: box.x + Math.round(box.width * 0.65),
     clientY: box.y + Math.round(box.height * 0.45),
   };
-  await hit.evaluate((layer, point) => {
+  const clickState = await hit.evaluate((layer, { point, selector }) => {
+    const chart = document.querySelector(selector);
     layer.dispatchEvent(new MouseEvent('click', {
       bubbles: true,
       cancelable: true,
@@ -52,16 +64,22 @@ async function assertInteractiveChart(page, canvasSelector) {
       clientY: point.clientY,
       button: 0,
     }));
-  }, clickPoint);
+    const pinnedAfterClick = Boolean(chart?._chartTooltipPinned);
+    layer.dispatchEvent(new MouseEvent('mousemove', {
+      bubbles: true,
+      clientX: point.clientX,
+      clientY: point.clientY,
+    }));
+    return {
+      pinnedAfterClick,
+      pinnedAfterMove: Boolean(chart?._chartTooltipPinned),
+      tooltipVisible: !document.querySelector('#chart-tooltip')?.hidden,
+    };
+  }, { point: clickPoint, selector: canvasSelector });
 
-  await expect.poll(
-    () => canvas.evaluate(node => Boolean(node._chartTooltipPinned)),
-    { timeout: 2000 },
-  ).toBeTruthy();
-  await expect(tooltip).toBeVisible();
-
-  await page.mouse.move(5, 5);
-  await expect(tooltip).toBeVisible(); // click pins the tooltip
+  expect(clickState.pinnedAfterClick).toBeTruthy();
+  expect(clickState.pinnedAfterMove).toBeTruthy();
+  expect(clickState.tooltipVisible).toBeTruthy();
 
   await hit.focus();
   await page.keyboard.press('ArrowRight');
