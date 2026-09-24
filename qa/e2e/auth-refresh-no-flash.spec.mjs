@@ -11,6 +11,11 @@ async function seedRestoredEmailSession(page) {
       verified: true,
       at: Date.now(),
     }));
+    // Make the i18n bootstrap deterministic on CI regardless of the runner's
+    // browser locale and guarantee that this test really exercises a cold catalog.
+    const settings = JSON.parse(localStorage.getItem('meteonexa_v3_settings') || '{}');
+    localStorage.setItem('meteonexa_v3_settings', JSON.stringify({ ...settings, language: 'it' }));
+    localStorage.removeItem('meteonexa_i18n_catalog_v4');
     sessionStorage.removeItem('meteonexa_force_auth_v1');
   });
 }
