@@ -43,20 +43,24 @@ async function seedRestoredEmailSession(page) {
   });
 }
 
-test('authenticated refresh keeps the boot splash until server session reconciliation finishes', async ({ page }) => {
+test('authenticated refresh never paints login while auth and initial weather hydration settle', async ({ page }) => {
   test.setTimeout(45000);
   await seedRestoredEmailSession(page);
   await prepareStableApp(page);
 
-  // Keep the authoritative server session deliberately pending long enough to
-  // cross the former 12-second watchdog boundary. The paint probe below is the
-  // invariant: authenticated refresh must never render the welcome/login view.
+  // Reproduce the real bootstrap ordering deterministically: server auth settles
+  // first, then the initial weather hydration keeps the boot pending beyond the
+  // former 12-second watchdog boundary. At no point may login be painted.
   await installWelcomePaintProbe(page);
 
   let statusCalls = 0;
+  let statusResolved = false;
+  let weatherCalls = 0;
+
   await page.route('**/api/auth/status.php', async route => {
     statusCalls += 1;
-    await new Promise(resolve => setTimeout(resolve, 10500));
+    await new Promise(resolve => setTimeout(resolve, 6000));
+    statusResolved = true;
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -71,12 +75,43 @@ test('authenticated refresh keeps the boot splash until server session reconcili
     });
   });
 
+  await page.route('https://api.open-meteo.com/v1/forecast**', async route => {
+    weatherCalls += 1;
+    await new Promise(resolve => setTimeout(resolve, 7000));
+    await route.fulfill({
+      status: 503,
+      contentType: 'application/json',
+      body: JSON.stringify({ ok: false, error: 'qa-delayed-weather' }),
+    });
+  });
+
+  // Keep air quality deterministic and fast: the delayed base weather request
+  // above is the only request intentionally holding the initial hydration open.
+  await page.route('https://air-quality-api.open-meteo.com/v1/air-quality**', route => route.fulfill({
+    status: 503,
+    contentType: 'application/json',
+    body: JSON.stringify({ ok: false, error: 'qa-air-disabled' }),
+  }));
+
   await page.goto('./', { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => document.documentElement.classList.contains('i18n-ready'), null, { timeout: 8000 });
 
   await expect.poll(() => statusCalls, { timeout: 10000 }).toBeGreaterThan(0);
 
-  // Cross the former 12s watchdog boundary while auth is deliberately pending.
+  // While server auth is still pending, neither login nor app may be revealed.
+  await page.waitForTimeout(500);
+  expect(statusResolved).toBe(false);
+  await expect(page.locator('html')).toHaveClass(/app-boot-pending/);
+  await expect(page.locator('#welcome')).toBeHidden();
+  await expect(page.locator('#weather-app')).toBeHidden();
+  expect(await page.evaluate(() => window.__meteonexaWelcomeEverVisible)).toBe(false);
+
+  // Auth resolves within its real 12s timeout. Weather hydration then starts and
+  // deliberately spans the former 12s watchdog boundary.
+  await expect.poll(() => statusResolved, { timeout: 10000 }).toBe(true);
+  await expect.poll(() => weatherCalls, { timeout: 10000 }).toBeGreaterThan(0);
+
+  // Cross the former 12s watchdog boundary while initial hydration is pending.
   // Login and app must both remain atomically hidden behind the boot splash.
   await page.waitForFunction(() => performance.now() >= 12200, null, { timeout: 15000 });
   await expect(page.locator('html')).toHaveClass(/app-boot-pending/);
@@ -85,7 +120,7 @@ test('authenticated refresh keeps the boot splash until server session reconcili
   await expect(page.locator('#weather-app')).toBeHidden();
   expect(await page.evaluate(() => window.__meteonexaWelcomeEverVisible)).toBe(false);
 
-  await waitForMeteoNexaReady(page, 20000);
+  await waitForMeteoNexaReady(page, 25000);
   await expect(page.locator('html')).not.toHaveClass(/app-boot-pending/);
   await expect(page.locator('#i18n-boot-splash')).toBeHidden();
   await page.waitForTimeout(350);

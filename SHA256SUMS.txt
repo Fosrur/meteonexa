@@ -356,7 +356,7 @@ cde9e0e5d5dd90e8a005b554202f5064129f54eebde4c18aeb2fe8df5538380e  ./qa/copilot_o
 a10db06a7c38c06e88773c16fa45f8be4559f7fc959eaf83e82cb373904684bf  ./qa/decision_route_account_sync_smoke.php
 88f4649f0b6de0ec34bf5210ca718f2aca322f4fe7c2e33bb29e76fe391b3059  ./qa/dependency_lock_smoke.py
 ad283edc6f3e815848c57ca081bbc1af4f3929e629627af48758d57065ff4250  ./qa/e2e/auth-guest.spec.mjs
-7bd97209cd27f8afc872586fad3438c2cfc759be950057d738e006a491ff2e8b  ./qa/e2e/auth-refresh-no-flash.spec.mjs
+30a46f9a2a1dc12f79de54b9e7efa6ec2273b123617153f1cb25af40f3e190df  ./qa/e2e/auth-refresh-no-flash.spec.mjs
 0ccf0f06ec7591c8938ec4ab8190844f42d086e20154c60bf3250d7f8fadc99c  ./qa/e2e/bug-report.spec.mjs
 1e1fa13ea8574425c0bd4e3a47cd3249aea9cf3a9a16438eae1173f773edf3b3  ./qa/e2e/charts.spec.mjs
 a747fee0f85a498156057e674118d8a85675bcf41a04182ef989ac6e8ff6f1d6  ./qa/e2e/maintenance-active-session.spec.mjs
