@@ -165,3 +165,35 @@ Avviata la prima tranche P1 sopra lo schema già esistente `model_skill_samples`
 - metadata espliciti nel payload reliability per `season`, `decayHalfLifeDays`, modalità `seasonal-decayed-skill-shrunk` e separazione fra freschezza del model run e freschezza cache/fetch.
 
 Restano nelle tranche P1 successive: champion/challenger in shadow mode, promozione automatica con soglie minime di evidenza, e CRPS/quantili quando saranno disponibili ensemble probabilistici reali.
+
+## Aggiornamento 24 settembre 2026 — QA P0 verde e chiusura P1.2
+
+### P0 — release pipeline verificata sullo stesso SHA
+
+Il commit `c16338828fb64308632e61a198cacd5aa90cab65` ha completato con successo MeteoNexa QA #58 e il Production Deploy #60 sullo stesso SHA. I gate release/checksum, security, MySQL, backup/restore, staging e browser regression Chromium/Firefox sono quindi allineati alla release effettivamente distribuita. La verifica visuale manuale del refresh autenticato resta il controllo finale lato utente per il criterio “nessun frame della login durante refresh”, ma non sono previste ulteriori modifiche P0 mentre questo SHA resta verde.
+
+### P1.2 — champion/challenger con promozione protetta
+
+Il Weather Reliability Engine completa il percorso di weighting adattivo senza sostituire alla cieca i pesi in produzione:
+
+- `champion`: il profilo production corrente `recency-decay-skill-v2`;
+- `challenger`: il profilo P1.1 `seasonal-decayed-skill-shrunk` con decadimento a 30 giorni, specializzazione stagionale e shrinkage low-sample;
+- confronto out-of-sample per `rain`, `storm`, `snow` e lead time `1/3/6/24/48/72h`, senza usare i campioni di holdout per addestrare i pesi confrontati;
+- almeno 30 target di training, almeno 24 campioni di valutazione e almeno 3 modelli per campione;
+- copertura holdout minima 90%;
+- miglioramento Brier minimo assoluto `0.01` e relativo `5%`;
+- regressione massima del calibration gap pari a `2` punti percentuali;
+- nessun singolo modello può superare il `60%` del peso del challenger nel bucket valutato;
+- il challenger deve vincere almeno 2 finestre temporali su 3 e non peggiorare l’ultima finestra oltre la tolleranza tecnica;
+- promozione automatica soltanto del bucket che supera tutti i guardrail; gli altri bucket restano sul champion;
+- qualsiasi errore, storia insufficiente o cache non valida è fail-safe sul champion;
+- stato shadow e decisione di promozione sono memorizzati in `app_metadata` con chiave anonimizzata per device/località, senza nuova migrazione DB; la cache viene invalidata da nuovi campioni verificati, cambio stagione o TTL di 6 ore;
+- un modello senza storico nel bucket usa un peso neutro rispetto alla media del bucket, evitando che un valore hard-coded possa dominare un profilo normalizzato.
+
+Il payload `forecastReliability` espone il `weightTournament` con diagnostica, guardrail, Brier champion/challenger e bucket promossi. Il worker di calibrazione e il summary autenticato usano la stessa decisione champion/challenger, evitando divergenza fra i consensus salvati e quelli mostrati all’utente.
+
+Con P1.2, P1 è considerato completo per weighting, calibrazione probabilistica binaria e governance champion/challenger. CRPS, percentili e quantili non vengono simulati con dati deterministici: passano esplicitamente a P2, dove saranno calcolati su ensemble probabilistici reali.
+
+### Prossimo sviluppo — P2
+
+P2 parte dall’integrazione ensemble reale: AIFS ENS/ensemble compatibile, P10/P50/P90, probabilità di superamento soglia, spread come input di confidence e CRPS su campioni verificati. Solo dopo questi dati verranno estesi i pesi continui di temperatura/vento alla fusione probabilistica; il consensus binario P1 resta il fallback production-safe.

@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require_once dirname(__DIR__) . '/intelligence/quality_helpers.php';
 require_once dirname(__DIR__) . '/intelligence/reliability_helpers.php';
+require_once dirname(__DIR__) . '/intelligence/intelligence_extensions.php';
 require_once dirname(__DIR__) . '/observations/providers.php';
 function meteonexa_calibration_locations(PDO $pdo, int $limit) : array {
     $items =[];
@@ -77,8 +78,11 @@ function meteonexa_calibration_queue(PDO $pdo, array $loc, array $models, array 
 function meteonexa_calibration_process_location(PDO $pdo, array $config, array $loc) : array {
     $obs = meteonexa_observations_collect($pdo, $config, $loc['deviceId'], $loc['latitude'], $loc['longitude'], true);
     $models = meteonexa_intelq_fetch_models($loc['latitude'], $loc['longitude'], false, 72);
-    $weights = meteonexa_reliability_skill_weights($pdo, $loc['deviceId'], $loc['locationKey']);
-    $consensus = meteonexa_weighted_consensus($models, $weights);
+    $skillV2 = meteonexa_recency_skill($pdo, $loc['deviceId'], $loc['locationKey']);
+    $championWeights = (array)($skillV2['weights']??[]);
+    $weightTournament = meteonexa_reliability_weight_tournament($pdo, $loc['deviceId'], $loc['locationKey'], $championWeights);
+    $weights = (array)($weightTournament['activeWeights']??$championWeights);
+    $consensus = meteonexa_weighted_consensus($models, $weights, meteonexa_reliability_tournament_weighting_meta($weightTournament));
     $verified = 0;
     $queued = 0;
     if (!$pdo->inTransaction())$pdo->beginTransaction();

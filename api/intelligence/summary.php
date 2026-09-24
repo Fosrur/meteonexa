@@ -55,15 +55,19 @@ $models = meteonexa_intelq_fetch_models($lat, $lon, false, 72);
 $canonicalConsensus = meteonexa_intelq_canonical_consensus($models);
 $skill = meteonexa_intelq_skill_summary($pdo, $deviceId, $locationKey);
 $skillV2 = meteonexa_recency_skill($pdo, $deviceId, $locationKey);
-$weights = (array)($skillV2['weights']??[]);
-$consensus = meteonexa_weighted_consensus($models, $weights);
+$championWeights = (array)($skillV2['weights']??[]);
+$weightTournament = meteonexa_reliability_weight_tournament($pdo, $deviceId, $locationKey, $championWeights);
+$weights = (array)($weightTournament['activeWeights']??$championWeights);
+$consensus = meteonexa_weighted_consensus($models, $weights, meteonexa_reliability_tournament_weighting_meta($weightTournament));
 $observations = meteonexa_observations_collect($pdo, $config, $deviceId, $lat, $lon, true);
 $calibrationProgress = meteonexa_calibration_touch_current($pdo,['deviceId'=>$deviceId, 'locationKey'=>$locationKey], $observations, $models, $consensus);
 if ((int)($calibrationProgress['verified']??0) > 0) {
     $skill = meteonexa_intelq_skill_summary($pdo, $deviceId, $locationKey);
     $skillV2 = meteonexa_recency_skill($pdo, $deviceId, $locationKey);
-    $weights = (array)($skillV2['weights']??[]);
-    $consensus = meteonexa_weighted_consensus($models, $weights);
+    $championWeights = (array)($skillV2['weights']??[]);
+    $weightTournament = meteonexa_reliability_weight_tournament($pdo, $deviceId, $locationKey, $championWeights, null, true);
+    $weights = (array)($weightTournament['activeWeights']??$championWeights);
+    $consensus = meteonexa_weighted_consensus($models, $weights, meteonexa_reliability_tournament_weighting_meta($weightTournament));
 }
 $motion = meteonexa_radar_motion($pdo, $deviceId, $lat, $lon);
 $lightning = meteonexa_intelligence_lightning($config, $lat, $lon);
@@ -99,7 +103,7 @@ if (!empty($calibration['available'])&&!empty($calibration['publishable'])&&in_a
 $snapshot = meteonexa_intelq_snapshot_from_consensus($consensus, $analysis);
 $forecastChange = meteonexa_intelq_persist_run_snapshot($pdo, $deviceId, $locationKey, $snapshot);
 $previousRuns = meteonexa_intelq_previous_runs($lat, $lon, false);
-$forecastReliability = meteonexa_reliability_summary($pdo, $deviceId, $locationKey, $skill, $observations, $consensus, $calibration);
+$forecastReliability = meteonexa_reliability_summary($pdo, $deviceId, $locationKey, $skill, $observations, $consensus, $calibration, $weightTournament);
 $forecastReliability['weights'] = $weights;
 $nowcastFusion = meteonexa_nowcast_fusion($consensus, $motion, $cellTracking, $lightning, $satellite, $official, $observations, $lat);
 $nowcastFusion['trend'] = meteonexa_persist_nowcast($pdo, $deviceId, $locationKey, $nowcastFusion);

@@ -176,9 +176,11 @@ function meteonexa_copilot_orchestrate(PDO $pdo, array $config, string $deviceId
     $models = meteonexa_intelq_fetch_models($lat, $lon, false, 72);
     $skill = meteonexa_intelq_skill_summary($pdo, $deviceId, $locationKey);
     $skillV2 = meteonexa_recency_skill($pdo, $deviceId, $locationKey);
-    $weights = (array)($skillV2['weights'] ?? []);
+    $championWeights = (array)($skillV2['weights'] ?? []);
+    $weightTournament = meteonexa_reliability_weight_tournament($pdo, $deviceId, $locationKey, $championWeights);
+    $weights = (array)($weightTournament['activeWeights'] ?? $championWeights);
     $canonicalConsensus = meteonexa_intelq_canonical_consensus($models);
-    $weightedConsensus = meteonexa_weighted_consensus($models, $weights);
+    $weightedConsensus = meteonexa_weighted_consensus($models, $weights, meteonexa_reliability_tournament_weighting_meta($weightTournament));
     $consensus = $canonicalConsensus;
     $canonicalPrimary = (array)($canonicalConsensus['primary'] ?? []);
     $tools['model_consensus'] = [
@@ -190,6 +192,8 @@ function meteonexa_copilot_orchestrate(PDO $pdo, array $config, string $deviceId
             'rainProbability' => $canonicalPrimary['precipitationProbability'] ?? $canonicalPrimary['rainProbability'] ?? null,
         ], static fn($value) => $value !== null),
         'localWeightsAppliedInternally' => $weights !== [],
+        'weightingMode' => $weightTournament['mode'] ?? 'champion',
+        'promotedWeightBuckets' => (int)($weightTournament['promotedBuckets'] ?? 0),
         'weightedAgreementPct' => $weightedConsensus['primary']['weightedAgreementPct'] ?? null,
     ];
     foreach ($models as $id => $model) {
