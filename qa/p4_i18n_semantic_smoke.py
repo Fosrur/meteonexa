@@ -32,7 +32,7 @@ with sqlite3.connect(ROOT/'api/install/meteonexa-baseline.sqlite') as connection
     db_keys = [row[0] for row in connection.execute('SELECT DISTINCT text_key FROM translations')]
     metadata = dict(connection.execute("SELECT meta_key,meta_value FROM app_metadata WHERE meta_key IN ('schema_version','translation_seed_version')"))
 if opaque(db_keys): fail('hash-like keys remain in baseline SQLite')
-if metadata != {'schema_version':'28','translation_seed_version':'20.1-semantic-i18n-v2'}: fail(f'unexpected baseline metadata: {metadata}')
+if metadata != {'schema_version':'29','translation_seed_version':'20.1-semantic-i18n-v2'}: fail(f'unexpected baseline metadata: {metadata}')
 
 for locale in locales:
     catalog = json.loads((ROOT/f'assets/i18n/{locale}.json').read_text(encoding='utf-8'))
@@ -53,4 +53,4 @@ for path in ROOT.rglob('*'):
     remaining = [key for key in legacy_keys if key in text]
     if remaining: fail(f'legacy i18n reference remains in {rel}: {remaining[:3]}')
 
-print('P4 semantic i18n: PASS (4645 semantic keys, 1317 legacy/hash keys migrated, schema 28)')
+print('P4 semantic i18n: PASS (4645 semantic keys, 1317 legacy/hash keys migrated, schema 29)')
