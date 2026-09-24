@@ -27,6 +27,7 @@ else:
     require(text, 'Restore maintenance on failed deployment validation', 'failed deployment validation must restore maintenance')
     require(text, 'if: failure()', 'maintenance preservation message must be conditional on workflow failure')
     require(text, 'bash docker/maintenance-mode.sh on', 'workflow must activate maintenance before canonical deploy')
+    require(text, 'sleep 6', 'maintenance quiescence window must exceed the 5-second active-session poll interval')
     deploy_pos = text.find('bash docker/deploy-production.sh')
     smoke_pos = text.find('External live production security smoke under maintenance')
     release_pos = text.find('Release maintenance for final live validation')
@@ -48,9 +49,10 @@ else:
     require(text, 'run: python3 qa/live_security_check.py https://www.meteonexa.com/', 'final live HTTP 200 security gate missing')
     require(text, 'bash docker/maintenance-mode.sh on" || true', 'failure recovery must re-enable maintenance after a failed final validation')
     on_pos = text.find('bash docker/maintenance-mode.sh on')
+    quiescence_pos = text.find('sleep 6', on_pos)
     script_pos = text.find('bash docker/deploy-production.sh')
-    if on_pos < 0 or script_pos < 0 or on_pos > script_pos:
-        errors.append('automatic deploy must activate maintenance before the canonical deploy script starts')
+    if min(on_pos, quiescence_pos, script_pos) < 0 or not (on_pos < quiescence_pos < script_pos):
+        errors.append('automatic deploy must activate maintenance, wait for the 5-second client poll window, then start the canonical deploy script')
 
 if deploy.is_file():
     text = deploy.read_text(encoding='utf-8')

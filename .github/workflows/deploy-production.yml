@@ -80,6 +80,10 @@ jobs:
           # Block both new navigations and already-open guest/auth sessions before
           # the release script starts building/replacing the candidate.
           bash docker/maintenance-mode.sh on
+          # Existing sessions poll maintenance every 5 seconds. Keep the gate
+          # active long enough for every already-open tab to observe it before
+          # build/container replacement starts.
+          sleep 6
           METEONEXA_GITHUB_REPOSITORY="$REPOSITORY" \
             METEONEXA_KEEP_MAINTENANCE=1 \
             bash docker/deploy-production.sh "$DEPLOY_SHA"
