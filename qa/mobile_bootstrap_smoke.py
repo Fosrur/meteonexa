@@ -21,6 +21,11 @@ for lang in ('it','en','fr','es','de'):
         ok(set(data)==seed_keys,f'static catalog {lang} key set differs from canonical translations')
         ok(all(isinstance(v,str) and v.strip() for v in data.values()),f'static catalog {lang} has empty translations')
 
+index=text('index.html')
+ok(re.search(r'<main\b[^>]*\bid=["\']welcome["\'][^>]*\bhidden(?:=["\'][^"\']*["\'])?[^>]*>', index) is not None
+   or re.search(r'<main\b[^>]*\bhidden(?:=["\'][^"\']*["\'])?[^>]*\bid=["\']welcome["\'][^>]*>', index) is not None,
+   'welcome/login must be hidden in initial HTML until root-view reconciliation completes')
+
 i18n=text('js/i18n-runtime.js')
 ok('requestStaticCatalog' in i18n,'i18n runtime has no static first-paint catalog')
 ok("assignCatalog(local, 'static-release')" in i18n,'static catalog is not assigned before server sync')

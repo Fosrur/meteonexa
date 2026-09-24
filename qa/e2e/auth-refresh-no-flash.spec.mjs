@@ -1,6 +1,29 @@
 import { test, expect } from '@playwright/test';
 import { prepareStableApp, waitForMeteoNexaReady } from './test-helpers.mjs';
 
+
+async function installWelcomePaintProbe(page) {
+  await page.addInitScript(() => {
+    window.__meteonexaWelcomeEverVisible = false;
+    const sample = () => {
+      const welcome = document.getElementById('welcome');
+      if (welcome) {
+        const style = getComputedStyle(welcome);
+        const rect = welcome.getBoundingClientRect();
+        const visible = !welcome.hidden
+          && style.display !== 'none'
+          && style.visibility !== 'hidden'
+          && Number(style.opacity || '1') > 0
+          && rect.width > 0
+          && rect.height > 0;
+        if (visible) window.__meteonexaWelcomeEverVisible = true;
+      }
+      requestAnimationFrame(sample);
+    };
+    document.addEventListener('DOMContentLoaded', () => requestAnimationFrame(sample), { once: true });
+  });
+}
+
 async function seedRestoredEmailSession(page) {
   await page.addInitScript(() => {
     localStorage.setItem('meteonexa_suite_device_id', 'device-regression-1234567890');
@@ -25,15 +48,10 @@ test('authenticated refresh keeps the boot splash until server session reconcili
   await seedRestoredEmailSession(page);
   await prepareStableApp(page);
 
-  // Force a cold i18n bootstrap before auth so the authoritative session check
-  // is still in flight after the old 12-second boot watchdog boundary. This is
-  // the production race that used to reveal login and then jump back into app.
-  let catalogCalls = 0;
-  await page.route('**/assets/i18n/it.json*', async route => {
-    catalogCalls += 1;
-    await new Promise(resolve => setTimeout(resolve, 2400));
-    await route.continue();
-  });
+  // Keep the authoritative server session deliberately pending long enough to
+  // cross the former 12-second watchdog boundary. The paint probe below is the
+  // invariant: authenticated refresh must never render the welcome/login view.
+  await installWelcomePaintProbe(page);
 
   let statusCalls = 0;
   await page.route('**/api/auth/status.php', async route => {
@@ -56,7 +74,6 @@ test('authenticated refresh keeps the boot splash until server session reconcili
   await page.goto('./', { waitUntil: 'domcontentloaded' });
   await page.waitForFunction(() => document.documentElement.classList.contains('i18n-ready'), null, { timeout: 8000 });
 
-  await expect.poll(() => catalogCalls, { timeout: 8000 }).toBeGreaterThan(0);
   await expect.poll(() => statusCalls, { timeout: 10000 }).toBeGreaterThan(0);
 
   // Cross the former 12s watchdog boundary while auth is deliberately pending.
@@ -66,10 +83,13 @@ test('authenticated refresh keeps the boot splash until server session reconcili
   await expect(page.locator('#i18n-boot-splash')).toBeVisible();
   await expect(page.locator('#welcome')).toBeHidden();
   await expect(page.locator('#weather-app')).toBeHidden();
+  expect(await page.evaluate(() => window.__meteonexaWelcomeEverVisible)).toBe(false);
 
   await waitForMeteoNexaReady(page, 20000);
   await expect(page.locator('html')).not.toHaveClass(/app-boot-pending/);
   await expect(page.locator('#i18n-boot-splash')).toBeHidden();
+  await page.waitForTimeout(350);
   await expect(page.locator('#welcome')).toBeHidden();
   await expect(page.locator('#weather-app')).toBeVisible();
+  expect(await page.evaluate(() => window.__meteonexaWelcomeEverVisible)).toBe(false);
 });
