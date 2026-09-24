@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import sys, ssl, socket, urllib.request, urllib.parse, urllib.error
+import sys, ssl, socket, urllib.request, urllib.parse, urllib.error, re
 from datetime import datetime, timezone
 
 url=sys.argv[1] if len(sys.argv)>1 and not sys.argv[1].startswith('--') else 'https://www.meteonexa.com/'
@@ -18,17 +18,35 @@ except urllib.error.HTTPError as e:
 except Exception as e: raise SystemExit(f'FAIL HTTPS fetch: {e}')
 
 maintenance_expected=allow_maintenance
+csp=h.get('content-security-policy','')
+reporting_endpoints=h.get('reporting-endpoints','')
+report_to_header=h.get('report-to','')
+# Production may terminate CSP telemetry at the ingress (/__csp-report__) or
+# pass through the application endpoint (/api/csp-report.php). Both are
+# same-origin, deliberately allow-listed reporting sinks; the smoke still
+# requires both modern report-to wiring and a legacy report-uri directive.
+allowed_reporting_paths=('/api/csp-report.php','/__csp-report__')
+report_to_match=re.search(r'(?:^|;)\s*report-to\s+([A-Za-z0-9._-]+)',csp,re.I)
+report_uri_match=re.search(r'(?:^|;)\s*report-uri\s+([^\s;]+)',csp,re.I)
+report_group=report_to_match.group(1) if report_to_match else ''
+report_uri=report_uri_match.group(1) if report_uri_match else ''
+modern_reporting_ok=bool(
+  report_group
+  and report_group in (reporting_endpoints+' '+report_to_header)
+  and any(path in (reporting_endpoints+' '+report_to_header) for path in allowed_reporting_paths)
+)
+legacy_reporting_ok=report_uri in allowed_reporting_paths
 checks={
   ('HTTP 503 maintenance' if maintenance_expected else 'HTTP 200'): status==(503 if maintenance_expected else 200),
   'final HTTPS':urllib.parse.urlparse(final).scheme=='https',
   'HSTS':bool(h.get('strict-transport-security')),
-  'CSP':'default-src' in h.get('content-security-policy',''),
-  'frame protection':h.get('x-frame-options','').upper() in {'DENY','SAMEORIGIN'} or 'frame-ancestors' in h.get('content-security-policy',''),
+  'CSP':'default-src' in csp,
+  'frame protection':h.get('x-frame-options','').upper() in {'DENY','SAMEORIGIN'} or 'frame-ancestors' in csp,
   'nosniff':h.get('x-content-type-options','').lower()=='nosniff',
   'referrer policy':bool(h.get('referrer-policy')),
   'permissions policy':bool(h.get('permissions-policy')),
-  'CSP reporting endpoint':'report-to csp-endpoint' in h.get('content-security-policy','') and '/api/csp-report.php' in h.get('reporting-endpoints',''),
-  'legacy CSP report-uri':'report-uri /api/csp-report.php' in h.get('content-security-policy',''),
+  'CSP reporting endpoint':modern_reporting_ok,
+  'legacy CSP report-uri':legacy_reporting_ok,
 }
 if maintenance_expected:
   decoded=body.decode('utf-8','replace')

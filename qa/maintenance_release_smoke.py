@@ -7,6 +7,13 @@ def text(rel): return (ROOT/rel).read_text(encoding='utf-8')
 ht=text('.htaccess'); deploy=text('docker/deploy-production.sh'); mode=text('docker/maintenance-mode.sh'); html=text('maintenance.html'); js=text('js/maintenance.js'); lifecycle=text('modules/esm/domains/app-lifecycle.mjs'); status_api=text('api/system/maintenance-status.php'); browser_router=text('qa/php-browser-router.php'); workflow=text('.github/workflows/meteonexa-tests.yml'); notifications=text('modules/esm/domains/notifications.mjs')
 for needle in ['/var/lib/meteonexa/maintenance.flag','api/maintenance.php']:
     if needle not in ht: errors.append(f'.htaccess missing {needle}')
+canonical_pos=ht.find('RewriteCond %{HTTP_HOST} ^meteonexa\\.com$')
+maintenance_pos=ht.find('RewriteCond /var/lib/meteonexa/maintenance.flag -f')
+if canonical_pos < 0 or maintenance_pos < 0 or canonical_pos > maintenance_pos:
+    errors.append('canonical apex redirect must run before maintenance rewrite')
+live_security=text('qa/live_security_check.py')
+for endpoint in ('/api/csp-report.php','/__csp-report__'):
+    if endpoint not in live_security: errors.append('live security CSP reporting allow-list missing '+endpoint)
 if 'Service-Worker-Allowed' not in ht or '/js/sw.js' not in ht: errors.append('service worker root scope header missing')
 build=deploy.find('docker compose build --pull web worker'); drill=deploy.find('bash docker/verify-backup-restore.sh'); on=deploy.find('bash docker/maintenance-mode.sh on'); up=deploy.find('docker compose up -d'); off=deploy.rfind('bash docker/maintenance-mode.sh off')
 if not (0 <= on < build < drill < up < off): errors.append('deploy sequence must be maintenance on -> build -> restore drill -> container replacement -> off')

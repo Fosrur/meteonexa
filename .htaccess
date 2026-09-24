@@ -72,6 +72,17 @@ ErrorDocument 504 /api/public-error.php?code=504
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
+  # Canonical browser navigation must run before maintenance rewriting.
+  # This guarantees that apex navigations never render an ingress-specific 503
+  # surface and always use the same www origin/session/storage contract.
+  # Canonical browser navigation: keep a single storage/session origin for the
+  # public UI. API/service-worker requests on the apex remain reachable so an older
+  # controlled page can update cleanly instead of being broken by a cross-origin
+  # redirect. Same-origin API validation is handled independently in bootstrap.
+  RewriteCond %{HTTP_HOST} ^meteonexa\.com$ [NC]
+  RewriteCond %{REQUEST_METHOD} ^(?:GET|HEAD)$ [NC]
+  RewriteCond %{HTTP_ACCEPT} text/html [NC]
+  RewriteRule ^ https://www.meteonexa.com%{REQUEST_URI} [R=308,L,NE]
   # Deployment maintenance mode. The flag lives on the shared runtime volume,
   # so the currently running container switches to maintenance before replacement.
   RewriteCond /var/lib/meteonexa/maintenance.flag -f
@@ -83,14 +94,6 @@ ErrorDocument 504 /api/public-error.php?code=504
   # styled and translated while the application itself intentionally returns 503.
   RewriteCond %{REQUEST_URI} !^/(?:css/maintenance\.css|js/maintenance\.js|assets/logo-full\.png|assets/logo\.png|assets/icons/(?:favicon-32\.png|favicon\.ico|apple-touch-icon\.png|icon-192\.png)|assets/i18n/(?:it|en|fr|es|de)\.json)$ [NC]
   RewriteRule ^ api/maintenance.php [L,QSA]
-  # Canonical browser navigation: keep a single storage/session origin for the
-  # public UI. API/service-worker requests on the apex remain reachable so an older
-  # controlled page can update cleanly instead of being broken by a cross-origin
-  # redirect. Same-origin API validation is handled independently in bootstrap.
-  RewriteCond %{HTTP_HOST} ^meteonexa\.com$ [NC]
-  RewriteCond %{REQUEST_METHOD} ^(?:GET|HEAD)$ [NC]
-  RewriteCond %{HTTP_ACCEPT} text/html [NC]
-  RewriteRule ^ https://www.meteonexa.com%{REQUEST_URI} [R=308,L,NE]
   # Source-control files are never public. /qa/ exposes only its protected web console;
   # qa/.htaccess denies the CLI runners, manifests and regression sources.
   RewriteRule ^\.github(?:/|$) - [F,L,NC]
