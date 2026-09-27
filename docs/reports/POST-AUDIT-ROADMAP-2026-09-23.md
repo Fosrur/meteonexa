@@ -1,6 +1,9 @@
 # MeteoNexa — audit tecnico e roadmap post-fix
 
-Data audit: 23 settembre 2026
+Data audit: 23 settembre 2026  
+Stato riallineato: 27 settembre 2026
+
+> **Stato corrente:** P0 e P1 sono chiusi; P2 ensemble probabilistico/CRPS è implementato nel sorgente e coperto dai gate locali dedicati. La chiusura live di P2 richiede ancora QA completa, MySQL 8.4, Chromium/Firefox e Production Deploy sul medesimo SHA. La **prossima tranche di sviluppo è P3 — Radar4 / Nowcast severo 0–120 minuti in shadow mode**. Le sezioni più sotto descrivono anche lo storico dell'audit del 23–24 settembre e vanno lette nel loro contesto temporale.
 
 ## Sintesi dell'audit
 
@@ -194,6 +197,23 @@ Il payload `forecastReliability` espone il `weightTournament` con diagnostica, g
 
 Con P1.2, P1 è considerato completo per weighting, calibrazione probabilistica binaria e governance champion/challenger. CRPS, percentili e quantili non vengono simulati con dati deterministici: passano esplicitamente a P2, dove saranno calcolati su ensemble probabilistici reali.
 
-### Prossimo sviluppo — P2
+## Aggiornamento 27 settembre 2026 — P2 code-complete e passaggio a P3
 
-P2 parte dall’integrazione ensemble reale: AIFS ENS/ensemble compatibile, P10/P50/P90, probabilità di superamento soglia, spread come input di confidence e CRPS su campioni verificati. Solo dopo questi dati verranno estesi i pesi continui di temperatura/vento alla fusione probabilistica; il consensus binario P1 resta il fallback production-safe.
+### P2 — implementazione completata
+
+P2 non è più il prossimo sviluppo: il sorgente integra ensemble reale AIFS ENS con fallback IFS ENS, P10/P50/P90, probabilità di superamento soglia, spread nel Confidence Engine, confronto separato con IFS deterministico, persistenza `ensemble_verification_samples`, CRPS empirico per le variabili supportate e tool Copilot `probabilistic_ensemble`. Lo schema corrente è **29**.
+
+I gate locali dedicati risultano coperti dal repository; la promozione live resta subordinata, come per le tranche precedenti, a QA completa, migrazione MySQL 8.4, Chromium + Firefox e Production Deploy sullo stesso SHA. Questa distinzione evita di confondere **code-complete** con **operationally closed**.
+
+### Prossimo sviluppo — P3 Radar4 / Nowcast severo 0–120 minuti
+
+La tranche successiva parte in **shadow mode** e non sostituisce Radar3:
+
+- optical flow e object tracking multi-frame;
+- identità/traiettoria delle celle e stima ETA;
+- score di crescita/decadimento;
+- probabilità separate di `rain start`, `peak` e `rain end`;
+- fusione progressiva di radar, fulmini, satellite, osservazioni e warning ufficiali;
+- backtest automatico con guardrail espliciti prima di qualunque promozione di Radar4 ad authority.
+
+Radar3 resta la sorgente production-safe finché Radar4 non dimostra un miglioramento misurabile e ripetibile sui dataset di verifica.

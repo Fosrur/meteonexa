@@ -32,7 +32,7 @@ Il Copilot dispone inoltre del tool deterministico `probabilistic_ensemble` quan
 
 ### Gate P2
 
-P2 è considerato chiuso operativamente soltanto quando lo SHA che contiene questa implementazione supera MeteoNexa QA completa, MySQL 8.4 con migrazione 15→29, Chromium + Firefox e Production Deploy dello stesso SHA. Fino a quel momento il codice rappresenta il candidato P2 e non un risultato live dichiarato.
+L'implementazione P2 è completa nel sorgente ed è coperta dai gate locali dedicati (`Forecast Reliability`, `Probabilistic Ensemble P2`, `P2 release quality`, `Final release smoke` e `Release provenance`). La chiusura **operativa/live** resta però vincolata allo stesso criterio di release: il nuovo SHA deve superare MeteoNexa QA completa, MySQL 8.4 con migrazione 15→29, Chromium + Firefox e Production Deploy dello stesso SHA. Fino a quel passaggio P2 va considerato **code-complete / release-candidate**, non ancora dichiarato live sul nuovo SHA.
 <!-- METEONEXA_CURRENT_CONTRACT_END -->
 
 ## Sviluppi successivi / Roadmap
@@ -42,6 +42,16 @@ P2 è considerato chiuso operativamente soltanto quando lo SHA che contiene ques
 - **P5 — AI Meteorologist 2.0:** decision object deterministico prima del testo LLM, tool contract tipizzato, `asOf`/fonti/confidence/limiti obbligatori, eval suite anti-hallucination e fallback template deterministico.
 - **P6 — Hyperlocal / Personal Weather Twin:** assimilazione di stazioni personali con quality score/outlier detection, bias correction locale e notification policy basata su cambiamenti materiali della decisione.
 - **P7 — osservabilità meteo/release:** SLO per forecast/nowcast/warning/AI, drift dashboard, golden locations europee e canary release con confronto delle metriche prima/dopo.
+
+### Stato roadmap — 27 settembre 2026
+
+- **P0:** chiuso e validato in release.
+- **P1:** chiuso e validato in release.
+- **P2:** implementazione completa; resta il gate operativo sullo stesso SHA di QA completa + MySQL 8.4 + Chromium/Firefox + Production Deploy.
+- **P3:** **prossima tranche attiva**. L'avvio è Radar4 in shadow mode sopra Radar3, con optical flow/object tracking multi-frame e metriche di backtest; Radar3 resta authority finché i guardrail P3 non sono superati.
+- **P4–P7:** pianificati dopo la maturazione P3, salvo attività safety/observability che possono procedere in parallelo senza cambiare l'authority meteo.
+
+Nota di packaging: i file SQL sono ora dichiarati `text eol=lf` in `.gitattributes`, così i checkout/ZIP Windows non alterano più `mysql-schema.sql` rispetto ai checksum di release.
 
 
 ## P1 release/documentation hardening — 20 settembre 2026

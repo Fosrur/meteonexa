@@ -1,7 +1,7 @@
 c1737961e6677cce2837327e0f9c6fbe07770c5d6827cc3e836082110fc4c6e1  ./.dockerignore
 abb2775c947a1e7b2875df68aa742f83916dcef9c41fa8bf3d2a110b61a47202  ./.env.example
 53c35e064789bc4f21239fc5b841ecbd1323470076747774ae4914ac6fd3dcdc  ./.env.staging.example
-3ae70d1231627271eca7384c9d9c23232b48ab940f13bdfde8bac4cb1f469940  ./.gitattributes
+d695b25f257a92ff1f62aaa1462f9a1ca6c40ab294a7dcfe5e6934e45577c291  ./.gitattributes
 dbdf47f62a27badc00789cd9369768de4d210117e6b04d534677154701c19435  ./.github/.htaccess
 a4ff7fed1a80ba5e269f62c732ee83073b5a5c7c6f2d02b83fdef82d080e338c  ./.github/workflows/dependency-security.yml
 f20b3799f3b23a665a4faffde0074d70877ef55f3ac10e33768c8db186c51fda  ./.github/workflows/deploy-production.yml
@@ -278,7 +278,7 @@ ecb62c47ea3e0eed98dca7e07ad680a6664e5d0e71391de69d10eaa4cd1edb1b  ./docker/verif
 97e11019c15b57a833a7abfbaaa2b180d6df385240856d5617a438f8f428badb  ./docker/verify-mysql.sh
 d15a7978c3879d9ec12453dd7ad14ed751c0ec6dd410ceae9ffa8f58c4d89840  ./docker/worker-loop.sh
 db1ef131e4261173902c5b6338b959379d835debfa83efd4a41f2209bd405e61  ./docs/reports/ARCHITECTURE-SECURITY.md
-c1a3c6034b1c9c564fcbd5ebca38331c1076068c5043b242c3dd475fdaaafacb  ./docs/reports/POST-AUDIT-ROADMAP-2026-09-23.md
+27b6e4723aabf57361e8814eea684114fec20dd11f7f9e16e4b1041e635ed742  ./docs/reports/POST-AUDIT-ROADMAP-2026-09-23.md
 d42455210fafdb406f41f7cc288d17ebc4345fd229fa0cc8f64c9ab4eebe1a26  ./eslint.config.mjs
 977e3b039fbf489b7fe5ce8a44d8d32877583ae54bf25c57e2d886cff511812d  ./index.html
 7ae983d670ace66d4571fc70e60df8d093ec1948eb0e3f97108b5f1a548d1850  ./install/.htaccess
@@ -446,7 +446,7 @@ d5fc7977d7a8c02e974f739e92e4a15d42d81e89285b9425da872f4c161b76b8  ./qa/traffic_a
 ae2aa6a4b58e201bdb43538a36849cc28aef98e4be875d0b73f542f1d125b425  ./qa/watch_plan_smoke.py
 1fb008a987f994ccb396d0e343ca7958341089fca8bce1be03e617f359d070fc  ./qa/weather_replay_smoke.php
 142daeafd803af370c0e33e9c3167607db3019ec5d001c983c9dbd440ae3279c  ./qa/workflow_supply_chain_smoke.py
-c17166c638c38b6188b77af36c3e8b9af536e9bc83cabe45117571c48065e4d5  ./readme.md
+fdb6a277f80c160634e1a3651d1caa252f9827d71af725dbeefac5534fcf1ff3  ./readme.md
 0c367e68ca08bca538114b116d62e65b31a04d399c161003a701aa83018ca468  ./robots.txt
 052f935d8b31949e141bfcaf29ec057a4357cceaec0a95ec92544df95952123d  ./sitemap.xml
 7f9ce627144060a6719a5c48c5e8ed2bc744ab708572b0c8f0f70dc9bcffebac  ./styles/main/00-foundation.css
