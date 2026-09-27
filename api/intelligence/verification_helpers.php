@@ -96,7 +96,7 @@ function meteonexa_radar_eta_queue(PDO $pdo, string $deviceId, string $locationK
     } catch (Throwable $ignored) {
     }
 }
-function meteonexa_radar_skill_update(PDO $pdo, string $deviceId, string $locationKey, array $nowcast, array $fusion, array $observations =[], array $radarObservation =[], array $hyperlocal =[], array $radar3 =[]) : array {
+function meteonexa_radar_skill_update(PDO $pdo, string $deviceId, string $locationKey, array $nowcast, array $fusion, array $observations =[], array $radarObservation =[], array $hyperlocal =[], array $radar3 =[], array $radar4 =[]) : array {
     if (!meteonexa_db_table_exists($pdo, 'radar_eta_predictions'))return['available'=>false, 'samples'=>0, 'groundTruth'=>'unavailable'];
     $now = time();
     $eta = is_numeric($nowcast['etaMinutes']??null) ? (int)$nowcast['etaMinutes'] : null;
@@ -117,6 +117,26 @@ function meteonexa_radar_skill_update(PDO $pdo, string $deviceId, string $locati
             $conf3 = (int)($dominant['trackConfidence']??0);
             $tol3 = max(5, min(45, (int)round(6 + $eta3 *(1 - $conf3 / 100) * .35)));
             meteonexa_radar_eta_queue($pdo, $deviceId, $locationKey, 'radar-v3', $eta3, $conf3, $tol3, $now,['cellId'=>$dominant['id']??null, 'mode'=>$radar3['mode']??'shadow']);
+        }
+    }
+    if (!empty($radar4['available']) && (($radar4['mode']??'shadow')==='shadow')) {
+        $dominant4 = null;
+        foreach ((array)($radar4['cells']??[]) as $cell) {
+            if (!is_numeric($cell['etaMinutes']??null))continue;
+            if ($dominant4===null||(float)($cell['energy']??0) > (float)($dominant4['energy']??0))$dominant4 = $cell;
+        }
+        if ($dominant4) {
+            $eta4 = (int)$dominant4['etaMinutes'];
+            $conf4 = (int)($dominant4['trackConfidence']??0);
+            $spread4 = is_numeric($radar4['flow']['vectorSpread']??null) ? (float)$radar4['flow']['vectorSpread'] : 0.0;
+            $tol4 = max(5, min(50, (int)round(6 + $eta4 *(1 - $conf4 / 100) * .4 + min(8, $spread4 * 30))));
+            meteonexa_radar_eta_queue($pdo, $deviceId, $locationKey, 'radar-v4', $eta4, $conf4, $tol4, $now,[
+                'cellId'=>$dominant4['id']??null,
+                'mode'=>'shadow',
+                'method'=>$radar4['method']??'optical-flow-object-tracking-v4',
+                'growthDecayScore'=>$dominant4['growthDecayScore']??null,
+                'flowConfidence'=>$radar4['flow']['confidence']??null,
+            ]);
         }
     }
     $ground = meteonexa_radar_independent_arrival($observations, $radarObservation, $hyperlocal);

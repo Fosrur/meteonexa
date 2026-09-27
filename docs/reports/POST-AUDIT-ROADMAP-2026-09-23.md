@@ -3,7 +3,7 @@
 Data audit: 23 settembre 2026  
 Stato riallineato: 27 settembre 2026
 
-> **Stato corrente:** P0 e P1 sono chiusi; P2 ensemble probabilistico/CRPS è implementato nel sorgente e coperto dai gate locali dedicati. La chiusura live di P2 richiede ancora QA completa, MySQL 8.4, Chromium/Firefox e Production Deploy sul medesimo SHA. La **prossima tranche di sviluppo è P3 — Radar4 / Nowcast severo 0–120 minuti in shadow mode**. Le sezioni più sotto descrivono anche lo storico dell'audit del 23–24 settembre e vanno lette nel loro contesto temporale.
+> **Stato corrente:** P0 e P1 sono chiusi; P2 ensemble probabilistico/CRPS è implementato nel sorgente e coperto dai gate locali dedicati. La chiusura live di P2 richiede ancora QA completa, MySQL 8.4, Chromium/Firefox e Production Deploy sul medesimo SHA. **P3.1 Radar4 shadow + tracking multi-frame è ora code-complete** mantenendo Radar3 come authority; la **prossima tranche è P3.2**, dedicata alle distribuzioni rain start/peak/end, alla fusione multi-evidenza shadow e alla maturazione del backtest. Le sezioni più sotto descrivono anche lo storico dell'audit del 23–24 settembre e vanno lette nel loro contesto temporale.
 
 ## Sintesi dell'audit
 
@@ -205,9 +205,9 @@ P2 non è più il prossimo sviluppo: il sorgente integra ensemble reale AIFS ENS
 
 I gate locali dedicati risultano coperti dal repository; la promozione live resta subordinata, come per le tranche precedenti, a QA completa, migrazione MySQL 8.4, Chromium + Firefox e Production Deploy sullo stesso SHA. Questa distinzione evita di confondere **code-complete** con **operationally closed**.
 
-### Prossimo sviluppo — P3 Radar4 / Nowcast severo 0–120 minuti
+### P3 — piano iniziale Radar4 / Nowcast severo 0–120 minuti
 
-La tranche successiva parte in **shadow mode** e non sostituisce Radar3:
+Questa era la definizione iniziale della tranche P3. **P3.1 è ora completata nel sorgente**; i punti non ancora chiusi confluiscono in P3.2 e nelle tranche successive. L’intero percorso P3 resta in **shadow mode** e non sostituisce Radar3:
 
 - optical flow e object tracking multi-frame;
 - identità/traiettoria delle celle e stima ETA;
@@ -217,3 +217,32 @@ La tranche successiva parte in **shadow mode** e non sostituisce Radar3:
 - backtest automatico con guardrail espliciti prima di qualunque promozione di Radar4 ad authority.
 
 Radar3 resta la sorgente production-safe finché Radar4 non dimostra un miglioramento misurabile e ripetibile sui dataset di verifica.
+
+## Aggiornamento 27 settembre 2026 — P3.1 Radar4 shadow code-complete
+
+### P3.1 — optical flow + object tracking multi-frame
+
+La prima tranche P3 è ora implementata nel sorgente mantenendo **Radar3 come authority production**. Radar4 è un layer separato e forzato in `shadow`/`off`:
+
+- optical flow Lucas–Kanade calcolato su più coppie di frame radar archiviati;
+- fusione del vettore optical-flow con le tracce object-based Radar3, con penalità esplicita quando i due vettori divergono;
+- traiettorie e cono d'incertezza a 15/30/45/60/90/**120 minuti**;
+- ETA della cella verso la località, direzione, velocità, confidence e `growthDecayScore`;
+- payload separato `radar4Tracking` con `authoritative=false` e policy `productionDecisionsUnaffected=true`;
+- `METEONEXA_RADAR4_MODE` limitato a `shadow` (default) oppure `off`: non esiste promozione runtime ad `active` in P3.1;
+- ETA Radar4 registrate nello stesso ledger `radar_eta_predictions` con algoritmo `radar-v4`, quindi verificate dalla medesima ground truth indipendente usata da Radar2/Radar3;
+- gate shadow Radar3↔Radar4 dopo almeno 30 campioni verificati per algoritmo: almeno 1 minuto e 8% di miglioramento MAE, regressione `within tolerance` non oltre 2 punti percentuali;
+- anche con guardrail verdi il risultato è soltanto `promotionCandidate`; `authorityLockedToRadar3=true` rimane obbligatorio in questa tranche;
+- QA dedicato `qa/radar4_shadow_smoke.php`, incluso nel runner aggregato.
+
+P3.1 non introduce migrazioni: lo schema resta **29** e il backtest riusa il ledger ETA già esistente.
+
+### Sviluppi successivi — P3.2
+
+La prossima tranche P3 deve costruire sopra P3.1 senza promuovere ancora Radar4:
+
+1. distribuzioni probabilistiche separate di **rain start**, **peak** e **rain end** sull'orizzonte 0–120 minuti;
+2. fusione shadow di Radar4 con fulmini, satellite, osservazioni al suolo e warning ufficiali, mantenendo separata l'autorità degli avvisi ufficiali;
+3. calibrazione della confidence rispetto a distanza dal radar, copertura/qualità osservativa e, dove disponibile, orografia;
+4. verifica a posteriori non solo dell'ETA ma anche di start/peak/end e del `growthDecayScore`;
+5. raccolta di un dataset live sufficiente su più aree/condizioni prima di definire un eventuale gate di promozione Radar4. La promozione non fa parte di P3.2 finché i criteri non sono misurabili e ripetibili.

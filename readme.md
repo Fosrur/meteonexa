@@ -8,7 +8,7 @@ Il repository **non può modificare da solo il flag GitHub “Allow write access
 
 
 <!-- METEONEXA_CURRENT_CONTRACT_START -->
-## MeteoNexa 20.1.1 — contratto corrente P0/P1 + P2 probabilistico
+## MeteoNexa 20.1.1 — contratto corrente P0/P1 + P2 probabilistico + P3.1 Radar4 shadow
 
 Il contratto corrente del sorgente resta **MeteoNexa 20.1.1**. La compatibilità applicativa/backend resta **20.1**; con P2 lo schema database passa a **29** e le tabelle applicative a **48**. Il catalogo i18n resta **4.645 chiavi × 5 lingue = 23.225 traduzioni**. Il package root e il package QA restano `20.1.1`.
 
@@ -33,11 +33,19 @@ Il Copilot dispone inoltre del tool deterministico `probabilistic_ensemble` quan
 ### Gate P2
 
 L'implementazione P2 è completa nel sorgente ed è coperta dai gate locali dedicati (`Forecast Reliability`, `Probabilistic Ensemble P2`, `P2 release quality`, `Final release smoke` e `Release provenance`). La chiusura **operativa/live** resta però vincolata allo stesso criterio di release: il nuovo SHA deve superare MeteoNexa QA completa, MySQL 8.4 con migrazione 15→29, Chromium + Firefox e Production Deploy dello stesso SHA. Fino a quel passaggio P2 va considerato **code-complete / release-candidate**, non ancora dichiarato live sul nuovo SHA.
+
+### P3.1 — Radar4 shadow + tracking multi-frame
+
+La prima tranche P3 è implementata senza cambiare l'authority meteo production. `Radar4` usa gli stessi frame radar archiviati di Radar3 ma costruisce un layer separato **shadow-only**: optical flow Lucas–Kanade su più coppie temporali + object tracking Radar3, fusione dei vettori con penalità per disaccordo, traiettorie/coni d'incertezza fino a **120 minuti**, ETA indipendente, `growthDecayScore`, stage della cella e confidence del track. Il payload espone `radar4Tracking`, `radar4Mode` e `radar4ShadowGate`; nessuno di questi campi sostituisce Radar3/Radar2 nelle decisioni correnti.
+
+Le ETA Radar4 vengono registrate nel ledger esistente `radar_eta_predictions` come algoritmo `radar-v4`, usando la stessa ground truth indipendente già usata per Radar2/Radar3. Il backtest confronta Radar4 con Radar3 dopo almeno **30 campioni verificati per algoritmo** e può soltanto produrre `promotionCandidate`: richiede almeno 1 minuto e 8% di miglioramento MAE, senza regressione `within tolerance` superiore a 2 punti percentuali. In P3.1 `authorityLockedToRadar3=true` resta invariabile anche quando i guardrail shadow risultano verdi.
+
+La configurazione `METEONEXA_RADAR4_MODE` accetta di fatto soltanto `shadow` (default) oppure `off`; non esiste una modalità `active` in questa tranche. Il gate dedicato `qa/radar4_shadow_smoke.php` verifica multi-frame flow, orizzonte 120 minuti, ETA, growth/decay e blocco dell'authority. Lo schema DB resta **29**: P3.1 riusa il ledger di verifica esistente e non introduce nuove tabelle.
 <!-- METEONEXA_CURRENT_CONTRACT_END -->
 
 ## Sviluppi successivi / Roadmap
 
-- **P3 — Nowcast severo 0–120 minuti / Radar4 shadow:** optical flow e object tracking multi-frame, probabilità separate di rain start/peak/end, ETA della cella, growth/decay score e fusione radar + fulmini + satellite + osservazioni + warning ufficiali. Radar3 resta authority finché il backtest non supera soglie predefinite.
+- **P3 — Nowcast severo 0–120 minuti:** **P3.1 completata nel sorgente** con Radar4 shadow, optical flow + object tracking multi-frame, ETA, traiettoria 120 min, growth/decay e ledger di backtest Radar3↔Radar4. **P3.2 successiva:** probabilità separate di rain start/peak/end e fusione shadow radar + fulmini + satellite + osservazioni + warning ufficiali, senza ancora cambiare authority.
 - **P4 — Official Warning Hub:** normalizzazione CAP/GeoJSON, lifecycle issued/updated/cancelled/expired, deduplica per evento/versione/area, geofencing polygon-based e separazione visiva/semantica fra warning ufficiale e previsione MeteoNexa.
 - **P5 — AI Meteorologist 2.0:** decision object deterministico prima del testo LLM, tool contract tipizzato, `asOf`/fonti/confidence/limiti obbligatori, eval suite anti-hallucination e fallback template deterministico.
 - **P6 — Hyperlocal / Personal Weather Twin:** assimilazione di stazioni personali con quality score/outlier detection, bias correction locale e notification policy basata su cambiamenti materiali della decisione.
@@ -48,7 +56,7 @@ L'implementazione P2 è completa nel sorgente ed è coperta dai gate locali dedi
 - **P0:** chiuso e validato in release.
 - **P1:** chiuso e validato in release.
 - **P2:** implementazione completa; resta il gate operativo sullo stesso SHA di QA completa + MySQL 8.4 + Chromium/Firefox + Production Deploy.
-- **P3:** **prossima tranche attiva**. L'avvio è Radar4 in shadow mode sopra Radar3, con optical flow/object tracking multi-frame e metriche di backtest; Radar3 resta authority finché i guardrail P3 non sono superati.
+- **P3:** **P3.1 completata nel sorgente**: Radar4 shadow, optical flow multi-frame, tracking 0–120 min, ETA/growth-decay e backtest nel ledger esistente. **Prossima tranche attiva: P3.2**, con distribuzioni separate rain start/peak/end e fusione multi-evidenza shadow. Radar3 resta comunque authority; una futura promozione richiederà evidenza live sufficiente e un gate esplicito separato.
 - **P4–P7:** pianificati dopo la maturazione P3, salvo attività safety/observability che possono procedere in parallelo senza cambiare l'authority meteo.
 
 Nota di packaging: i file SQL sono ora dichiarati `text eol=lf` in `.gitattributes`, così i checkout/ZIP Windows non alterano più `mysql-schema.sql` rispetto ai checksum di release.

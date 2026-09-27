@@ -38,6 +38,7 @@ run_php probabilistic_ensemble_smoke.php
 run_php nowcast_fusion_smoke.php
 run_php probabilistic_nowcast_smoke.php
 run_php radar3_production_gate_smoke.php
+run_php radar4_shadow_smoke.php
 run_php weather_replay_smoke.php
 run_php decision_route_account_sync_smoke.php
 run_php privacy_proof_smoke.php

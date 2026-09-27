@@ -221,6 +221,11 @@ return [
         'mode' => in_array(strtolower((string)(getenv('METEONEXA_RADAR3_MODE') ?: 'active')), ['off','shadow','active'], true)
             ? strtolower((string)(getenv('METEONEXA_RADAR3_MODE') ?: 'active')) : 'active',
     ],
+    'radar4' => [
+        // P3 phase 1 is deliberately shadow-only. No environment setting can
+        // promote Radar4 to production authority in this tranche.
+        'mode' => strtolower((string)(getenv('METEONEXA_RADAR4_MODE') ?: 'shadow'))==='off' ? 'off' : 'shadow',
+    ],
     'netatmo' => [
         'client_id' => getenv('METEONEXA_NETATMO_CLIENT_ID') ?: '',
         'client_secret' => getenv('METEONEXA_NETATMO_CLIENT_SECRET') ?: '',

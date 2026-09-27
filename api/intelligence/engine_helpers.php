@@ -3,6 +3,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/http_helpers.php';
 require_once dirname(__DIR__) . '/backend_i18n.php';
 require_once __DIR__ . '/verification_helpers.php';
+require_once __DIR__ . '/radar4_helpers.php';
 function meteonexa_intel_clamp(float $value, float $min, float $max) : float {
     return max($min, min($max, $value));
 }
@@ -613,13 +614,19 @@ function meteonexa_radar_motion(PDO $pdo, string $deviceId, float $lat, float $l
         $avgFrameMinutes = array_sum(array_map(static fn($v)=>$v['dt'] / 60, $vectors)) / count($vectors);
         $multiCells = meteonexa_radar_multicell_tracks($prepared[1]['grid'], $prepared[0]['grid'], max(1,($prepared[0]['time'] - $prepared[1]['time']) / 60));
         $radar3 = meteonexa_radar_object_tracks_v3($prepared);
+        $radar4RequestedMode = 'shadow';
+        $radar4 = ['available'=>false, 'cells'=>[], 'mode'=>'off', 'authoritative'=>false, 'reason'=>'disabled'];
         $radar3RequestedMode = 'active';
         if (function_exists('load_config')) {
             $cfg = load_config();
             $radar3RequestedMode = (string)($cfg['radar3']['mode']??'active');
+            $radar4RequestedMode = (string)($cfg['radar4']['mode']??'shadow');
         }
         $radarAgeMinutes = max(0, (int)round((time() - (int)$prepared[0]['time']) / 60));
         $locationKey = meteonexa_intelligence_location_key($lat, $lon);
+        if ($radar4RequestedMode==='shadow')$radar4 = meteonexa_radar4_shadow_tracks($prepared, $radar3);
+        $radar4['requestedMode'] = $radar4RequestedMode;
+        $radar4Gate = meteonexa_radar4_shadow_gate($pdo, $deviceId, $locationKey, 30);
         $radar3Gate = meteonexa_radar3_production_gate($pdo, $deviceId, $locationKey, $radar3, $radarAgeMinutes);
         $radar3Mode = $radar3RequestedMode;
         if ($radar3RequestedMode==='active') {
@@ -632,12 +639,15 @@ function meteonexa_radar_motion(PDO $pdo, string $deviceId, float $lat, float $l
                 $radar3Mode = 'active-fallback-v2';
             }
         }
-        if (function_exists('meteonexa_observability_event'))meteonexa_observability_event('radar', 'radar3', $radar3Mode,['reason'=>(string)($radar3Gate['reason']??'unknown'), 'radarAgeMinutes'=>$radarAgeMinutes, 'cellCount'=>(int)($radar3['cellCount']??0)]);
+        if (function_exists('meteonexa_observability_event')) {
+            meteonexa_observability_event('radar', 'radar3', $radar3Mode,['reason'=>(string)($radar3Gate['reason']??'unknown'), 'radarAgeMinutes'=>$radarAgeMinutes, 'cellCount'=>(int)($radar3['cellCount']??0)]);
+            meteonexa_observability_event('radar', 'radar4', $radar4RequestedMode==='shadow' ? 'shadow' : 'off',['available'=>!empty($radar4['available']), 'promotionCandidate'=>!empty($radar4Gate['promotionCandidate']), 'radarAgeMinutes'=>$radarAgeMinutes, 'cellCount'=>(int)($radar4['cellCount']??0)]);
+        }
         $centerIndex = (int)round($center);
         $centerSamples =[];
         for ($yy = max(0, $centerIndex - 1); $yy<=min((int)$latest['size'] - 1, $centerIndex + 1); $yy++) for ($xx = max(0, $centerIndex - 1); $xx<=min((int)$latest['size'] - 1, $centerIndex + 1); $xx++)$centerSamples[] = (float)($latest['grid'][$yy][$xx]??0);
         $centerSignal = $centerSamples ? array_sum($centerSamples) / count($centerSamples) : 0.0;
-        return['available'=>true, 'multiCellTracking'=>$multiCells, 'radar3Tracking'=>$radar3, 'radar3Mode'=>$radar3Mode, 'radar3RequestedMode'=>$radar3RequestedMode, 'radar3ProductionGate'=>$radar3Gate, 'radarObservation'=>['observedAt'=>gmdate('c', (int)$prepared[0]['time']), 'centerSignal'=>round($centerSignal, 3), 'archiveDistanceKm'=>round($bestDistance, 1), 'independentFromTrajectory'=>true], 'direction'=>$dir, 'angle'=>round($angle, 1), 'vxCellsMin'=>round($vx, 3), 'vyCellsMin'=>round($vy, 3), 'confidence'=>$confidence, 'etaMinutes'=>$eta, 'frameMinutes'=>round($avgFrameMinutes, 1), 'vectorSamples'=>count($vectors), 'archiveDistanceKm'=>round($bestDistance, 1), 'method'=>'multi-frame-block-correlation', 'latestFrameAt'=>gmdate('c', (int)$prepared[0]['time']), 'ageMinutes'=>$radarAgeMinutes];
+        return['available'=>true, 'multiCellTracking'=>$multiCells, 'radar3Tracking'=>$radar3, 'radar3Mode'=>$radar3Mode, 'radar3RequestedMode'=>$radar3RequestedMode, 'radar3ProductionGate'=>$radar3Gate, 'radar4Tracking'=>$radar4, 'radar4Mode'=>$radar4RequestedMode==='shadow' ? 'shadow' : 'off', 'radar4RequestedMode'=>$radar4RequestedMode, 'radar4ShadowGate'=>$radar4Gate, 'radarAuthority'=>$radar3Mode==='active' ? 'radar3' : 'radar2', 'radarObservation'=>['observedAt'=>gmdate('c', (int)$prepared[0]['time']), 'centerSignal'=>round($centerSignal, 3), 'archiveDistanceKm'=>round($bestDistance, 1), 'independentFromTrajectory'=>true], 'direction'=>$dir, 'angle'=>round($angle, 1), 'vxCellsMin'=>round($vx, 3), 'vyCellsMin'=>round($vy, 3), 'confidence'=>$confidence, 'etaMinutes'=>$eta, 'frameMinutes'=>round($avgFrameMinutes, 1), 'vectorSamples'=>count($vectors), 'archiveDistanceKm'=>round($bestDistance, 1), 'method'=>'multi-frame-block-correlation', 'latestFrameAt'=>gmdate('c', (int)$prepared[0]['time']), 'ageMinutes'=>$radarAgeMinutes];
     } catch (Throwable $ignored) {
         meteonexa_observability_event('radar', 'motion', 'analysis_failed',['class'=>get_class($ignored)]);
         return['available'=>false, 'reason'=>'analysis_failed'];
