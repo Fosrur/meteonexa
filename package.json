@@ -39,7 +39,8 @@
     "check:maintenance": "python3 qa/maintenance_release_smoke.py .",
     "check:deploy-contract": "python3 qa/automatic_deploy_contract_smoke.py",
     "check:p6": "python3 qa/p6_production_ux_security_smoke.py .",
-    "check:radar4": "php qa/radar4_shadow_smoke.php"
+    "check:radar4": "php qa/radar4_shadow_smoke.php",
+    "check:radar4:p32": "php qa/radar4_probabilistic_shadow_smoke.php"
   },
   "engines": {
     "node": ">=20.19"

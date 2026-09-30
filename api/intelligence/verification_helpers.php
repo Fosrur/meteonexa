@@ -86,7 +86,8 @@ function meteonexa_radar_eta_queue(PDO $pdo, string $deviceId, string $locationK
             $columns.=',algorithm,ground_truth_source,ground_truth_quality,ground_truth_json,verification_method';
             $values.=',:alg,\'\',0,:gt,\'\'';
         }
-        $st = $pdo->prepare('INSERT OR IGNORE INTO radar_eta_predictions(' . $columns . ') VALUES(' . $values . ')');
+        $insertVerb = meteonexa_pdo_driver($pdo)==='mysql' ? 'INSERT IGNORE' : 'INSERT OR IGNORE';
+        $st = $pdo->prepare($insertVerb . ' INTO radar_eta_predictions(' . $columns . ') VALUES(' . $values . ')');
         $params =[':d'=>$deviceId, ':l'=>$locationKey, ':k'=>$key, ':i'=>$issued, ':p'=>$pred, ':e'=>$eta, ':t'=>$tolerance, ':c'=>$confidence, ':a'=>$issued];
         if (str_contains($values, ':alg')) {
             $params[':alg'] = $algorithm;
@@ -490,7 +491,7 @@ function meteonexa_prune_verified_precision(PDO $pdo, array $config) : array {
     $runtimeDays = (int)($config['verification']['runtime_metrics_retention_days']??30);
     $limits = (array)($config['storage_limits']??[]);
     $deleted =[];
-    $tableDays =['radar_eta_predictions'=>$retention, 'decision_verification_samples'=>$retention, 'predictive_alert_verifications'=>$retention, 'predictive_alert_opportunities'=>$retention, 'runtime_metrics'=>$runtimeDays];
+    $tableDays =['radar_eta_predictions'=>$retention, 'radar4_event_predictions'=>$retention, 'decision_verification_samples'=>$retention, 'predictive_alert_verifications'=>$retention, 'predictive_alert_opportunities'=>$retention, 'runtime_metrics'=>$runtimeDays];
     foreach ($tableDays as $table=>$days) {
         if (!meteonexa_db_table_exists($pdo, $table))continue;
         try {

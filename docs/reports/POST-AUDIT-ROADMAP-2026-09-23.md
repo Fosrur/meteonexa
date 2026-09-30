@@ -1,9 +1,9 @@
 # MeteoNexa — audit tecnico e roadmap post-fix
 
 Data audit: 23 settembre 2026  
-Stato riallineato: 27 settembre 2026
+Stato riallineato: 30 settembre 2026
 
-> **Stato corrente:** P0 e P1 sono chiusi; P2 ensemble probabilistico/CRPS è implementato nel sorgente e coperto dai gate locali dedicati. La chiusura live di P2 richiede ancora QA completa, MySQL 8.4, Chromium/Firefox e Production Deploy sul medesimo SHA. **P3.1 Radar4 shadow + tracking multi-frame è ora code-complete** mantenendo Radar3 come authority; la **prossima tranche è P3.2**, dedicata alle distribuzioni rain start/peak/end, alla fusione multi-evidenza shadow e alla maturazione del backtest. Le sezioni più sotto descrivono anche lo storico dell'audit del 23–24 settembre e vanno lette nel loro contesto temporale.
+> **Stato corrente:** P0 e P1 sono chiusi; P2 ensemble probabilistico/CRPS è implementato nel sorgente e coperto dai gate locali dedicati. La chiusura live di P2 richiede ancora QA completa, MySQL 8.4, Chromium/Firefox e Production Deploy sul medesimo SHA. **P3.1 e P3.2 sono ora code-complete** mantenendo Radar3 come authority: Radar4 dispone di tracking 0–120 min, distribuzioni rain start/peak/end, fusione multi-evidenza, confidence calibrata e ledger di verifica schema 30. La **prossima tranche è P3.3**, dedicata alla maturazione live multi-area e alla calibrazione empirica prima di definire qualunque promotion gate. Le sezioni più sotto descrivono anche lo storico dell'audit del 23–24 settembre e vanno lette nel loro contesto temporale.
 
 ## Sintesi dell'audit
 
@@ -237,12 +237,30 @@ La prima tranche P3 è ora implementata nel sorgente mantenendo **Radar3 come au
 
 P3.1 non introduce migrazioni: lo schema resta **29** e il backtest riusa il ledger ETA già esistente.
 
-### Sviluppi successivi — P3.2
+## Aggiornamento 30 settembre 2026 — P3.2 Radar4 probabilistico shadow code-complete
 
-La prossima tranche P3 deve costruire sopra P3.1 senza promuovere ancora Radar4:
+### P3.2 — distribuzioni evento + fusione multi-evidenza + verification ledger
 
-1. distribuzioni probabilistiche separate di **rain start**, **peak** e **rain end** sull'orizzonte 0–120 minuti;
-2. fusione shadow di Radar4 con fulmini, satellite, osservazioni al suolo e warning ufficiali, mantenendo separata l'autorità degli avvisi ufficiali;
-3. calibrazione della confidence rispetto a distanza dal radar, copertura/qualità osservativa e, dove disponibile, orografia;
-4. verifica a posteriori non solo dell'ETA ma anche di start/peak/end e del `growthDecayScore`;
-5. raccolta di un dataset live sufficiente su più aree/condizioni prima di definire un eventuale gate di promozione Radar4. La promozione non fa parte di P3.2 finché i criteri non sono misurabili e ripetibili.
+La seconda tranche P3 è ora implementata nel sorgente e resta **shadow-only**:
+
+- distribuzioni separate P10/P50/P90 per `rainStart`, `rainPeak` e `rainEnd` su 0–120 minuti, con bucket da 5 minuti;
+- fusione Radar4 + fulmini + satellite + osservazioni indipendenti + modelli + warning ufficiali; gli warning sono soltanto contesto con peso limitato e conservano authority/lifecycle separati;
+- confidence calibrata con qualità optical-flow, vector spread, qualità/numero osservazioni, copertura delle sorgenti, distanza dal punto radar archiviato e quota del terreno come proxy orografico conservativo;
+- policy esplicita `orographyUsesElevationProxyOnly=true`: P3.2 non finge di derivare slope/terrain complexity dalla sola quota;
+- nuovo schema **30** e tabella `radar4_event_predictions` per conservare le previsioni start/peak/end/growth e verificarle contro `observation_evidence` indipendente;
+- skill a posteriori: MAE temporale e coverage P10–P90 per start/peak/end; errore del trend osservato per `growthDecayScore`; la ground truth usa lo stato al tempo di emissione e non associa un vecchio episodio wet a un nuovo rain-start;
+- dataset considerato maturo solo dopo almeno 30 campioni verificati per ciascun tipo (`rain_start`, `rain_peak`, `rain_end`, `growth_decay`);
+- anche con dataset maturo, `promotionEligible=false`, `authorityLockedToRadar3=true` e `productionDecisionsUnaffected=true` restano invarianti in P3.2;
+- QA dedicato `qa/radar4_probabilistic_shadow_smoke.php`, incluso nel runner aggregato.
+
+Durante P3.2 è stato corretto anche il ledger ETA Radar4/Radar3 per usare `INSERT IGNORE` su MySQL e `INSERT OR IGNORE` su SQLite: il precedente statement SQLite-only avrebbe impedito l'accodamento ETA su MySQL pur essendo coperto dai catch fail-safe.
+
+### Sviluppi successivi — P3.3
+
+La prossima tranche non promuove ancora Radar4. Deve:
+
+1. accumulare e analizzare un dataset **live multi-area / multi-condizione** sufficiente per start/peak/end/growth e ETA;
+2. calibrare empiricamente le distribuzioni (coverage P10–P90, bias P50, reliability per event probability) per distanza/copertura/stagione;
+3. sostituire, dove i dati lo permettono, il semplice elevation proxy con informazione orografica/terrain più ricca e verificabile;
+4. introdurre dashboard/report di backtest Radar3↔Radar4 + P3.2 per area e regime meteo, senza modificare le decisioni production;
+5. soltanto dopo evidenza ripetibile definire i criteri numerici di un futuro promotion gate. L'attivazione di Radar4 come authority resta fuori da P3.3 finché non esiste un passaggio release esplicito separato.

@@ -70,7 +70,7 @@ if ($current !== 29) {
     fwrite(STDERR, "current MySQL schema metadata is {$current}, expected 29\n");
     exit(1);
 }
-foreach (['runtime_metrics', 'radar_eta_predictions', 'predictive_alert_opportunities', 'product_metrics_daily', 'ensemble_verification_samples'] as $table) {
+foreach (['runtime_metrics', 'radar_eta_predictions', 'radar4_event_predictions', 'predictive_alert_opportunities', 'product_metrics_daily', 'ensemble_verification_samples'] as $table) {
     if (!meteonexa_db_table_exists($pdo, $table)) {
         fwrite(STDERR, "missing current capability table {$table}\n");
         exit(1);

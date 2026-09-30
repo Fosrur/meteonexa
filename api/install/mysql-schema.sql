@@ -240,6 +240,37 @@ CREATE TABLE IF NOT EXISTS radar_eta_predictions (
   KEY idx_radar_eta_algorithm(device_id,location_key,algorithm,status,predicted_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS radar4_event_predictions (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  device_id VARCHAR(191) NOT NULL,
+  location_key VARCHAR(191) NOT NULL,
+  prediction_key VARCHAR(64) NOT NULL,
+  event_kind VARCHAR(24) NOT NULL,
+  issued_at VARCHAR(40) NOT NULL,
+  p10_at VARCHAR(40) NOT NULL,
+  p50_at VARCHAR(40) NOT NULL,
+  p90_at VARCHAR(40) NOT NULL,
+  event_probability DOUBLE NOT NULL DEFAULT 0,
+  confidence INT NOT NULL DEFAULT 0,
+  predicted_value DOUBLE NULL,
+  status VARCHAR(24) NOT NULL DEFAULT 'pending',
+  verified_at VARCHAR(40) NOT NULL DEFAULT '',
+  observed_at VARCHAR(40) NOT NULL DEFAULT '',
+  observed_value DOUBLE NULL,
+  error_minutes DOUBLE NULL,
+  absolute_error_minutes DOUBLE NULL,
+  absolute_error_value DOUBLE NULL,
+  within_interval TINYINT NULL,
+  ground_truth_source VARCHAR(64) NOT NULL DEFAULT '',
+  ground_truth_quality INT NOT NULL DEFAULT 0,
+  ground_truth_json MEDIUMTEXT NOT NULL,
+  verification_method VARCHAR(64) NOT NULL DEFAULT '',
+  created_at VARCHAR(40) NOT NULL,
+  UNIQUE KEY uq_radar4_event_prediction(device_id,location_key,prediction_key),
+  KEY idx_radar4_event_pending(device_id,location_key,status,issued_at),
+  KEY idx_radar4_event_skill(device_id,location_key,event_kind,status,verified_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS decision_verification_samples (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
   device_id VARCHAR(191) NOT NULL,
@@ -645,7 +676,7 @@ CREATE TABLE IF NOT EXISTS radar_frame_quality (
   KEY idx_radar_quality_checked(checked_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO app_metadata(meta_key,meta_value,updated_at) VALUES('schema_version','29',UTC_TIMESTAMP(6))
+INSERT INTO app_metadata(meta_key,meta_value,updated_at) VALUES('schema_version','30',UTC_TIMESTAMP(6))
 ON DUPLICATE KEY UPDATE meta_value=VALUES(meta_value),updated_at=VALUES(updated_at);
 INSERT INTO app_metadata(meta_key,meta_value,updated_at) VALUES('app_version','20.1',UTC_TIMESTAMP(6))
 ON DUPLICATE KEY UPDATE meta_value=VALUES(meta_value),updated_at=VALUES(updated_at);
