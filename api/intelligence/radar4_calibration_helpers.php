@@ -245,7 +245,7 @@ function meteonexa_radar4_p33_segment_rows(array $rows, string $field, callable 
 function meteonexa_radar4_p33_calibration_report(PDO $pdo, string $deviceId): array {
     $base = [
         'available'=>false, 'phase'=>'P3.3', 'shadowOnly'=>true, 'authorityLockedToRadar3'=>true,
-        'datasetMature'=>false, 'areas'=>0, 'seasons'=>0, 'weatherRegimes'=>0,
+        'datasetMature'=>false, 'areas'=>0, 'seasons'=>0, 'weatherRegimes'=>0, 'growthSamples'=>0,
         'events'=>[], 'eta'=>[], 'segments'=>[],
         'futurePromotionStudy'=>['eligible'=>false,'numericThresholdsFinalized'=>false,'activationAllowed'=>false],
     ];
@@ -303,7 +303,8 @@ function meteonexa_radar4_p33_calibration_report(PDO $pdo, string $deviceId): ar
         foreach ($requiredKinds as $kind) {
             if ((int)($base['events'][$kind]['binary']['samples'] ?? 0) < 50 || (int)($base['events'][$kind]['timing']['samples'] ?? 0) < 30) $enoughEvents = false;
         }
-        $enoughGrowth = count($byEvent['growth_decay'] ?? []) >= 30;
+        $base['growthSamples'] = count($byEvent['growth_decay'] ?? []);
+        $enoughGrowth = $base['growthSamples'] >= 30;
         $eta3 = (int)($base['eta']['radar-v3']['samples'] ?? 0);
         $eta4 = (int)($base['eta']['radar-v4']['samples'] ?? 0);
         $datasetMature = $base['areas'] >= 3 && $base['seasons'] >= 2 && $base['weatherRegimes'] >= 3 && $enoughEvents && $enoughGrowth && $eta3 >= 60 && $eta4 >= 60;

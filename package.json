@@ -42,7 +42,8 @@
     "check:radar4": "php qa/radar4_shadow_smoke.php",
     "check:radar4:p32": "php qa/radar4_probabilistic_shadow_smoke.php",
     "check:radar4:p33": "php qa/radar4_empirical_calibration_smoke.php && python3 qa/radar4_empirical_calibration_schema_smoke.py",
-    "check:radar4:p34": "php qa/radar4_promotion_study_smoke.php"
+    "check:radar4:p34": "php qa/radar4_promotion_study_smoke.php",
+    "check:radar4:ops": "php qa/radar4_operational_readiness_smoke.php"
   },
   "engines": {
     "node": ">=20.19"

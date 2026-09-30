@@ -5,6 +5,7 @@ require_once dirname(__DIR__) . '/public_helpers.php';
 require_once dirname(__DIR__) . '/pipeline/helpers.php';
 require_once dirname(__DIR__) . '/intelligence/engine_helpers.php';
 require_once dirname(__DIR__) . '/intelligence/quality_helpers.php';
+require_once dirname(__DIR__) . '/intelligence/radar4_operational_helpers.php';
 require_once dirname(__DIR__) . '/observations/providers.php';
 require_once dirname(__DIR__) . '/official/lifecycle_helpers.php';
 require_once dirname(__DIR__) . '/calibration/helpers.php';
@@ -119,6 +120,27 @@ foreach ($locations as $loc) {
             meteonexa_pipeline_provider_result($pdo, 'verification-worker', true, meteonexa_pipeline_ms() - $started,['verified'=>$cal['verified'], 'queued'=>$cal['queued'], 'sources'=>$cal['observations']['sourceTypes']??[]], 0);
             $result['calibration'] = 'ok';
             $success++;
+            if (($config['radar4']['mode']??'shadow')==='shadow') {
+                $radar4Started = meteonexa_pipeline_ms();
+                try {
+                    $radar4Live = meteonexa_radar4_live_shadow_cycle($pdo, $config, $calLoc + ['locationName'=>$loc['locationName']??'', 'admin1'=>$loc['admin1']??''], $cal);
+                    $radar4Ok = !empty($radar4Live['available']);
+                    meteonexa_pipeline_provider_result($pdo, 'radar4-shadow-evidence', $radar4Ok, meteonexa_pipeline_ms() - $radar4Started,[
+                        'status'=>$radar4Live['status']??'unknown',
+                        'eventQueued'=>(int)($radar4Live['eventQueued']??0),
+                        'eventVerified'=>(int)($radar4Live['eventVerified']??0),
+                        'evidenceCompletionPct'=>$radar4Live['evidenceCompletionPct']??0,
+                        'datasetMature'=>!empty($radar4Live['datasetMature']),
+                        'manualCanaryReviewEligible'=>!empty($radar4Live['manualCanaryReviewEligible']),
+                    ], 0, $radar4Ok ? 'ok' : 'degraded');
+                    $result['radar4Evidence'] = $radar4Live['status']??'unknown';
+                    $radar4Ok ? $success++ : $failure++;
+                } catch (Throwable $e) {
+                    meteonexa_pipeline_provider_result($pdo, 'radar4-shadow-evidence', false, meteonexa_pipeline_ms() - $radar4Started,['code'=>'RADAR4_LIVE_EVIDENCE_FAILED']);
+                    $result['radar4Evidence'] = 'error';
+                    $failure++;
+                }
+            }
         } catch (Throwable $e) {
             meteonexa_pipeline_provider_result($pdo, 'verification-worker', false, meteonexa_pipeline_ms() - $started,['code'=>'VERIFICATION_PIPELINE_FAILED']);
             $result['calibration'] = 'error';
