@@ -8,9 +8,9 @@ Il repository **non può modificare da solo il flag GitHub “Allow write access
 
 
 <!-- METEONEXA_CURRENT_CONTRACT_START -->
-## MeteoNexa 20.1.1 — contratto corrente P0/P1 + P2 probabilistico + P3.3 Radar4 empirical calibration shadow
+## MeteoNexa 20.1.1 — contratto corrente P0/P1 + P2 probabilistico + P3.4 Radar4 promotion study shadow
 
-Il contratto corrente del sorgente resta **MeteoNexa 20.1.1**. La compatibilità applicativa/backend resta **20.1**; con P3.3 lo schema database passa a **31** e le tabelle applicative restano **49**. Il catalogo i18n resta **4.645 chiavi × 5 lingue = 23.225 traduzioni**. Il package root e il package QA restano `20.1.1`.
+Il contratto corrente del sorgente resta **MeteoNexa 20.1.1**. La compatibilità applicativa/backend resta **20.1**; P3.4 riusa lo schema database **31** e le tabelle applicative restano **49**. Il catalogo i18n resta **4.645 chiavi × 5 lingue = 23.225 traduzioni**. Il package root e il package QA restano `20.1.1`.
 
 ### P0 — release/bootstrap reliability
 
@@ -58,12 +58,23 @@ Il report `radar4Calibration` misura **bias P50**, **coverage P10–P90**, **Bri
 
 Quando il provider terrain è disponibile, P3.3 campiona un profilo DEM attorno al punto e calcola relief e gradiente verificabili; questi sostituiscono il semplice proxy basato sulla sola quota nella confidence calibration. In caso di errore/provider assente resta il fallback conservativo P3.2. Il dataset viene dichiarato maturo solo con evidenza multi-area/multi-stagione/multi-regime e campioni minimi per eventi ed ETA; anche allora il risultato abilita esclusivamente un **promotion study separato**. `numericThresholdsFinalized=false`, `activationAllowed=false` e `authorityLockedToRadar3=true` restano invarianti: P3.3 non può promuovere Radar4.
 
+
+### P3.4 — promotion study riproducibile su train/holdout
+
+P3.4 è ora **code-complete** e chiude la parte software della roadmap P3 senza attivare Radar4. Il nuovo `radar4PromotionStudy` resta inattivo finché il report P3.3 non dichiara `datasetMature=true`; solo allora legge i ledger verificati, calcola un fingerprint SHA-256 del dataset usato per lo studio e applica uno split **70/30 deterministico** basato su hash stabile. Le soglie numeriche vengono derivate esclusivamente dal train set e validate sul holdout, evitando di tarare e valutare sullo stesso campione.
+
+Lo studio verifica insieme: miglioramento ETA Radar4↔Radar3 (MAE e within-tolerance), bias P50 e coverage P10–P90 di rain start/peak/end, Brier/reliability rispetto alle probabilità raw e stabilità su **area, stagione e regime meteo**. Il report espone fingerprint, dimensioni train/holdout, soglie derivate, esito holdout e stabilità segmentata. Se tutti i guardrail sono verdi può produrre soltanto `manualCanaryReviewEligible=true` / `eligible-for-separate-manual-canary-review`.
+
+Il vincolo di sicurezza resta invariabile: `activationAllowed=false`, `automaticPromotion=false`, `authorityLockedToRadar3=true` e `productionDecisionsUnaffected=true`. Un eventuale cambio authority richiede una **release separata**, con canary e rollback espliciti sullo stesso fingerprint di valutazione. P3.4 non introduce migrazioni: schema **31**, **49 tabelle**. Il gate `qa/radar4_promotion_study_smoke.php` copre blocco pre-maturità, fingerprint riproducibile, split deterministico, derivazione train-only, holdout, stabilità segmentata e impossibilità di auto-promozione.
+
+**Verifica locale P3.4:** i gate Radar4 P3.1–P3.4, Forecast Reliability, P2 Ensemble, roadmap contract, static analysis, release audit/final, production readiness, i18n, maintainability backend, checksum e provenance risultano verdi. La QA aggregata resta separatamente bloccata dal precedente byte-contract `source↔dist` di `js/app.js` e di alcuni moduli ESM: P3.4 non modifica frontend/dist e in questo ambiente non è presente `node_modules`/esbuild per rigenerare gli artifact production.
+
 I gate dedicati sono `qa/radar4_empirical_calibration_smoke.php` e `qa/radar4_empirical_calibration_schema_smoke.py`; lo snapshot SQLite e lo schema MySQL sono allineati a schema 31. La raccolta dei campioni live necessaria a dichiarare la maturità operativa non può essere sostituita da fixture sintetiche di QA.
 <!-- METEONEXA_CURRENT_CONTRACT_END -->
 
 ## Sviluppi successivi / Roadmap
 
-- **P3 — Nowcast severo 0–120 minuti:** **P3.1, P3.2 e implementazione P3.3 completate nel sorgente**. P3.3 aggiunge schema 31, contesto multi-area/multi-condizione, negativi osservativi verificati, bias/coverage/Brier/reliability, confronto ETA Radar3↔Radar4 e profilo terrain DEM. **Gate operativo P3.3 ancora aperto:** accumulo di dati live sufficienti a soddisfare le soglie di maturità. Solo dopo quel gate si apre P3.4 come promotion study separato; nessuna promozione automatica.
+- **P3 — Nowcast severo 0–120 minuti:** **P3.1, P3.2, P3.3 e P3.4 sono code-complete**. P3.4 aggiunge fingerprint del dataset, split train/holdout deterministico, soglie train-only, validazione holdout e stabilità per area/stagione/regime, sempre senza auto-promozione. **Gate operativo P3 ancora aperto:** servono campioni live sufficienti per rendere maturo P3.3 e poi far passare P3.4 sul dataset reale congelato. Radar3 resta authority fino a una release canary separata.
 - **P4 — Official Warning Hub:** normalizzazione CAP/GeoJSON, lifecycle issued/updated/cancelled/expired, deduplica per evento/versione/area, geofencing polygon-based e separazione visiva/semantica fra warning ufficiale e previsione MeteoNexa.
 - **P5 — AI Meteorologist 2.0:** decision object deterministico prima del testo LLM, tool contract tipizzato, `asOf`/fonti/confidence/limiti obbligatori, eval suite anti-hallucination e fallback template deterministico.
 - **P6 — Hyperlocal / Personal Weather Twin:** assimilazione di stazioni personali con quality score/outlier detection, bias correction locale e notification policy basata su cambiamenti materiali della decisione.
@@ -74,7 +85,7 @@ I gate dedicati sono `qa/radar4_empirical_calibration_smoke.php` e `qa/radar4_em
 - **P0:** chiuso e validato in release.
 - **P1:** chiuso e validato in release.
 - **P2:** implementazione completa; resta il gate operativo sullo stesso SHA di QA completa + MySQL 8.4 + Chromium/Firefox + Production Deploy.
-- **P3:** **P3.1 + P3.2 + P3.3 code-complete**: tracking Radar4 0–120 min, eventi probabilistici, calibrazione empirica segmentata e report Radar3↔Radar4 su schema 31. **Stato operativo:** raccolta live P3.3 ancora in corso finché il report non raggiunge i requisiti multi-area/multi-stagione/multi-regime. Il passo successivo di sviluppo è **P3.4 promotion study**, ma resta bloccato finché `datasetMature=false`; Radar3 resta authority.
+- **P3:** **code-complete (P3.1 + P3.2 + P3.3 + P3.4)**: tracking Radar4 0–120 min, eventi probabilistici, calibrazione empirica, dataset fingerprint, train/holdout e promotion study riproducibile su schema 31. **Stato operativo:** raccolta live P3.3 ancora necessaria; quando `datasetMature=true`, P3.4 deve passare sul dataset reale e produrre un release-review ripetibile. Non resta sviluppo core P3 da completare; l’eventuale attivazione Radar4 è una release separata con canary/rollback e Radar3 resta authority fino ad allora.
 - **P4–P7:** pianificati dopo la maturazione P3, salvo attività safety/observability che possono procedere in parallelo senza cambiare l'authority meteo.
 
 Nota di packaging: i file SQL sono ora dichiarati `text eol=lf` in `.gitattributes`, così i checkout/ZIP Windows non alterano più `mysql-schema.sql` rispetto ai checksum di release.

@@ -15,11 +15,8 @@ def fail(message: str) -> None:
 
 
 migration_dir = ROOT / "api" / "database" / "migrations"
-expected_versions = list(range(16, 30))
 revision_files = sorted(migration_dir.glob("[0-9][0-9][0-9][0-9]_*.php"))
 versions = [int(path.name[:4]) for path in revision_files]
-if versions != expected_versions:
-    fail(f"expected migration files 0016..0029, got {versions}")
 
 legacy_sqlite = migration_dir / "legacy_sqlite_upgrade.php"
 if not legacy_sqlite.is_file():
@@ -56,8 +53,12 @@ try:
     contract = json.loads(probe.stdout)
 except json.JSONDecodeError as exc:
     fail(f"migration registry probe returned invalid JSON: {exc}")
-if contract.get("current") != 29 or contract.get("count") != 14:
+current_version = int(contract.get("current") or 0)
+expected_versions = list(range(16, current_version + 1))
+if current_version < 16 or contract.get("count") != len(expected_versions):
     fail(f"unexpected migration registry contract: {contract}")
+if versions != expected_versions:
+    fail(f"expected contiguous migration files 0016..{current_version:04d}, got {versions}")
 manifest_versions = [int(value) for value in contract.get("manifest", {}).keys()]
 if manifest_versions != expected_versions:
     fail(f"runtime manifest is not contiguous: {manifest_versions}")

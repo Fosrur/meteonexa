@@ -3,7 +3,7 @@
 Data audit: 23 settembre 2026  
 Stato riallineato: 30 settembre 2026
 
-> **Stato corrente:** P0 e P1 sono chiusi; P2 ensemble probabilistico/CRPS è implementato nel sorgente e coperto dai gate locali dedicati. La chiusura live di P2 richiede ancora QA completa, MySQL 8.4, Chromium/Firefox e Production Deploy sul medesimo SHA. **P3.1, P3.2 e l’implementazione P3.3 sono ora code-complete** mantenendo Radar3 come authority. P3.3 porta il contratto a schema 31 con calibrazione empirica multi-area/multi-condizione, negativi osservativi verificati, report reliability/ETA e profilo terrain DEM. La maturità **live** P3.3 resta un gate operativo basato su campioni reali; P3.4 (promotion study) resta bloccata finché quel gate non è soddisfatto. Le sezioni più sotto descrivono anche lo storico dell'audit del 23–24 settembre e vanno lette nel loro contesto temporale.
+> **Stato corrente:** P0 e P1 sono chiusi; P2 ensemble probabilistico/CRPS è implementato nel sorgente e coperto dai gate locali dedicati. La chiusura live di P2 richiede ancora QA completa, MySQL 8.4, Chromium/Firefox e Production Deploy sul medesimo SHA. **P3.1, P3.2, P3.3 e P3.4 sono ora code-complete** mantenendo Radar3 come authority. P3.4 riusa lo schema 31 e aggiunge fingerprint del dataset, split train/holdout deterministico, soglie derivate solo sul train, validazione holdout e stabilità segmentata. La maturità **live** P3.3 resta il gate operativo: P3.4 diventa eseguibile sul dataset reale soltanto quando quel gate è soddisfatto e non può comunque attivare Radar4. Le sezioni più sotto descrivono anche lo storico dell'audit del 23–24 settembre e vanno lette nel loro contesto temporale.
 
 ## Sintesi dell'audit
 
@@ -276,6 +276,27 @@ QA dedicata: `qa/radar4_empirical_calibration_smoke.php` copre segmentazione, te
 
 **Code-complete:** sì. **Dataset live maturo:** non dichiarato finché `radar4Calibration.datasetMature` non diventa `true` su dati reali. Le fixture sintetiche servono solo a provare la logica dei gate e non valgono come evidenza meteorologica live.
 
-### Sviluppi successivi — P3.4 promotion study (bloccato dal gate live P3.3)
+## Aggiornamento 30 settembre 2026 — P3.4 promotion study code-complete / execution gated by live evidence
 
-P3.4 potrà iniziare soltanto dopo maturità live ripetibile. Dovrà congelare un dataset di valutazione, derivare/validare soglie numeriche su holdout separato, verificare stabilità per area/stagione/regime e produrre un report release-review. Anche P3.4 non dovrà attivare Radar4 automaticamente: un eventuale cambio authority richiederà una tranche/release esplicita successiva con rollback e canary dedicati.
+### P3.4 — dataset fingerprint, train/holdout e release-review
+
+La parte software del promotion study è ora implementata senza introdurre una nuova migrazione: schema **31**, 49 tabelle. `radar4PromotionStudy` resta bloccato finché P3.3 non raggiunge `datasetMature=true`; dopo il gate:
+
+- calcola un **fingerprint SHA-256** del ledger verificato usato per lo studio, così il release-review identifica esattamente lo snapshot valutato;
+- costruisce uno split **70/30 deterministico** basato su SHA-256, riproducibile a parità di dataset;
+- deriva le soglie numeriche esclusivamente dal train set con limiti conservativi e le valida sul holdout;
+- controlla ETA Radar4↔Radar3, bias P50, coverage P10–P90, Brier/reliability e campioni minimi del holdout;
+- verifica stabilità per **area, stagione e regime meteo**, senza accettare regressioni rilevanti nei segmenti con campioni sufficienti;
+- produce un release-review che può soltanto indicare `eligible-for-separate-manual-canary-review` oppure `keep-radar4-shadow`.
+
+I vincoli restano hard-coded nel contratto P3.4: `activationAllowed=false`, `automaticPromotion=false`, `authorityLockedToRadar3=true`, `productionDecisionsUnaffected=true`, canary e rollback obbligatori per una release successiva. Il gate `qa/radar4_promotion_study_smoke.php` verifica anche che un dataset immaturo non finalizzi soglie e che fingerprint/split siano riproducibili.
+
+**Verifica locale:** P3.1/P3.2/P3.3/P3.4, Forecast Reliability, P2 Ensemble, release audit/final, production readiness, roadmap, i18n, backend maintainability, checksum e provenance sono verdi. Il full QA continua a incontrare il byte-contract `source↔dist` già presente nella baseline su `js/app.js` e alcuni ESM; nessun asset frontend/dist è stato modificato da P3.4 e la rigenerazione production richiede la toolchain esbuild installata.
+
+### Stato P3 dopo P3.4
+
+**Sviluppo core P3: code-complete.** Non resta un'altra tranche algoritmica da implementare prima della verifica live. La chiusura operativa richiede: (1) maturità live P3.3 multi-area/multi-stagione/multi-regime; (2) esecuzione P3.4 sul dataset reale congelato; (3) holdout e stabilità verdi. Finché questi tre punti non sono soddisfatti, Radar4 resta shadow e Radar3 resta authority.
+
+### Sviluppi successivi — release canary Radar4, separata dalla P3 core
+
+Solo dopo un P3.4 live verde si potrà aprire una release esplicita per un eventuale canary Radar4. Quella release dovrà usare lo stesso `datasetFingerprint` approvato, definire rollback automatico/manuale, osservabilità dedicata, percentuale/ambito del canary e criteri di abort. Non è parte della chiusura software P3 e non deve essere avviata automaticamente dal promotion study.
