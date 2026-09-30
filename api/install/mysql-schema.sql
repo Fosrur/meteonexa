@@ -234,10 +234,17 @@ CREATE TABLE IF NOT EXISTS radar_eta_predictions (
   ground_truth_quality INT NOT NULL DEFAULT 0,
   ground_truth_json MEDIUMTEXT NOT NULL,
   verification_method VARCHAR(48) NOT NULL DEFAULT '',
+  area_key VARCHAR(32) NOT NULL DEFAULT '',
+  distance_band VARCHAR(16) NOT NULL DEFAULT 'unknown',
+  coverage_band VARCHAR(16) NOT NULL DEFAULT 'unknown',
+  season VARCHAR(16) NOT NULL DEFAULT 'unknown',
+  weather_regime VARCHAR(24) NOT NULL DEFAULT 'unknown',
+  terrain_class VARCHAR(24) NOT NULL DEFAULT 'unknown',
   created_at VARCHAR(40) NOT NULL,
   UNIQUE KEY uq_radar_eta_prediction(device_id,location_key,prediction_key),
   KEY idx_radar_eta_verify(device_id,location_key,status,predicted_at),
-  KEY idx_radar_eta_algorithm(device_id,location_key,algorithm,status,predicted_at)
+  KEY idx_radar_eta_algorithm(device_id,location_key,algorithm,status,predicted_at),
+  KEY idx_radar_eta_calibration(device_id,algorithm,status,season,distance_band,coverage_band)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS radar4_event_predictions (
@@ -265,10 +272,23 @@ CREATE TABLE IF NOT EXISTS radar4_event_predictions (
   ground_truth_quality INT NOT NULL DEFAULT 0,
   ground_truth_json MEDIUMTEXT NOT NULL,
   verification_method VARCHAR(64) NOT NULL DEFAULT '',
+  area_key VARCHAR(32) NOT NULL DEFAULT '',
+  distance_band VARCHAR(16) NOT NULL DEFAULT 'unknown',
+  coverage_band VARCHAR(16) NOT NULL DEFAULT 'unknown',
+  season VARCHAR(16) NOT NULL DEFAULT 'unknown',
+  weather_regime VARCHAR(24) NOT NULL DEFAULT 'unknown',
+  terrain_class VARCHAR(24) NOT NULL DEFAULT 'unknown',
+  terrain_relief_m DOUBLE NULL,
+  terrain_gradient_pct DOUBLE NULL,
+  event_observed TINYINT NULL,
+  calibrated_probability DOUBLE NULL,
+  probability_brier DOUBLE NULL,
+  calibration_context_json MEDIUMTEXT NULL,
   created_at VARCHAR(40) NOT NULL,
   UNIQUE KEY uq_radar4_event_prediction(device_id,location_key,prediction_key),
   KEY idx_radar4_event_pending(device_id,location_key,status,issued_at),
-  KEY idx_radar4_event_skill(device_id,location_key,event_kind,status,verified_at)
+  KEY idx_radar4_event_skill(device_id,location_key,event_kind,status,verified_at),
+  KEY idx_radar4_event_calibration(device_id,event_kind,status,season,distance_band,coverage_band)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS decision_verification_samples (
@@ -676,7 +696,7 @@ CREATE TABLE IF NOT EXISTS radar_frame_quality (
   KEY idx_radar_quality_checked(checked_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO app_metadata(meta_key,meta_value,updated_at) VALUES('schema_version','30',UTC_TIMESTAMP(6))
+INSERT INTO app_metadata(meta_key,meta_value,updated_at) VALUES('schema_version','31',UTC_TIMESTAMP(6))
 ON DUPLICATE KEY UPDATE meta_value=VALUES(meta_value),updated_at=VALUES(updated_at);
 INSERT INTO app_metadata(meta_key,meta_value,updated_at) VALUES('app_version','20.1',UTC_TIMESTAMP(6))
 ON DUPLICATE KEY UPDATE meta_value=VALUES(meta_value),updated_at=VALUES(updated_at);

@@ -15,6 +15,7 @@ require_once __DIR__ . '/convective_v3.php';
 require_once __DIR__ . '/convective_v4.php';
 require_once __DIR__ . '/verification_helpers.php';
 require_once __DIR__ . '/radar4_probabilistic_helpers.php';
+require_once __DIR__ . '/radar4_calibration_helpers.php';
 require_once __DIR__ . '/sun_cloud_helpers.php';
 require_once dirname(__DIR__) . '/observations/providers.php';
 require_once dirname(__DIR__) . '/account/account_helpers.php';
@@ -119,8 +120,6 @@ $nowcastFusion = meteonexa_nowcast_fusion($consensus, $motion, $cellTracking, $l
 $nowcastFusion['trend'] = meteonexa_persist_nowcast($pdo, $deviceId, $locationKey, $nowcastFusion);
 $weatherConfidence = meteonexa_weather_confidence($analysis, $consensus, $forecastReliability, $nowcastFusion, $probabilisticEnsemble);
 $nowcastV2 = meteonexa_object_nowcast($pdo, $deviceId, $locationKey, $nowcastFusion, $consensus, $cellTracking, $motion);
-$radarSkill = meteonexa_radar_skill_update($pdo, $deviceId, $locationKey, $nowcastV2, $nowcastFusion, $observations, (array)($motion['radarObservation']??[]), $hyperlocal, (array)($motion['radar3Tracking']??[]), (array)($motion['radar4Tracking']??[]));
-$nowcastV2['verifiedSkill'] = $radarSkill;
 $nowcastV2['multiCellTracking'] = $motion['multiCellTracking']??['available'=>false, 'cells'=>[]];
 $nowcastV2['radar3Tracking'] = $motion['radar3Tracking']??['available'=>false, 'cells'=>[]];
 $nowcastV2['radar3Mode'] = $motion['radar3Mode']??'active-fallback-v2';
@@ -131,6 +130,9 @@ $nowcastV2['radar4Mode'] = $motion['radar4Mode']??'shadow';
 $nowcastV2['radar4RequestedMode'] = $motion['radar4RequestedMode']??'shadow';
 $nowcastV2['radar4ShadowGate'] = $motion['radar4ShadowGate']??['available'=>false, 'promotionCandidate'=>false, 'authorityLockedToRadar3'=>true, 'reason'=>'unavailable'];
 $nowcastV4 = meteonexa_probabilistic_nowcast($nowcastV2, $consensus, $lightning, $satellite, $convectiveRiskV3, $severeOutlook, $observations, $official);
+$terrainElevation = is_numeric($weather['elevation']??null) ? (float)$weather['elevation'] : null;
+$archiveDistance = is_numeric($motion['archiveDistanceKm']??null) ? (float)$motion['archiveDistanceKm'] : null;
+$radar4TerrainProfile = meteonexa_radar4_p33_terrain_profile($lat, $lon, $terrainElevation);
 $radar4ProbabilisticShadow = meteonexa_radar4_probabilistic_shadow(
     (array)($motion['radar4Tracking']??[]),
     $nowcastV4,
@@ -139,11 +141,21 @@ $radar4ProbabilisticShadow = meteonexa_radar4_probabilistic_shadow(
     $satellite,
     $observations,
     $official,
-    is_numeric($weather['elevation']??null) ? (float)$weather['elevation'] : null,
-    is_numeric($motion['archiveDistanceKm']??null) ? (float)$motion['archiveDistanceKm'] : null
+    $terrainElevation,
+    $archiveDistance,
+    $radar4TerrainProfile
 );
-$radar4EventVerification = meteonexa_radar4_event_verification_update($pdo, $deviceId, $locationKey, $radar4ProbabilisticShadow);
+$radar4CalibrationBefore = meteonexa_radar4_p33_calibration_report($pdo, $deviceId);
+$radar4ProbabilisticShadow = meteonexa_radar4_p33_apply_empirical_calibration($radar4ProbabilisticShadow, $radar4CalibrationBefore);
+$radar4CalibrationContext = meteonexa_radar4_p33_context($locationKey, $radar4ProbabilisticShadow, $lightning, $satellite, $observations, $radar4TerrainProfile, $archiveDistance);
+$radarSkill = meteonexa_radar_skill_update($pdo, $deviceId, $locationKey, $nowcastV2, $nowcastFusion, $observations, (array)($motion['radarObservation']??[]), $hyperlocal, (array)($motion['radar3Tracking']??[]), (array)($motion['radar4Tracking']??[]), $radar4CalibrationContext);
+$nowcastV2['verifiedSkill'] = $radarSkill;
+$radar4EventVerification = meteonexa_radar4_event_verification_update($pdo, $deviceId, $locationKey, $radar4ProbabilisticShadow, $radar4CalibrationContext);
+$radar4CalibrationReport = meteonexa_radar4_p33_calibration_report($pdo, $deviceId);
 $radar4ProbabilisticShadow['verification'] = $radar4EventVerification;
+$radar4ProbabilisticShadow['terrainProfile'] = $radar4TerrainProfile;
+$radar4ProbabilisticShadow['calibrationContext'] = $radar4CalibrationContext;
+$radar4ProbabilisticShadow['calibrationReport'] = $radar4CalibrationReport;
 $freshness = meteonexa_intelq_source_freshness($models, $motion, $lightning, $satellite, $official, $hyperlocal);
 foreach ((array)($observations['evidence']??[]) as $obs)$freshness[] =['id'=>'obs-' .($obs['sourceType']??'source'), 'label'=>$obs['station']??$obs['source']??'Observation', 'available'=>true, 'retrievedAt'=>$obs['observedAt']??null, 'ageMinutes'=>$obs['ageMinutes']??null, 'freshnessBasis'=>'observation', 'kind'=>'independentObservation'];
 if (!empty($probabilisticEnsemble['available'])) $freshness[] =['id'=>'probabilistic-ensemble', 'label'=>$probabilisticEnsemble['model']??'ECMWF AIFS ENS', 'available'=>true, 'retrievedAt'=>$probabilisticEnsemble['freshness']['fetchedAt']??null, 'ageMinutes'=>$probabilisticEnsemble['freshness']['ageMinutes']??null, 'freshnessBasis'=>'ensemble-retrieval', 'kind'=>'probabilisticEnsemble', 'memberCount'=>$probabilisticEnsemble['memberCount']??0, 'stale'=>!empty($probabilisticEnsemble['freshness']['stale'])];
@@ -175,5 +187,5 @@ foreach ($freshness as $src) {
 }
 $retention = meteonexa_prune_verified_precision($pdo, $config);
 $durationMs = round((microtime(true) - $requestStarted) * 1000, 1);
-meteonexa_record_runtime_metric($pdo, 'intelligence', 'summary', 'ok', $durationMs,['freshModels'=>$freshnessTrust['modelsFresh'], 'radarAvailable'=>!empty($motion['available']), 'radar3Mode'=>$motion['radar3Mode']??'shadow', 'radar4Mode'=>$motion['radar4Mode']??'shadow', 'radar4Available'=>!empty($motion['radar4Tracking']['available']), 'radar4P32Available'=>!empty($radar4ProbabilisticShadow['available'])], $durationMs);
-respond(['ok'=>true, 'mode'=>'authenticated', 'analysis'=>$analysis, 'accuracy'=>$accuracy, 'consensus'=>$canonicalConsensus, 'weightedConsensus'=>$consensus, 'modelSkill'=>$skill, 'modelSkillV2'=>$skillV2, 'confidenceCalibration'=>$calibration, 'calibrationProgress'=>$calibrationProgress, 'forecastReliability'=>$forecastReliability, 'probabilisticEnsemble'=>$probabilisticEnsemble, 'observations'=>$observations, 'forecastChange'=>$forecastChange, 'forecastChangeV2'=>$forecastChangeV2, 'sunCloudWindow'=>$sunCloudWindow, 'previousRuns'=>$previousRuns, 'sourceFreshness'=>$freshness, 'explainability'=>$explainability, 'decisionWindows'=>$decisions, 'decisionTimeline'=>$decisionTimeline, 'activityProfiles'=>$activityProfiles, 'radarMotion'=>$motion, 'cellTracking'=>$cellTracking, 'nowcastFusion'=>$nowcastFusion, 'nowcastV2'=>$nowcastV2, 'nowcastV4'=>$nowcastV4, 'radar4ProbabilisticShadow'=>$radar4ProbabilisticShadow, 'weatherConfidence'=>$weatherConfidence, 'confidenceV2'=>$confidenceV2, 'personalWeatherTwin'=>$personalTwin, 'aiWeatherModels'=>$aiWeatherModels, 'severeOutlook'=>$severeOutlook, 'convectiveRiskV3'=>$convectiveRiskV3, 'convectiveRiskV4'=>$convectiveRiskV3, 'trustScoreboard'=>$trustScoreboard, 'freshnessTrust'=>$freshnessTrust, 'predictiveVerification'=>$predictiveVerification, 'predictiveOpportunities'=>$predictiveOpportunities, 'retention'=>$retention, 'requestId'=>$requestId, 'pipelineHealth'=>meteonexa_pipeline_health_summary($pdo), 'lightning'=>$lightning, 'satellite'=>$satellite, 'official'=>$official, 'hyperlocal'=>$hyperlocal, 'privacy'=>['externalAiUsed'=>false, 'coordinatesPersistedByThisRequest'=>false, 'runSnapshotPersisted'=>true, 'observationEvidencePersisted'=>!empty($observations['available']), 'observationProviderCoordinatesRounded'=>true], 'engine'=>'20.1', 'generatedAt'=>gmdate('c')]);
+meteonexa_record_runtime_metric($pdo, 'intelligence', 'summary', 'ok', $durationMs,['freshModels'=>$freshnessTrust['modelsFresh'], 'radarAvailable'=>!empty($motion['available']), 'radar3Mode'=>$motion['radar3Mode']??'shadow', 'radar4Mode'=>$motion['radar4Mode']??'shadow', 'radar4Available'=>!empty($motion['radar4Tracking']['available']), 'radar4P32Available'=>!empty($radar4ProbabilisticShadow['available']), 'radar4P33DatasetMature'=>!empty($radar4CalibrationReport['datasetMature'])], $durationMs);
+respond(['ok'=>true, 'mode'=>'authenticated', 'analysis'=>$analysis, 'accuracy'=>$accuracy, 'consensus'=>$canonicalConsensus, 'weightedConsensus'=>$consensus, 'modelSkill'=>$skill, 'modelSkillV2'=>$skillV2, 'confidenceCalibration'=>$calibration, 'calibrationProgress'=>$calibrationProgress, 'forecastReliability'=>$forecastReliability, 'probabilisticEnsemble'=>$probabilisticEnsemble, 'observations'=>$observations, 'forecastChange'=>$forecastChange, 'forecastChangeV2'=>$forecastChangeV2, 'sunCloudWindow'=>$sunCloudWindow, 'previousRuns'=>$previousRuns, 'sourceFreshness'=>$freshness, 'explainability'=>$explainability, 'decisionWindows'=>$decisions, 'decisionTimeline'=>$decisionTimeline, 'activityProfiles'=>$activityProfiles, 'radarMotion'=>$motion, 'cellTracking'=>$cellTracking, 'nowcastFusion'=>$nowcastFusion, 'nowcastV2'=>$nowcastV2, 'nowcastV4'=>$nowcastV4, 'radar4ProbabilisticShadow'=>$radar4ProbabilisticShadow, 'radar4Calibration'=>$radar4CalibrationReport, 'weatherConfidence'=>$weatherConfidence, 'confidenceV2'=>$confidenceV2, 'personalWeatherTwin'=>$personalTwin, 'aiWeatherModels'=>$aiWeatherModels, 'severeOutlook'=>$severeOutlook, 'convectiveRiskV3'=>$convectiveRiskV3, 'convectiveRiskV4'=>$convectiveRiskV3, 'trustScoreboard'=>$trustScoreboard, 'freshnessTrust'=>$freshnessTrust, 'predictiveVerification'=>$predictiveVerification, 'predictiveOpportunities'=>$predictiveOpportunities, 'retention'=>$retention, 'requestId'=>$requestId, 'pipelineHealth'=>meteonexa_pipeline_health_summary($pdo), 'lightning'=>$lightning, 'satellite'=>$satellite, 'official'=>$official, 'hyperlocal'=>$hyperlocal, 'privacy'=>['externalAiUsed'=>false, 'coordinatesPersistedByThisRequest'=>false, 'runSnapshotPersisted'=>true, 'observationEvidencePersisted'=>!empty($observations['available']), 'observationProviderCoordinatesRounded'=>true], 'engine'=>'20.1', 'generatedAt'=>gmdate('c')]);

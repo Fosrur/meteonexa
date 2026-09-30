@@ -86,6 +86,11 @@ function meteonexa_radar_eta_queue(PDO $pdo, string $deviceId, string $locationK
             $columns.=',algorithm,ground_truth_source,ground_truth_quality,ground_truth_json,verification_method';
             $values.=',:alg,\'\',0,:gt,\'\'';
         }
+        $hasP33 = meteonexa_db_column_exists($pdo, 'radar_eta_predictions', 'area_key');
+        if ($hasP33) {
+            $columns.=',area_key,distance_band,coverage_band,season,weather_regime,terrain_class';
+            $values.=',:area,:distance,:coverage,:season,:regime,:terrain';
+        }
         $insertVerb = meteonexa_pdo_driver($pdo)==='mysql' ? 'INSERT IGNORE' : 'INSERT OR IGNORE';
         $st = $pdo->prepare($insertVerb . ' INTO radar_eta_predictions(' . $columns . ') VALUES(' . $values . ')');
         $params =[':d'=>$deviceId, ':l'=>$locationKey, ':k'=>$key, ':i'=>$issued, ':p'=>$pred, ':e'=>$eta, ':t'=>$tolerance, ':c'=>$confidence, ':a'=>$issued];
@@ -93,11 +98,19 @@ function meteonexa_radar_eta_queue(PDO $pdo, string $deviceId, string $locationK
             $params[':alg'] = $algorithm;
             $params[':gt'] = json_encode($meta, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         }
+        if ($hasP33) {
+            $params[':area'] = (string)($meta['areaKey'] ?? '');
+            $params[':distance'] = (string)($meta['distanceBand'] ?? 'unknown');
+            $params[':coverage'] = (string)($meta['coverageBand'] ?? 'unknown');
+            $params[':season'] = (string)($meta['season'] ?? 'unknown');
+            $params[':regime'] = (string)($meta['weatherRegime'] ?? 'unknown');
+            $params[':terrain'] = (string)($meta['terrainClass'] ?? 'unknown');
+        }
         $st->execute($params);
     } catch (Throwable $ignored) {
     }
 }
-function meteonexa_radar_skill_update(PDO $pdo, string $deviceId, string $locationKey, array $nowcast, array $fusion, array $observations =[], array $radarObservation =[], array $hyperlocal =[], array $radar3 =[], array $radar4 =[]) : array {
+function meteonexa_radar_skill_update(PDO $pdo, string $deviceId, string $locationKey, array $nowcast, array $fusion, array $observations =[], array $radarObservation =[], array $hyperlocal =[], array $radar3 =[], array $radar4 =[], array $calibrationContext =[]) : array {
     if (!meteonexa_db_table_exists($pdo, 'radar_eta_predictions'))return['available'=>false, 'samples'=>0, 'groundTruth'=>'unavailable'];
     $now = time();
     $eta = is_numeric($nowcast['etaMinutes']??null) ? (int)$nowcast['etaMinutes'] : null;
@@ -105,7 +118,7 @@ function meteonexa_radar_skill_update(PDO $pdo, string $deviceId, string $locati
     $range = is_array($nowcast['etaRangeMinutes']??null) ? array_values($nowcast['etaRangeMinutes']) :[];
     $tol = 10;
     if (isset($range[0], $range[1])&&is_numeric($range[0])&&is_numeric($range[1]))$tol = max(5, min(45, (int)ceil(abs((float)$range[1] - (float)$range[0]) / 2)));
-    meteonexa_radar_eta_queue($pdo, $deviceId, $locationKey, 'radar-v2', $eta, $confidence, $tol, $now,['method'=>$nowcast['method']??'']);
+    meteonexa_radar_eta_queue($pdo, $deviceId, $locationKey, 'radar-v2', $eta, $confidence, $tol, $now,array_merge($calibrationContext, ['method'=>$nowcast['method']??'']));
     if (!empty($radar3['available'])) {
         $dominant = null;
         foreach ((array)($radar3['cells']??[]) as $cell) {
@@ -117,7 +130,7 @@ function meteonexa_radar_skill_update(PDO $pdo, string $deviceId, string $locati
             $eta3 = (int)$dominant['etaMinutes'];
             $conf3 = (int)($dominant['trackConfidence']??0);
             $tol3 = max(5, min(45, (int)round(6 + $eta3 *(1 - $conf3 / 100) * .35)));
-            meteonexa_radar_eta_queue($pdo, $deviceId, $locationKey, 'radar-v3', $eta3, $conf3, $tol3, $now,['cellId'=>$dominant['id']??null, 'mode'=>$radar3['mode']??'shadow']);
+            meteonexa_radar_eta_queue($pdo, $deviceId, $locationKey, 'radar-v3', $eta3, $conf3, $tol3, $now,array_merge($calibrationContext, ['cellId'=>$dominant['id']??null, 'mode'=>$radar3['mode']??'shadow']));
         }
     }
     if (!empty($radar4['available']) && (($radar4['mode']??'shadow')==='shadow')) {
@@ -131,13 +144,13 @@ function meteonexa_radar_skill_update(PDO $pdo, string $deviceId, string $locati
             $conf4 = (int)($dominant4['trackConfidence']??0);
             $spread4 = is_numeric($radar4['flow']['vectorSpread']??null) ? (float)$radar4['flow']['vectorSpread'] : 0.0;
             $tol4 = max(5, min(50, (int)round(6 + $eta4 *(1 - $conf4 / 100) * .4 + min(8, $spread4 * 30))));
-            meteonexa_radar_eta_queue($pdo, $deviceId, $locationKey, 'radar-v4', $eta4, $conf4, $tol4, $now,[
+            meteonexa_radar_eta_queue($pdo, $deviceId, $locationKey, 'radar-v4', $eta4, $conf4, $tol4, $now,array_merge($calibrationContext, [
                 'cellId'=>$dominant4['id']??null,
                 'mode'=>'shadow',
                 'method'=>$radar4['method']??'optical-flow-object-tracking-v4',
                 'growthDecayScore'=>$dominant4['growthDecayScore']??null,
                 'flowConfidence'=>$radar4['flow']['confidence']??null,
-            ]);
+            ]));
         }
     }
     $ground = meteonexa_radar_independent_arrival($observations, $radarObservation, $hyperlocal);

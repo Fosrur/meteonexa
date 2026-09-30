@@ -112,7 +112,7 @@ function meteonexa_radar4_evidence_fusion(array $radar4, array $nowcastV4, array
     ];
 }
 
-function meteonexa_radar4_confidence_calibration(array $radar4, array $observations, array $satellite, ?float $elevationM = null, ?float $archiveDistanceKm = null): array {
+function meteonexa_radar4_confidence_calibration(array $radar4, array $observations, array $satellite, ?float $elevationM = null, ?float $archiveDistanceKm = null, array $terrainProfile = []): array {
     $cell = meteonexa_radar4_dominant_cell($radar4);
     if (!$cell) return ['available'=>false, 'rawConfidence'=>0, 'calibratedConfidence'=>0];
     $raw = (float)($cell['trackConfidence'] ?? 0);
@@ -128,7 +128,15 @@ function meteonexa_radar4_confidence_calibration(array $radar4, array $observati
     $distancePenalty = $archiveDistanceKm === null ? 0.0 : min(15.0, max(0.0, $archiveDistanceKm - 10) * .18);
     $spreadPenalty = min(18.0, $spread * 42);
     $terrainPenalty = 0.0;
-    if ($elevationM !== null) {
+    $terrainProfileAvailable = !empty($terrainProfile['available']);
+    if ($terrainProfileAvailable) {
+        $relief = is_numeric($terrainProfile['reliefM'] ?? null) ? (float)$terrainProfile['reliefM'] : 0.0;
+        $gradient = is_numeric($terrainProfile['maxGradientPct'] ?? null) ? (float)$terrainProfile['maxGradientPct'] : 0.0;
+        // P3.3 uses independently sampled DEM relief/gradient when available.
+        // The penalty is deliberately bounded: terrain is a confidence modifier,
+        // never a standalone meteorological signal.
+        $terrainPenalty = min(15.0, max(0.0, $relief - 120) / 120 + max(0.0, $gradient - 2.0) * .65);
+    } elseif ($elevationM !== null) {
         if ($elevationM >= 2500) $terrainPenalty = 12.0;
         elseif ($elevationM >= 1800) $terrainPenalty = 8.0;
         elseif ($elevationM >= 1000) $terrainPenalty = 4.0;
@@ -148,6 +156,9 @@ function meteonexa_radar4_confidence_calibration(array $radar4, array $observati
             'evidenceCoverageCount'=>$sourceCoverage,
             'radarArchiveDistanceKm'=>$archiveDistanceKm === null ? null : round($archiveDistanceKm, 1),
             'terrainElevationM'=>$elevationM === null ? null : round($elevationM),
+            'terrainReliefM'=>is_numeric($terrainProfile['reliefM'] ?? null) ? round((float)$terrainProfile['reliefM'], 1) : null,
+            'terrainGradientPct'=>is_numeric($terrainProfile['maxGradientPct'] ?? null) ? round((float)$terrainProfile['maxGradientPct'], 2) : null,
+            'terrainClass'=>$terrainProfile['terrainClass'] ?? 'unknown',
         ],
         'modifiers'=>[
             'flow'=>round($flowModifier, 1),
@@ -159,8 +170,10 @@ function meteonexa_radar4_confidence_calibration(array $radar4, array $observati
             'satelliteAvailabilityPenalty'=>round($satellitePenalty, 1),
         ],
         'policy'=>[
-            'orographyUsesElevationProxyOnly'=>true,
-            'noTerrainSlopeInference'=>true,
+            'orographyUsesElevationProxyOnly'=>!$terrainProfileAvailable,
+            'terrainProfileAvailable'=>$terrainProfileAvailable,
+            'terrainProfileSource'=>$terrainProfile['source'] ?? ($elevationM !== null ? 'single-elevation-proxy' : 'unavailable'),
+            'noTerrainSlopeInference'=>!$terrainProfileAvailable,
             'confidenceCalibrationShadowOnly'=>true,
         ],
     ];
@@ -227,10 +240,10 @@ function meteonexa_radar4_nowcast_peak_minute(array $nowcastV4): ?int {
     return $bestMinute;
 }
 
-function meteonexa_radar4_probabilistic_shadow(array $radar4, array $nowcastV4, array $consensus, array $lightning, array $satellite, array $observations, array $official, ?float $elevationM = null, ?float $archiveDistanceKm = null): array {
+function meteonexa_radar4_probabilistic_shadow(array $radar4, array $nowcastV4, array $consensus, array $lightning, array $satellite, array $observations, array $official, ?float $elevationM = null, ?float $archiveDistanceKm = null, array $terrainProfile = []): array {
     $cell = meteonexa_radar4_dominant_cell($radar4);
     $fusion = meteonexa_radar4_evidence_fusion($radar4, $nowcastV4, $consensus, $lightning, $satellite, $observations, $official);
-    $calibration = meteonexa_radar4_confidence_calibration($radar4, $observations, $satellite, $elevationM, $archiveDistanceKm);
+    $calibration = meteonexa_radar4_confidence_calibration($radar4, $observations, $satellite, $elevationM, $archiveDistanceKm, $terrainProfile);
     if (!$cell || empty($radar4['available'])) {
         return [
             'available'=>false,
@@ -319,14 +332,22 @@ function meteonexa_radar4_probabilistic_shadow(array $radar4, array $nowcastV4, 
     ];
 }
 
-function meteonexa_radar4_event_prediction_queue(PDO $pdo, string $deviceId, string $locationKey, array $shadow): int {
+function meteonexa_radar4_event_prediction_queue(PDO $pdo, string $deviceId, string $locationKey, array $shadow, array $context = []): int {
     if (!meteonexa_db_table_exists($pdo, 'radar4_event_predictions') || empty($shadow['available'])) return 0;
     $now = time();
     $issued = gmdate('c', $now);
     $driver = meteonexa_pdo_driver($pdo);
     $verb = $driver === 'mysql' ? 'INSERT IGNORE' : 'INSERT OR IGNORE';
-    $sql = $verb . " INTO radar4_event_predictions(device_id,location_key,prediction_key,event_kind,issued_at,p10_at,p50_at,p90_at,event_probability,confidence,predicted_value,status,verified_at,observed_at,observed_value,error_minutes,absolute_error_minutes,absolute_error_value,within_interval,ground_truth_source,ground_truth_quality,ground_truth_json,verification_method,created_at) VALUES(:d,:l,:k,:kind,:issued,:p10,:p50,:p90,:prob,:confidence,:pred,'pending','', '',NULL,NULL,NULL,NULL,NULL,'',0,'','',:created)";
-    $st = $pdo->prepare($sql);
+    $hasP33 = meteonexa_db_column_exists($pdo, 'radar4_event_predictions', 'area_key');
+    $columns = 'device_id,location_key,prediction_key,event_kind,issued_at,p10_at,p50_at,p90_at,event_probability,confidence,predicted_value,status,verified_at,observed_at,observed_value,error_minutes,absolute_error_minutes,absolute_error_value,within_interval,ground_truth_source,ground_truth_quality,ground_truth_json,verification_method';
+    $values = ":d,:l,:k,:kind,:issued,:p10,:p50,:p90,:prob,:confidence,:pred,'pending','', '',NULL,NULL,NULL,NULL,NULL,'',0,'',''";
+    if ($hasP33) {
+        $columns .= ',area_key,distance_band,coverage_band,season,weather_regime,terrain_class,terrain_relief_m,terrain_gradient_pct,event_observed,calibrated_probability,probability_brier,calibration_context_json';
+        $values .= ",:area,:distance,:coverage,:season,:regime,:terrain,:relief,:gradient,NULL,:calibrated,NULL,:context";
+    }
+    $columns .= ',created_at';
+    $values .= ',:created';
+    $st = $pdo->prepare($verb . ' INTO radar4_event_predictions(' . $columns . ') VALUES(' . $values . ')');
     $inserted = 0;
     foreach (['rain_start'=>'rainStart', 'rain_peak'=>'rainPeak', 'rain_end'=>'rainEnd'] as $kind=>$field) {
         $distribution = (array)($shadow[$field] ?? []);
@@ -334,23 +355,45 @@ function meteonexa_radar4_event_prediction_queue(PDO $pdo, string $deviceId, str
         $p10 = $now + (int)$distribution['p10Minutes'] * 60;
         $p50 = $now + (int)$distribution['p50Minutes'] * 60;
         $p90 = $now + (int)$distribution['p90Minutes'] * 60;
-        $key = substr(hash('sha256', $deviceId . '|' . $locationKey . '|radar4-p32|' . $kind . '|' . gmdate('Y-m-d\TH:i', intdiv($now, 300) * 300)), 0, 48);
-        $st->execute([
+        $key = substr(hash('sha256', $deviceId . '|' . $locationKey . '|radar4-p33|' . $kind . '|' . gmdate('Y-m-d\TH:i', intdiv($now, 300) * 300)), 0, 48);
+        $params = [
             ':d'=>$deviceId, ':l'=>$locationKey, ':k'=>$key, ':kind'=>$kind, ':issued'=>$issued,
             ':p10'=>gmdate('c', $p10), ':p50'=>gmdate('c', $p50), ':p90'=>gmdate('c', $p90),
             ':prob'=>(float)($distribution['eventProbabilityPct'] ?? 0), ':confidence'=>(int)($shadow['confidenceCalibration']['calibratedConfidence'] ?? 0), ':pred'=>null, ':created'=>$issued,
-        ]);
+        ];
+        if ($hasP33) {
+            $empirical = (array)($distribution['empiricalCalibration'] ?? []);
+            $params += [
+                ':area'=>(string)($context['areaKey'] ?? ''), ':distance'=>(string)($context['distanceBand'] ?? 'unknown'),
+                ':coverage'=>(string)($context['coverageBand'] ?? 'unknown'), ':season'=>(string)($context['season'] ?? 'unknown'),
+                ':regime'=>(string)($context['weatherRegime'] ?? 'unknown'), ':terrain'=>(string)($context['terrainClass'] ?? 'unknown'),
+                ':relief'=>$context['terrainReliefM'] ?? null, ':gradient'=>$context['terrainGradientPct'] ?? null,
+                ':calibrated'=>is_numeric($empirical['calibratedProbabilityPct'] ?? null) ? (float)$empirical['calibratedProbabilityPct'] : (float)($distribution['eventProbabilityPct'] ?? 0),
+                ':context'=>json_encode($context, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            ];
+        }
+        $st->execute($params);
         $inserted += $st->rowCount() > 0 ? 1 : 0;
     }
     $growth = (array)($shadow['growthDecay'] ?? []);
     if (is_numeric($growth['predictedScore'] ?? null)) {
         $target = $now + max(10, min(60, (int)($growth['verificationTargetMinutes'] ?? 30))) * 60;
-        $key = substr(hash('sha256', $deviceId . '|' . $locationKey . '|radar4-p32|growth|' . gmdate('Y-m-d\TH:i', intdiv($now, 300) * 300)), 0, 48);
-        $st->execute([
+        $key = substr(hash('sha256', $deviceId . '|' . $locationKey . '|radar4-p33|growth|' . gmdate('Y-m-d\TH:i', intdiv($now, 300) * 300)), 0, 48);
+        $params = [
             ':d'=>$deviceId, ':l'=>$locationKey, ':k'=>$key, ':kind'=>'growth_decay', ':issued'=>$issued,
             ':p10'=>gmdate('c', $target - 600), ':p50'=>gmdate('c', $target), ':p90'=>gmdate('c', $target + 600),
             ':prob'=>100, ':confidence'=>(int)($shadow['confidenceCalibration']['calibratedConfidence'] ?? 0), ':pred'=>(float)$growth['predictedScore'], ':created'=>$issued,
-        ]);
+        ];
+        if ($hasP33) {
+            $params += [
+                ':area'=>(string)($context['areaKey'] ?? ''), ':distance'=>(string)($context['distanceBand'] ?? 'unknown'),
+                ':coverage'=>(string)($context['coverageBand'] ?? 'unknown'), ':season'=>(string)($context['season'] ?? 'unknown'),
+                ':regime'=>(string)($context['weatherRegime'] ?? 'unknown'), ':terrain'=>(string)($context['terrainClass'] ?? 'unknown'),
+                ':relief'=>$context['terrainReliefM'] ?? null, ':gradient'=>$context['terrainGradientPct'] ?? null,
+                ':calibrated'=>100.0, ':context'=>json_encode($context, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            ];
+        }
+        $st->execute($params);
         $inserted += $st->rowCount() > 0 ? 1 : 0;
     }
     return $inserted;
@@ -456,35 +499,67 @@ function meteonexa_radar4_truth_from_series(array $series, string $kind, int $is
     return null;
 }
 
+function meteonexa_radar4_negative_event_truth(array $series, int $issuedTs, int $minimumSpanMinutes = 90): ?array {
+    $good = array_values(array_filter($series, static fn($row)=>(int)($row['quality'] ?? 0) >= 65 && (int)($row['ts'] ?? 0) >= $issuedTs));
+    if (count($good) < 4) return null;
+    $firstTs = (int)($good[0]['ts'] ?? 0);
+    $lastTs = (int)($good[count($good) - 1]['ts'] ?? 0);
+    if (($lastTs - $firstTs) < $minimumSpanMinutes * 60) return null;
+    foreach ($good as $row) if (!empty($row['wet'])) return null;
+    $qualities = array_map(static fn($row)=>(int)($row['quality'] ?? 0), $good);
+    $sources = array_values(array_unique(array_map(static fn($row)=>(string)($row['source'] ?? 'observation'), $good)));
+    return [
+        'observedTs'=>$lastTs,
+        'value'=>0.0,
+        'source'=>'independent-negative-series',
+        'quality'=>(int)round(array_sum($qualities) / max(1, count($qualities))),
+        'detail'=>['sampleCount'=>count($good),'spanMinutes'=>round(($lastTs - $firstTs) / 60,1),'sources'=>$sources],
+    ];
+}
+
 function meteonexa_radar4_event_skill_summary(PDO $pdo, string $deviceId, string $locationKey): array {
     if (!meteonexa_db_table_exists($pdo, 'radar4_event_predictions')) return ['available'=>false, 'samples'=>0, 'learning'=>true];
     $result = ['available'=>false, 'samples'=>0, 'learning'=>true, 'byEvent'=>[], 'promotionEligible'=>false, 'authorityLockedToRadar3'=>true];
     try {
-        $st = $pdo->prepare("SELECT event_kind,COUNT(*) samples,AVG(absolute_error_minutes) mae_minutes,AVG(absolute_error_value) mae_value,AVG(CASE WHEN within_interval=1 THEN 1.0 WHEN within_interval=0 THEN 0.0 ELSE NULL END) interval_coverage FROM radar4_event_predictions WHERE device_id=:d AND location_key=:l AND status='verified' GROUP BY event_kind");
+        $hasP33 = meteonexa_db_column_exists($pdo, 'radar4_event_predictions', 'event_observed');
+        $extra = $hasP33
+            ? ',SUM(CASE WHEN event_observed=1 THEN 1 ELSE 0 END) positive_samples,SUM(CASE WHEN event_observed=0 THEN 1 ELSE 0 END) negative_samples,AVG(probability_brier) brier_score'
+            : ',0 positive_samples,0 negative_samples,NULL brier_score';
+        $st = $pdo->prepare("SELECT event_kind,COUNT(*) samples,AVG(absolute_error_minutes) mae_minutes,AVG(absolute_error_value) mae_value,AVG(CASE WHEN within_interval=1 THEN 1.0 WHEN within_interval=0 THEN 0.0 ELSE NULL END) interval_coverage" . $extra . " FROM radar4_event_predictions WHERE device_id=:d AND location_key=:l AND status='verified' GROUP BY event_kind");
         $st->execute([':d'=>$deviceId, ':l'=>$locationKey]);
         $total = 0;
         foreach ($st->fetchAll() as $row) {
             $kind = (string)$row['event_kind'];
             $samples = (int)($row['samples'] ?? 0);
+            $positive = $hasP33 && $kind !== 'growth_decay' ? (int)($row['positive_samples'] ?? 0) : $samples;
+            $negative = $hasP33 && $kind !== 'growth_decay' ? (int)($row['negative_samples'] ?? 0) : 0;
             $total += $samples;
             $result['byEvent'][$kind] = [
                 'samples'=>$samples,
+                'positiveSamples'=>$positive,
+                'negativeSamples'=>$negative,
                 'maeMinutes'=>is_numeric($row['mae_minutes'] ?? null) ? round((float)$row['mae_minutes'], 2) : null,
                 'maeValue'=>is_numeric($row['mae_value'] ?? null) ? round((float)$row['mae_value'], 2) : null,
                 'intervalCoveragePct'=>is_numeric($row['interval_coverage'] ?? null) ? round((float)$row['interval_coverage'] * 100, 1) : null,
-                'learning'=>$samples < 30,
+                'brierScore'=>is_numeric($row['brier_score'] ?? null) ? round((float)$row['brier_score'], 4) : null,
+                'learning'=>$positive < 30,
             ];
         }
         $result['samples'] = $total;
         $result['available'] = $total > 0;
         $eventKinds = ['rain_start', 'rain_peak', 'rain_end', 'growth_decay'];
         $mature = true;
-        foreach ($eventKinds as $kind) if ((int)($result['byEvent'][$kind]['samples'] ?? 0) < 30) $mature = false;
+        foreach ($eventKinds as $kind) {
+            $timingSamples = $kind === 'growth_decay'
+                ? (int)($result['byEvent'][$kind]['samples'] ?? 0)
+                : (int)($result['byEvent'][$kind]['positiveSamples'] ?? $result['byEvent'][$kind]['samples'] ?? 0);
+            if ($timingSamples < 30) $mature = false;
+        }
         $result['learning'] = !$mature;
         $result['datasetMature'] = $mature;
-        $result['minimumSamplesPerEvent'] = 30;
+        $result['minimumPositiveTimingSamplesPerEvent'] = 30;
         $result['promotionEligible'] = false;
-        $result['reason'] = $mature ? 'dataset_mature_promotion_still_disabled_in_p32' : 'collecting_live_multiarea_samples';
+        $result['reason'] = $mature ? 'local_timing_skill_mature_global_p33_gate_still_required' : 'collecting_live_event_samples';
         return $result;
     } catch (Throwable $ignored) {
         $result['reason'] = 'skill_query_failed';
@@ -492,11 +567,12 @@ function meteonexa_radar4_event_skill_summary(PDO $pdo, string $deviceId, string
     }
 }
 
-function meteonexa_radar4_event_verification_update(PDO $pdo, string $deviceId, string $locationKey, array $shadow): array {
-    $queued = meteonexa_radar4_event_prediction_queue($pdo, $deviceId, $locationKey, $shadow);
+function meteonexa_radar4_event_verification_update(PDO $pdo, string $deviceId, string $locationKey, array $shadow, array $context = []): array {
+    $queued = meteonexa_radar4_event_prediction_queue($pdo, $deviceId, $locationKey, $shadow, $context);
     if (!meteonexa_db_table_exists($pdo, 'radar4_event_predictions')) return ['available'=>false, 'queued'=>$queued, 'verified'=>0, 'skill'=>['available'=>false]];
     $now = time();
     $verified = 0;
+    $hasP33 = meteonexa_db_column_exists($pdo, 'radar4_event_predictions', 'event_observed');
     try {
         $st = $pdo->prepare("SELECT * FROM radar4_event_predictions WHERE device_id=:d AND location_key=:l AND status='pending' ORDER BY id ASC LIMIT 120");
         $st->execute([':d'=>$deviceId, ':l'=>$locationKey]);
@@ -510,6 +586,18 @@ function meteonexa_radar4_event_verification_update(PDO $pdo, string $deviceId, 
             if ($now < $maturityTs) continue;
             $series = meteonexa_radar4_observation_series($pdo, $deviceId, $locationKey, $issuedTs - 900, $issuedTs + 150 * 60);
             $truth = meteonexa_radar4_truth_from_series($series, $kind, $issuedTs);
+            $eventObserved = null;
+            $negative = false;
+            if (!$truth && $hasP33 && $kind !== 'growth_decay') {
+                // A verified dry window is a real binary negative and is required
+                // for Brier/reliability calibration. Sparse/missing observations
+                // remain unverified and can never become false negatives.
+                $truth = meteonexa_radar4_negative_event_truth($series, $issuedTs, 90);
+                if ($truth) {
+                    $eventObserved = 0;
+                    $negative = true;
+                }
+            }
             if (!$truth) {
                 if ($now >= $issuedTs + 6 * 3600) {
                     $up = $pdo->prepare("UPDATE radar4_event_predictions SET status='expired_unverified',verified_at=:v,verification_method='insufficient-independent-observation' WHERE id=:id AND status='pending'");
@@ -528,18 +616,33 @@ function meteonexa_radar4_event_verification_update(PDO $pdo, string $deviceId, 
                 $predictedValue = is_numeric($row['predicted_value'] ?? null) ? (float)$row['predicted_value'] : 0.0;
                 $valueErr = round((float)$truth['value'] - $predictedValue, 2);
                 $absValueErr = abs($valueErr);
-            } else {
+            } elseif (!$negative) {
+                $eventObserved = 1;
                 $errMin = round(($observedTs - $p50Ts) / 60, 2);
                 $absErrMin = abs($errMin);
                 $within = $observedTs >= $p10Ts && $observedTs <= $p90Ts ? 1 : 0;
+            } else {
+                $within = 0;
             }
-            $up = $pdo->prepare("UPDATE radar4_event_predictions SET status='verified',verified_at=:v,observed_at=:o,observed_value=:ov,error_minutes=:em,absolute_error_minutes=:aem,absolute_error_value=:aev,within_interval=:wi,ground_truth_source=:gs,ground_truth_quality=:gq,ground_truth_json=:gj,verification_method='independent-observation-series' WHERE id=:id AND status='pending'");
-            $up->execute([
+
+            $p33Sql = '';
+            $params = [
                 ':v'=>gmdate('c', $now), ':o'=>gmdate('c', $observedTs), ':ov'=>$truth['value'] ?? null,
                 ':em'=>$errMin, ':aem'=>$absErrMin, ':aev'=>$absValueErr, ':wi'=>$within,
                 ':gs'=>(string)($truth['source'] ?? 'observation'), ':gq'=>(int)($truth['quality'] ?? 0),
                 ':gj'=>json_encode($truth, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), ':id'=>(int)$row['id'],
-            ]);
+            ];
+            if ($hasP33 && $kind !== 'growth_decay') {
+                $probabilityPct = is_numeric($row['calibrated_probability'] ?? null) ? (float)$row['calibrated_probability'] : (float)($row['event_probability'] ?? 0);
+                $probability = max(0.0, min(1.0, $probabilityPct / 100));
+                $brier = ($probability - (int)$eventObserved) ** 2;
+                $p33Sql = ',event_observed=:eo,probability_brier=:pb';
+                $params[':eo'] = (int)$eventObserved;
+                $params[':pb'] = round($brier, 6);
+            }
+            $method = $negative ? 'independent-negative-observation-series' : 'independent-observation-series';
+            $up = $pdo->prepare("UPDATE radar4_event_predictions SET status='verified',verified_at=:v,observed_at=:o,observed_value=:ov,error_minutes=:em,absolute_error_minutes=:aem,absolute_error_value=:aev,within_interval=:wi,ground_truth_source=:gs,ground_truth_quality=:gq,ground_truth_json=:gj,verification_method='" . $method . "'" . $p33Sql . " WHERE id=:id AND status='pending'");
+            $up->execute($params);
             $verified += $up->rowCount() > 0 ? 1 : 0;
         }
     } catch (Throwable $ignored) {
@@ -549,6 +652,6 @@ function meteonexa_radar4_event_verification_update(PDO $pdo, string $deviceId, 
         'queued'=>$queued,
         'verified'=>$verified,
         'skill'=>meteonexa_radar4_event_skill_summary($pdo, $deviceId, $locationKey),
-        'policy'=>['promotionDisabledInP32'=>true, 'authorityLockedToRadar3'=>true],
+        'policy'=>['promotionDisabledInP32'=>true, 'promotionDisabledInP33'=>true, 'authorityLockedToRadar3'=>true],
     ];
 }

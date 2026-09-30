@@ -3,7 +3,7 @@
 Data audit: 23 settembre 2026  
 Stato riallineato: 30 settembre 2026
 
-> **Stato corrente:** P0 e P1 sono chiusi; P2 ensemble probabilistico/CRPS è implementato nel sorgente e coperto dai gate locali dedicati. La chiusura live di P2 richiede ancora QA completa, MySQL 8.4, Chromium/Firefox e Production Deploy sul medesimo SHA. **P3.1 e P3.2 sono ora code-complete** mantenendo Radar3 come authority: Radar4 dispone di tracking 0–120 min, distribuzioni rain start/peak/end, fusione multi-evidenza, confidence calibrata e ledger di verifica schema 30. La **prossima tranche è P3.3**, dedicata alla maturazione live multi-area e alla calibrazione empirica prima di definire qualunque promotion gate. Le sezioni più sotto descrivono anche lo storico dell'audit del 23–24 settembre e vanno lette nel loro contesto temporale.
+> **Stato corrente:** P0 e P1 sono chiusi; P2 ensemble probabilistico/CRPS è implementato nel sorgente e coperto dai gate locali dedicati. La chiusura live di P2 richiede ancora QA completa, MySQL 8.4, Chromium/Firefox e Production Deploy sul medesimo SHA. **P3.1, P3.2 e l’implementazione P3.3 sono ora code-complete** mantenendo Radar3 come authority. P3.3 porta il contratto a schema 31 con calibrazione empirica multi-area/multi-condizione, negativi osservativi verificati, report reliability/ETA e profilo terrain DEM. La maturità **live** P3.3 resta un gate operativo basato su campioni reali; P3.4 (promotion study) resta bloccata finché quel gate non è soddisfatto. Le sezioni più sotto descrivono anche lo storico dell'audit del 23–24 settembre e vanno lette nel loro contesto temporale.
 
 ## Sintesi dell'audit
 
@@ -255,12 +255,27 @@ La seconda tranche P3 è ora implementata nel sorgente e resta **shadow-only**:
 
 Durante P3.2 è stato corretto anche il ledger ETA Radar4/Radar3 per usare `INSERT IGNORE` su MySQL e `INSERT OR IGNORE` su SQLite: il precedente statement SQLite-only avrebbe impedito l'accodamento ETA su MySQL pur essendo coperto dai catch fail-safe.
 
-### Sviluppi successivi — P3.3
+## Aggiornamento 30 settembre 2026 — P3.3 empirical calibration code-complete / live evidence pending
 
-La prossima tranche non promuove ancora Radar4. Deve:
+### P3.3 — dataset multi-area, reliability empirica e terrain verificabile
 
-1. accumulare e analizzare un dataset **live multi-area / multi-condizione** sufficiente per start/peak/end/growth e ETA;
-2. calibrare empiricamente le distribuzioni (coverage P10–P90, bias P50, reliability per event probability) per distanza/copertura/stagione;
-3. sostituire, dove i dati lo permettono, il semplice elevation proxy con informazione orografica/terrain più ricca e verificabile;
-4. introdurre dashboard/report di backtest Radar3↔Radar4 + P3.2 per area e regime meteo, senza modificare le decisioni production;
-5. soltanto dopo evidenza ripetibile definire i criteri numerici di un futuro promotion gate. L'attivazione di Radar4 come authority resta fuori da P3.3 finché non esiste un passaggio release esplicito separato.
+La parte implementabile nel sorgente è completata senza cambiare l’authority production:
+
+- schema **31**, senza nuove tabelle: `radar4_event_predictions` e `radar_eta_predictions` conservano `area_key` coarse, distanza radar, coverage delle evidenze, stagione, regime meteo e classe terrain;
+- start/peak/end possono produrre sia campioni positivi sia **negativi osservativi reali**. Un negativo richiede almeno quattro osservazioni indipendenti di qualità ≥65, una finestra asciutta di almeno 90 minuti e nessun campione wet; in assenza di copertura sufficiente la previsione resta non verificata;
+- Brier score e reliability bins della probability vengono quindi calcolati su outcome 0/1 reali, insieme a bias P50 e coverage P10–P90 dei soli eventi positivi;
+- il report `radar4Calibration` aggrega skill globale e segmentata per distanza, coverage, stagione, regime meteo e terrain, e confronta ETA Radar3↔Radar4 per area/regime;
+- la calibrazione empirica usa shrinkage verso la probability grezza e resta shadow-only; un bucket con meno di 20 campioni non viene calibrato;
+- profilo orografico P3.3: campionamento DEM attorno al punto (centro + 8 punti a circa 5 km), con relief, gradiente massimo e classe `flat/rolling/complex/mountainous`. Se il provider non è disponibile, resta il fallback elevation-only P3.2;
+- soglia di maturità del dataset: almeno 3 aree coarse, 2 stagioni, 3 regimi meteo, 50 outcome binari e 30 timing positivi per ciascuno tra start/peak/end, 30 campioni growth/decay e 60 ETA verificate per Radar3 e Radar4;
+- anche a dataset maturo il codice imposta `numericThresholdsFinalized=false`, `activationAllowed=false`, `authorityLockedToRadar3=true`: la maturità abilita soltanto una fase di studio separata, non la promozione.
+
+QA dedicata: `qa/radar4_empirical_calibration_smoke.php` copre segmentazione, terrain, negativi osservativi, Brier/reliability e blocco promotion; `qa/radar4_empirical_calibration_schema_smoke.py` valida schema 31, baseline SQLite, colonne/indici e contratto MySQL.
+
+### Stato operativo P3.3
+
+**Code-complete:** sì. **Dataset live maturo:** non dichiarato finché `radar4Calibration.datasetMature` non diventa `true` su dati reali. Le fixture sintetiche servono solo a provare la logica dei gate e non valgono come evidenza meteorologica live.
+
+### Sviluppi successivi — P3.4 promotion study (bloccato dal gate live P3.3)
+
+P3.4 potrà iniziare soltanto dopo maturità live ripetibile. Dovrà congelare un dataset di valutazione, derivare/validare soglie numeriche su holdout separato, verificare stabilità per area/stagione/regime e produrre un report release-review. Anche P3.4 non dovrà attivare Radar4 automaticamente: un eventuale cambio authority richiederà una tranche/release esplicita successiva con rollback e canary dedicati.
