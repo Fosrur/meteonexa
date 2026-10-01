@@ -1,0 +1,906 @@
+{
+  "version": 1,
+  "description": "Post-roadmap continuous quality catalog. Commands are repository-root relative and zero-dependency unless explicitly noted.",
+  "modes": {
+    "fast": [
+      {
+        "id": "continuous-quality-contract",
+        "category": "quality-system",
+        "command": [
+          "python3",
+          "qa/continuous_quality_contract_smoke.py"
+        ],
+        "timeout": 30
+      },
+      {
+        "id": "p5-ai-v2",
+        "category": "roadmap",
+        "command": [
+          "php",
+          "qa/ai_meteorologist_v2_smoke.php"
+        ],
+        "timeout": 45
+      },
+      {
+        "id": "p6-personal-twin",
+        "category": "roadmap",
+        "command": [
+          "php",
+          "qa/personal_weather_twin_v2_smoke.php"
+        ],
+        "timeout": 45
+      },
+      {
+        "id": "p7-weather-observability",
+        "category": "roadmap",
+        "command": [
+          "php",
+          "qa/weather_observability_release_smoke.php"
+        ],
+        "timeout": 45
+      },
+      {
+        "id": "roadmap-schema",
+        "category": "database",
+        "command": [
+          "python3",
+          "qa/roadmap_complete_schema_smoke.py"
+        ],
+        "timeout": 45
+      },
+      {
+        "id": "p4-warning-hub",
+        "category": "safety",
+        "command": [
+          "php",
+          "qa/official_warning_hub_smoke.php"
+        ],
+        "timeout": 45
+      },
+      {
+        "id": "p3-radar4-ops",
+        "category": "weather",
+        "command": [
+          "php",
+          "qa/radar4_operational_readiness_smoke.php"
+        ],
+        "timeout": 45
+      },
+      {
+        "id": "roadmap-contract",
+        "category": "architecture",
+        "command": [
+          "python3",
+          "qa/roadmap_contract_smoke.py"
+        ],
+        "timeout": 45
+      },
+      {
+        "id": "syntax",
+        "category": "static",
+        "command": [
+          "node",
+          "tools/static-analysis.mjs",
+          "--syntax-only"
+        ],
+        "timeout": 120
+      }
+    ],
+    "release": [
+      {
+        "id": "release-audit",
+        "category": "release",
+        "command": [
+          "python3",
+          "qa/release_audit.py",
+          "."
+        ],
+        "timeout": 120
+      },
+      {
+        "id": "production-readiness",
+        "category": "release",
+        "command": [
+          "python3",
+          "qa/production_readiness_smoke.py",
+          "."
+        ],
+        "timeout": 120
+      },
+      {
+        "id": "deploy-contract",
+        "category": "release",
+        "command": [
+          "python3",
+          "qa/automatic_deploy_contract_smoke.py"
+        ],
+        "timeout": 90
+      },
+      {
+        "id": "p2-release-quality",
+        "category": "weather",
+        "command": [
+          "python3",
+          "qa/p2_release_quality_smoke.py",
+          "."
+        ],
+        "timeout": 120
+      },
+      {
+        "id": "release-final",
+        "category": "release",
+        "command": [
+          "python3",
+          "qa/release_final_smoke.py",
+          "."
+        ],
+        "timeout": 120
+      },
+      {
+        "id": "release-provenance",
+        "category": "integrity",
+        "command": [
+          "python3",
+          "qa/release_provenance_smoke.py",
+          "."
+        ],
+        "timeout": 90
+      },
+      {
+        "id": "checksums",
+        "category": "integrity",
+        "command": [
+          "sha256sum",
+          "-c",
+          "SHA256SUMS.txt"
+        ],
+        "timeout": 180
+      }
+    ],
+    "full": [
+      {
+        "id": "release-audit",
+        "category": "release",
+        "command": [
+          "python3",
+          "qa/release_audit.py",
+          "."
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "architecture-layout-smoke",
+        "category": "architecture",
+        "command": [
+          "python3",
+          "qa/architecture_layout_smoke.py",
+          "."
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "maintenance-release-smoke",
+        "category": "release",
+        "command": [
+          "python3",
+          "qa/maintenance_release_smoke.py",
+          "."
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "automatic-deploy-contract-smoke",
+        "category": "release",
+        "command": [
+          "python3",
+          "qa/automatic_deploy_contract_smoke.py"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "no-legacy-release-refs",
+        "category": "release",
+        "command": [
+          "python3",
+          "qa/no_legacy_release_refs.py"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "asset-contract",
+        "category": "frontend",
+        "command": [
+          "python3",
+          "qa/asset_contract.py"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "model-consistency-smoke",
+        "category": "weather",
+        "command": [
+          "python3",
+          "qa/model_consistency_smoke.py"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "traffic-analytics-removed-smoke",
+        "category": "privacy",
+        "command": [
+          "python3",
+          "qa/traffic_analytics_removed_smoke.py"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "radar-global-proxy-smoke",
+        "category": "weather",
+        "command": [
+          "python3",
+          "qa/radar_global_proxy_smoke.py"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "server-model-source-smoke",
+        "category": "weather",
+        "command": [
+          "python3",
+          "qa/server_model_source_smoke.py"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "feature-regression-smoke",
+        "category": "frontend",
+        "command": [
+          "python3",
+          "qa/feature_regression_smoke.py"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "runtime-lifecycle-guest-smoke",
+        "category": "frontend",
+        "command": [
+          "python3",
+          "qa/runtime_lifecycle_guest_smoke.py"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "runtime-user-regressions-smoke",
+        "category": "frontend",
+        "command": [
+          "python3",
+          "qa/runtime_user_regressions_smoke.py"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "dependency-lock-smoke",
+        "category": "architecture",
+        "command": [
+          "python3",
+          "qa/dependency_lock_smoke.py"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "workflow-supply-chain-smoke",
+        "category": "regression",
+        "command": [
+          "python3",
+          "qa/workflow_supply_chain_smoke.py",
+          "."
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "backup-restore-contract-smoke",
+        "category": "release",
+        "command": [
+          "python3",
+          "qa/backup_restore_contract_smoke.py"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "release-flow-contract-smoke",
+        "category": "release",
+        "command": [
+          "python3",
+          "qa/release_flow_contract_smoke.py"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "release-preflight-contract-smoke",
+        "category": "release",
+        "command": [
+          "python3",
+          "qa/release_preflight_contract_smoke.py"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "production-readiness-smoke",
+        "category": "release",
+        "command": [
+          "python3",
+          "qa/production_readiness_smoke.py",
+          "."
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "release-provenance-smoke",
+        "category": "release",
+        "command": [
+          "python3",
+          "qa/release_provenance_smoke.py",
+          "."
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "roadmap-contract-smoke",
+        "category": "architecture",
+        "command": [
+          "python3",
+          "qa/roadmap_contract_smoke.py"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "roadmap-20-1-completion-smoke",
+        "category": "architecture",
+        "command": [
+          "python3",
+          "qa/roadmap_20_1_completion_smoke.py"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "watch-plan-smoke",
+        "category": "regression",
+        "command": [
+          "python3",
+          "qa/watch_plan_smoke.py"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "copilot-orchestration-smoke",
+        "category": "weather",
+        "command": [
+          "python3",
+          "qa/copilot_orchestration_smoke.py"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "copilot-decision-smoke",
+        "category": "weather",
+        "command": [
+          "php",
+          "qa/copilot_decision_smoke.php"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "smtp-auth-plain-smoke",
+        "category": "security",
+        "command": [
+          "python3",
+          "qa/smtp_auth_plain_smoke.py"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "engine-smoke",
+        "category": "weather",
+        "command": [
+          "php",
+          "qa/engine_smoke.php"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "severe-weather-engine-smoke",
+        "category": "weather",
+        "command": [
+          "php",
+          "qa/severe_weather_engine_smoke.php"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "intelligence-quality-smoke",
+        "category": "weather",
+        "command": [
+          "php",
+          "qa/intelligence_quality_smoke.php"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "official-warning-hub-smoke",
+        "category": "regression",
+        "command": [
+          "php",
+          "qa/official_warning_hub_smoke.php"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "official-warning-hub-schema-smoke",
+        "category": "regression",
+        "command": [
+          "python3",
+          "qa/official_warning_hub_schema_smoke.py",
+          "."
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "ai-meteorologist-v2-smoke",
+        "category": "regression",
+        "command": [
+          "php",
+          "qa/ai_meteorologist_v2_smoke.php"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "personal-weather-twin-v2-smoke",
+        "category": "weather",
+        "command": [
+          "php",
+          "qa/personal_weather_twin_v2_smoke.php"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "weather-observability-release-smoke",
+        "category": "weather",
+        "command": [
+          "php",
+          "qa/weather_observability_release_smoke.php"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "roadmap-complete-schema-smoke",
+        "category": "architecture",
+        "command": [
+          "python3",
+          "qa/roadmap_complete_schema_smoke.py"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "forecast-reliability-smoke",
+        "category": "weather",
+        "command": [
+          "php",
+          "qa/forecast_reliability_smoke.php"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "probabilistic-ensemble-smoke",
+        "category": "regression",
+        "command": [
+          "php",
+          "qa/probabilistic_ensemble_smoke.php"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "nowcast-fusion-smoke",
+        "category": "weather",
+        "command": [
+          "php",
+          "qa/nowcast_fusion_smoke.php"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "probabilistic-nowcast-smoke",
+        "category": "weather",
+        "command": [
+          "php",
+          "qa/probabilistic_nowcast_smoke.php"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "radar3-production-gate-smoke",
+        "category": "weather",
+        "command": [
+          "php",
+          "qa/radar3_production_gate_smoke.php"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "radar4-shadow-smoke",
+        "category": "weather",
+        "command": [
+          "php",
+          "qa/radar4_shadow_smoke.php"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "radar4-probabilistic-shadow-smoke",
+        "category": "weather",
+        "command": [
+          "php",
+          "qa/radar4_probabilistic_shadow_smoke.php"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "radar4-empirical-calibration-smoke",
+        "category": "weather",
+        "command": [
+          "php",
+          "qa/radar4_empirical_calibration_smoke.php"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "radar4-empirical-calibration-schema-smoke",
+        "category": "weather",
+        "command": [
+          "python3",
+          "qa/radar4_empirical_calibration_schema_smoke.py",
+          "."
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "radar4-promotion-study-smoke",
+        "category": "weather",
+        "command": [
+          "php",
+          "qa/radar4_promotion_study_smoke.php"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "radar4-operational-readiness-smoke",
+        "category": "weather",
+        "command": [
+          "php",
+          "qa/radar4_operational_readiness_smoke.php"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "weather-replay-smoke",
+        "category": "weather",
+        "command": [
+          "php",
+          "qa/weather_replay_smoke.php"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "decision-route-account-sync-smoke",
+        "category": "weather",
+        "command": [
+          "php",
+          "qa/decision_route_account_sync_smoke.php"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "privacy-proof-smoke",
+        "category": "privacy",
+        "command": [
+          "php",
+          "qa/privacy_proof_smoke.php"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "qa-admin-provision-smoke",
+        "category": "regression",
+        "command": [
+          "python3",
+          "qa/qa_admin_provision_smoke.py",
+          "."
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "p0-security-refactor-smoke",
+        "category": "security",
+        "command": [
+          "python3",
+          "qa/p0_security_refactor_smoke.py",
+          "."
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "p1-maintainability-smoke",
+        "category": "regression",
+        "command": [
+          "python3",
+          "qa/p1_maintainability_smoke.py",
+          "."
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "p2-toolchain-smoke",
+        "category": "regression",
+        "command": [
+          "python3",
+          "qa/p2_toolchain_smoke.py",
+          "."
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "p2-esm-runtime-smoke",
+        "category": "frontend",
+        "command": [
+          "node",
+          "qa/p2_esm_runtime_smoke.mjs"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "p2-core-esm-smoke",
+        "category": "regression",
+        "command": [
+          "node",
+          "qa/p2_core_esm_smoke.mjs"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "p2-domain-esm-smoke",
+        "category": "regression",
+        "command": [
+          "node",
+          "qa/p2_domain_esm_smoke.mjs"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "p3-dependency-graph-smoke",
+        "category": "architecture",
+        "command": [
+          "node",
+          "qa/p3_dependency_graph_smoke.mjs"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "p3-dependency-injection-smoke",
+        "category": "architecture",
+        "command": [
+          "node",
+          "qa/p3_dependency_injection_smoke.mjs"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "p3-shell-decomposition-smoke",
+        "category": "regression",
+        "command": [
+          "node",
+          "qa/p3_shell_decomposition_smoke.mjs"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "p3-final-architecture-smoke",
+        "category": "architecture",
+        "command": [
+          "node",
+          "qa/p3_final_architecture_smoke.mjs"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "p4-platform-hardening-smoke",
+        "category": "regression",
+        "command": [
+          "python3",
+          "qa/p4_platform_hardening_smoke.py",
+          "."
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "p4-backend-maintainability-smoke",
+        "category": "regression",
+        "command": [
+          "python3",
+          "qa/p4_backend_maintainability_smoke.py",
+          "."
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "p4-css-architecture-smoke",
+        "category": "architecture",
+        "command": [
+          "python3",
+          "qa/p4_css_architecture_smoke.py",
+          "."
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "p4-i18n-semantic-smoke",
+        "category": "i18n",
+        "command": [
+          "python3",
+          "qa/p4_i18n_semantic_smoke.py",
+          "."
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "p4-production-build-smoke",
+        "category": "release",
+        "command": [
+          "python3",
+          "qa/p4_production_build_smoke.py",
+          "."
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "p5-audit-performance-smoke",
+        "category": "regression",
+        "command": [
+          "python3",
+          "qa/p5_audit_performance_smoke.py",
+          "."
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "p6-production-ux-security-smoke",
+        "category": "security",
+        "command": [
+          "python3",
+          "qa/p6_production_ux_security_smoke.py",
+          "."
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "release-final-smoke",
+        "category": "release",
+        "command": [
+          "python3",
+          "qa/release_final_smoke.py",
+          "."
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "privacy-article13-smoke",
+        "category": "privacy",
+        "command": [
+          "python3",
+          "qa/privacy_article13_smoke.py"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "i18n-ai-home-alert-smoke",
+        "category": "i18n",
+        "command": [
+          "python3",
+          "qa/i18n_ai_home_alert_smoke.py"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "i18n-reference-smoke",
+        "category": "i18n",
+        "command": [
+          "python3",
+          "qa/i18n_reference_smoke.py"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "i18n-hardcoded-copy-smoke",
+        "category": "i18n",
+        "command": [
+          "python3",
+          "qa/i18n_hardcoded_copy_smoke.py",
+          "."
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "i18n-runtime-literal-smoke",
+        "category": "i18n",
+        "command": [
+          "python3",
+          "qa/i18n_runtime_literal_smoke.py",
+          "."
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "p2-release-quality-smoke",
+        "category": "release",
+        "command": [
+          "python3",
+          "qa/p2_release_quality_smoke.py",
+          "."
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "policy-alignment-smoke",
+        "category": "privacy",
+        "command": [
+          "python3",
+          "qa/policy_alignment_smoke.py"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "hardcode-contract-smoke",
+        "category": "frontend",
+        "command": [
+          "python3",
+          "qa/hardcode_contract_smoke.py"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "mobile-bootstrap-smoke",
+        "category": "frontend",
+        "command": [
+          "python3",
+          "qa/mobile_bootstrap_smoke.py"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "mobile-guest-alerts-private-smoke",
+        "category": "frontend",
+        "command": [
+          "python3",
+          "qa/mobile_guest_alerts_private_smoke.py"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "golden-auth-legacy-smoke",
+        "category": "security",
+        "command": [
+          "python3",
+          "qa/golden_auth_legacy_smoke.py"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "sql-rewrite-smoke",
+        "category": "regression",
+        "command": [
+          "php",
+          "qa/sql_rewrite_smoke.php"
+        ],
+        "timeout": 180
+      }
+    ]
+  }
+}

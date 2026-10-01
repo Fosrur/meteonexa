@@ -33,3 +33,10 @@ node_modules/
 
 # Dependency lockfile must be versioned
 !/composer.lock
+
+# Local continuous-quality reports
+/.quality-reports/
+
+# Python bytecode
+__pycache__/
+*.py[cod]

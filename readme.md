@@ -136,6 +136,13 @@ La roadmap post-audit è **completa lato sviluppo software**. Non viene aperta a
 - **P7:** code-complete su schema 35; **53 tabelle applicative** nella baseline corrente.
 - **Fine roadmap corrente:** **RAGGIUNTA.** P7 è il termine del piano post-audit. Non esiste una P8 pianificata; il prossimo ciclo è `continuous quality + improvement backlog`, oppure una nuova roadmap soltanto se viene approvata una nuova capability sostanziale.
 
+
+### Sistema automatico post-roadmap — implementato
+
+Il quality system post-roadmap è ora operativo. `tools/quality-runner.py` usa `qa/quality-suite.json` come catalogo unico e produce per ogni run JSON, Markdown, JUnit XML, log per gate e history JSONL. `qa:fast` esegue 9 guardrail rapidi; `qa:release` aggiunge 7 gate release/integrity; `qa:full` esegue **80 regressioni individuali** continuando dopo i failure, così una CI rossa mostra tutti i problemi rilevati e non soltanto il primo. `qa/run-all.sh` resta compatibile ma delega al runner full.
+
+La CI conserva i report continuous-quality per 30 giorni e pubblica il riepilogo Markdown nel Job Summary. Anche Playwright Chromium/Firefox produce evidence HTML + JUnit separata per regressione generale e percorso maintenance. Un report precedente può essere passato con `--baseline-report` per confrontare status e durata prima/dopo un miglioramento. Il self-test `qa/continuous_quality_contract_smoke.py` protegge il catalogo e il wiring CI. Il prossimo backlog è quindi metric-driven: prima build reproducibility `source↔dist`, poi trend cross-run/flakiness, property/mutation test dei motori critici e miglioramenti meteo ordinati dalle metriche P7.
+
 Nota di packaging: i file SQL sono ora dichiarati `text eol=lf` in `.gitattributes`, così i checkout/ZIP Windows non alterano più `mysql-schema.sql` rispetto ai checksum di release.
 
 

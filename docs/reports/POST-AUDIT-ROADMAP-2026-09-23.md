@@ -145,6 +145,12 @@ Dashboard provider latency/error/cache age, SLO distinti per forecast/nowcast/wa
 
 **P7 è il punto finale della roadmap post-audit.** Non viene creata una P8 automaticamente. La fase successiva è un backlog di miglioramenti con metrica prima/dopo e un sistema di test automatico stratificato (`fast`, `release`, `full`), documentato in `POST-ROADMAP-QUALITY-PLAN.md`. La GitHub Action resta automatica su push/PR/nightly e mantiene il job MySQL 8.4 separato.
 
+### Post-roadmap quality system — implementato
+
+Il sistema automatico previsto alla chiusura P7 è stato implementato. `tools/quality-runner.py` + `qa/quality-suite.json` rendono i gate interrogabili singolarmente e producono JSON/Markdown/JUnit/log/history; la full regression contiene **80 gate individuali** e continua dopo gli errori. `qa:fast` contiene 9 gate, mentre `qa:release` aggiunge 7 controlli release/integrity. GitHub Actions conserva i report per 30 giorni, aggiunge il Markdown al Job Summary e raccoglie anche JUnit + HTML da Chromium/Firefox. `--baseline-report` consente il confronto prima/dopo senza introdurre promozioni automatiche.
+
+**Sviluppi successivi:** non esiste P8. Il primo backlog post-roadmap è build reproducibility del contratto `source↔dist`, seguito da trend cross-run/flakiness, property/mutation testing e miglioramenti meteorologici guidati dalle metriche P7.
+
 ## Ordine suggerito
 
 Prima chiudere P0 e rendere il deploy dimostrabilmente sicuro. Poi P1/P2, perché un migliore motore di affidabilità rende più utile tutto ciò che viene dopo. P3 è il blocco con più potenziale di differenziazione percepibile dall'utente. P4 deve procedere in parallelo per la parte safety. P5 va costruito sopra P1–P4, non prima. P6/P7 completano personalizzazione e maturità operativa.

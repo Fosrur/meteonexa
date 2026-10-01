@@ -13,7 +13,11 @@ export default defineConfig({
   workers: process.env.CI ? 2 : undefined,
   maxFailures: process.env.CI ? 5 : 0,
   reporter: process.env.CI
-    ? [['line'], ['html', { outputFolder: 'playwright-report', open: 'never' }]]
+    ? [
+        ['line'],
+        ['html', { outputFolder: process.env.PLAYWRIGHT_HTML_OUTPUT_DIR || 'playwright-report', open: 'never' }],
+        ['junit', { outputFile: process.env.PLAYWRIGHT_JUNIT_OUTPUT_FILE || 'test-results/junit.xml' }],
+      ]
     : 'line',
   use: {
     baseURL,
