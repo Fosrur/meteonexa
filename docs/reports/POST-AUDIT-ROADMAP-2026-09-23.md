@@ -1,9 +1,9 @@
 # MeteoNexa — audit tecnico e roadmap post-fix
 
 Data audit: 23 settembre 2026  
-Stato riallineato: 30 settembre 2026
+Stato riallineato: 1 ottobre 2026
 
-> **Stato corrente:** P0 e P1 sono chiusi; P2 ensemble probabilistico/CRPS è implementato nel sorgente e coperto dai gate locali dedicati. La chiusura live di P2 richiede ancora QA completa, MySQL 8.4, Chromium/Firefox e Production Deploy sul medesimo SHA. **P3.1, P3.2, P3.3 e P3.4 sono code-complete e anche la raccolta operativa live P3 è automatizzata server-side**, mantenendo Radar3 come authority. Il worker misura i 12 requisiti di maturità P3.3 e, quando il dataset reale è maturo, P3.4 produce uno studio fingerprint-addressed e congelato per review. La maturità meteorologica **live** resta necessariamente un gate di evidenza reale: non può essere sostituita da fixture sintetiche e non può comunque attivare Radar4. Le sezioni più sotto descrivono anche lo storico dell'audit del 23–24 settembre e vanno lette nel loro contesto temporale.
+> **Stato corrente:** P0 e P1 sono chiusi; P2 ensemble probabilistico/CRPS è implementato nel sorgente e coperto dai gate locali dedicati. La chiusura live di P2 richiede ancora QA completa, MySQL 8.4, Chromium/Firefox e Production Deploy sul medesimo SHA. **P3.1, P3.2, P3.3 e P3.4 sono code-complete e anche la raccolta operativa live P3 è automatizzata server-side**, mantenendo Radar3 come authority. **P4 Official Warning Hub è code-complete su schema 32 / 49 tabelle**, con contratto canonico CAP/GeoJSON, lifecycle e geofencing geometrico. Il prossimo sviluppo di codice è **P5 — AI Meteorologist 2.0**. La maturità meteorologica P3 **live** resta un gate di evidenza reale e continua in parallelo. La roadmap post-audit corrente termina a **P7**: non è pianificata una P8; dopo P7 restano release/canary, evidenza live, manutenzione e hardening salvo nuova decisione esplicita di roadmap. Le sezioni più sotto descrivono anche lo storico dell'audit del 23–24 settembre e vanno lette nel loro contesto temporale.
 
 ## Sintesi dell'audit
 
@@ -320,3 +320,29 @@ Nessuna nuova migrazione: **schema 31, 49 tabelle**. Il nuovo gate `qa/radar4_op
 ### Sviluppi successivi — release canary Radar4, separata dalla P3
 
 Solo dopo `datasetMature=true` **e** un P3.4 live verde sullo snapshot congelato si potrà aprire una release esplicita per un eventuale canary Radar4. Quella release dovrà usare lo stesso `datasetFingerprint` approvato, definire rollback automatico/manuale, osservabilità dedicata, percentuale/ambito del canary e criteri di abort. Non è parte della chiusura P3 e non viene avviata automaticamente dal promotion study. Nel frattempo la roadmap di sviluppo può avanzare su **P4 — Official Warning Hub** (e sulle attività safety/observability P7 compatibili), senza attendere artificialmente la maturazione stagionale P3.
+
+## Aggiornamento 1 ottobre 2026 — P4 Official Warning Hub code-complete
+
+### P4 — contratto canonico CAP/GeoJSON e lifecycle ufficiale
+
+P4 è ora implementata nel sorgente come livello **ufficiale e separato** dal forecast/nowcast proprietario:
+
+- `api/official/hub_helpers.php` definisce il contratto canonico v1 per warning CAP/GeoJSON con `eventId`, `versionId`, `areaKey` e `hubKey` stabili, authority/sender/source, severity/certainty/urgency, finestre temporali, geometry/geocodes e `forecastAuthoritySeparated=true`;
+- polygon e multipolygon GeoJSON vengono sanitizzati; i polygon CAP vengono convertiti da `lat,lon` a GeoJSON `lon,lat`; i circle CAP vengono convertiti in poligoni conservativi, così il matching può essere **polygon-based** invece che soltanto testuale;
+- deduplica per evento+area con selezione della versione più recente; i riferimenti CAP di `Update/Cancel` mantengono l'identità dell'evento root;
+- lifecycle canonico `issued → updated → cancelled/expired`: `Cancel` è terminale e non resta fra gli alert attivi; la scomparsa da una risposta provider fresca/autorevole chiude come `expired`; cache stale o fallback non possono produrre scadenze sintetiche;
+- i change-type legacy (`new`, `escalated`, `downgraded`, ecc.) restano disponibili per compatibilità UI/diagnostica, ma sono distinti dallo stato lifecycle canonico;
+- MeteoAlarm EDR conserva geometria e metadata CAP-like nel modello interno; il fallback Atom estrae polygon/circle CAP e usa il geofencing geometrico prima del matching testuale;
+- eventuali adapter nazionali/regionali autorizzati possono essere aggiunti dietro lo stesso contratto senza trasformare una fonte ufficiale in una previsione MeteoNexa. Accessi/tokens protetti restano configurazione operativa e non vengono simulati.
+
+Lo schema passa a **32** senza nuove tabelle (**49 tabelle applicative**): `official_alert_state` e `official_alert_revisions` vengono estese con identità evento/versione/area e metadata di lifecycle/authority/source/geometry. È stato corretto anche il persistence path MySQL: l'upsert usa `ON DUPLICATE KEY UPDATE`, mentre SQLite mantiene `ON CONFLICT`; il precedente path lifecycle era SQLite-specifico.
+
+QA dedicata: `qa/official_warning_hub_smoke.php` copre normalizzazione, geofencing, deduplica e cancellation; `qa/official_warning_hub_schema_smoke.py` valida baseline schema 32, colonne/indici, installer MySQL, dual upsert e adapter EDR/Atom. Entrambi sono inclusi nel runner aggregato.
+
+### Stato dopo P4 e fine roadmap
+
+- **P4 software:** code-complete. L'eventuale disponibilità di feed ufficiali protetti/autorizzati è un requisito operativo/provider, non un'altra tranche P4.
+- **Prossimo sviluppo:** **P5 — AI Meteorologist 2.0**.
+- **Poi:** P6 Hyperlocal / Personal Weather Twin e P7 Observability/Release.
+- **Fine del piano corrente:** **P7 è l'ultimo milestone della roadmap post-audit**. Non esiste una P8 definita in questo documento; una fase successiva richiederà una nuova roadmap esplicita.
+- P3 continua in parallelo a raccogliere evidenza Radar4 live; nessun punto P4/P5 modifica automaticamente l'authority Radar3.

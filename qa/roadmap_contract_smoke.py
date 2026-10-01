@@ -38,5 +38,13 @@ ck('meteonexa_intelq_canonical_consensus' in cop and 'meteonexa_route_analyze' i
 ck(all(x in cop for x in ["$tools['official_warnings']","$tools['convective_risk']","$tools['trust_score']",'criticalCrosswindKmh']),'Copilot exposes official/convective/trust/wind-crosswind evidence')
 ck("'preciseCoordinatesExcludedFromLlm' => true" in cop and "'routeCoordinatesExcludedFromLlm' => true" in cop,'Copilot excludes precise and sampled route coordinates from LLM payload')
 ck('crosswindKmh' in route and 'windKmh' in route and 'gustKmh' in route,'Route engine computes wind/gust/crosswind risk')
+
+# P4 Official Warning Hub / roadmap endpoint
+hub=t('api/official/hub_helpers.php'); life=t('api/official/lifecycle_helpers.php'); readme=t('readme.md')
+ck(all(x in hub for x in ['eventId','versionId','areaKey','forecastAuthoritySeparated','meteonexa_official_hub_geometry_contains']),'P4 Official Warning Hub retains canonical identity/geofencing/authority separation')
+ck(all(x in life for x in ['terminalRevisions','freshAuthoritative','ON DUPLICATE KEY UPDATE','ON CONFLICT(location_key,alert_key)']),'P4 warning lifecycle retains cancellation/expiry and dual-driver persistence')
+ck('P4 — Official Warning Hub:** **code-complete**' in readme and 'P5 — AI Meteorologist 2.0:** **prossimo sviluppo di codice**' in readme,'roadmap marks P4 complete and P5 next')
+ck('Fine roadmap corrente' in readme and 'termina a **P7**' in readme and 'P8' in readme,'roadmap has an explicit endpoint at P7')
+
 print('\nRoadmap contract: '+('PASS' if not fail else 'FAIL'))
 sys.exit(bool(fail))

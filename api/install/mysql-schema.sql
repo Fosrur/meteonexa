@@ -651,8 +651,19 @@ CREATE TABLE IF NOT EXISTS official_alert_state (
   previous_severity VARCHAR(16) NOT NULL DEFAULT '',
   previous_ends_at VARCHAR(40) NOT NULL DEFAULT '',
   payload_json MEDIUMTEXT NOT NULL,
+  event_id VARCHAR(255) NOT NULL DEFAULT '',
+  version_id VARCHAR(64) NOT NULL DEFAULT '',
+  area_key VARCHAR(64) NOT NULL DEFAULT '',
+  lifecycle_status VARCHAR(24) NOT NULL DEFAULT 'issued',
+  authority_name VARCHAR(191) NOT NULL DEFAULT '',
+  sender VARCHAR(255) NOT NULL DEFAULT '',
+  message_type VARCHAR(24) NOT NULL DEFAULT 'alert',
+  source_name VARCHAR(96) NOT NULL DEFAULT '',
+  geometry_json MEDIUMTEXT NULL,
   PRIMARY KEY(location_key,alert_key),
-  KEY idx_official_alert_state_change(location_key,last_change_at)
+  KEY idx_official_alert_state_change(location_key,last_change_at),
+  KEY idx_official_alert_state_event(event_id,area_key,lifecycle_status),
+  KEY idx_official_alert_state_source(source_name,lifecycle_status,last_seen_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS official_alert_revisions (
@@ -667,8 +678,13 @@ CREATE TABLE IF NOT EXISTS official_alert_revisions (
   provider_alert_id VARCHAR(255) NOT NULL DEFAULT '',
   payload_json MEDIUMTEXT NOT NULL,
   observed_at VARCHAR(40) NOT NULL,
+  event_id VARCHAR(255) NOT NULL DEFAULT '',
+  version_id VARCHAR(64) NOT NULL DEFAULT '',
+  area_key VARCHAR(64) NOT NULL DEFAULT '',
+  lifecycle_status VARCHAR(24) NOT NULL DEFAULT 'updated',
   KEY idx_official_alert_revisions_location(location_key,id),
-  KEY idx_official_alert_revisions_time(observed_at)
+  KEY idx_official_alert_revisions_time(observed_at),
+  KEY idx_official_alert_revisions_event(event_id,area_key,id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS lightning_observation_snapshots (
@@ -696,7 +712,7 @@ CREATE TABLE IF NOT EXISTS radar_frame_quality (
   KEY idx_radar_quality_checked(checked_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO app_metadata(meta_key,meta_value,updated_at) VALUES('schema_version','31',UTC_TIMESTAMP(6))
+INSERT INTO app_metadata(meta_key,meta_value,updated_at) VALUES('schema_version','32',UTC_TIMESTAMP(6))
 ON DUPLICATE KEY UPDATE meta_value=VALUES(meta_value),updated_at=VALUES(updated_at);
 INSERT INTO app_metadata(meta_key,meta_value,updated_at) VALUES('app_version','20.1',UTC_TIMESTAMP(6))
 ON DUPLICATE KEY UPDATE meta_value=VALUES(meta_value),updated_at=VALUES(updated_at);

@@ -549,7 +549,33 @@ function meteonexa_intelq_meteoalarm_edr(array $config, float $lat, float $lon, 
             $p = (array)($feature['properties']??[]);
             $level = strtolower((string)($p['awareness_level']??$p['severity']??''));
             $severity =(str_contains($level, 'green')||preg_match('/(^|[^0-9])1(?:[^0-9]|$)/', $level)===1) ? 'green' :(str_contains($level, 'red')||str_contains($level, 'extreme') ? 'red' :(str_contains($level, 'orange')||str_contains($level, 'severe') ? 'orange' : 'yellow'));
-            $relevant[] =['id'=>(string)($feature['id']??$p['identifier']??hash('sha256', json_encode($p))), 'title'=>(string)($p['headline']??$p['event']??$p['awareness_type']??'MeteoAlarm'), 'summary'=>(string)($p['description']??$p['instruction']??''), 'severity'=>$severity, 'updatedAt'=>$p['sent']??$p['updated']??null, 'startsAt'=>$p['onset']??$p['effective']??$p['valid_from']??null, 'endsAt'=>$p['expires']??$p['valid_to']??null, 'source'=>'MeteoAlarm EDR', 'geospatialMatch'=>true, 'locationId'=>$country];
+            $identifier=(string)($p['identifier']??$feature['id']??hash('sha256', json_encode($p)));
+            $relevant[] =[
+                'id'=>(string)($feature['id']??$identifier),
+                'identifier'=>$identifier,
+                'title'=>(string)($p['headline']??$p['event']??$p['awareness_type']??'MeteoAlarm'),
+                'summary'=>(string)($p['description']??''),
+                'instruction'=>(string)($p['instruction']??''),
+                'event'=>(string)($p['event']??$p['awareness_type']??''),
+                'area'=>(string)($p['areaDesc']??$p['area_desc']??$p['area']??''),
+                'severity'=>$severity,
+                'certainty'=>(string)($p['certainty']??'unknown'),
+                'urgency'=>(string)($p['urgency']??'unknown'),
+                'sender'=>(string)($p['sender']??$p['issuer']??''),
+                'sentAt'=>$p['sent']??null,
+                'updatedAt'=>$p['updated']??$p['sent']??null,
+                'startsAt'=>$p['onset']??$p['effective']??$p['valid_from']??null,
+                'endsAt'=>$p['expires']??$p['valid_to']??null,
+                'messageType'=>(string)($p['msgType']??$p['msg_type']??$p['message_type']??'alert'),
+                'status'=>(string)($p['status']??'actual'),
+                'references'=>$p['references']??[],
+                'geocodes'=>is_array($p['geocode']??null)?(array)$p['geocode']:[],
+                'geometry'=>$geometry,
+                'source'=>'MeteoAlarm EDR',
+                'authority'=>(string)($p['senderName']??$p['issuer_name']??'MeteoAlarm / national warning authority'),
+                'geospatialMatch'=>true,
+                'locationId'=>$country,
+            ];
         }
         return['available'=>true, 'relevant'=>$relevant, 'mode'=>'edr-geospatial', 'geospatial'=>true, 'locationId'=>$country, 'generatedAt'=>gmdate('c'), 'providerFresh'=>!$staleProvider, 'staleProviderCache'=>$staleProvider, 'cacheAgeSeconds'=>$cacheAge];
     } catch (Throwable $ignored) {

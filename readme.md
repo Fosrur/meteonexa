@@ -8,9 +8,9 @@ Il repository **non può modificare da solo il flag GitHub “Allow write access
 
 
 <!-- METEONEXA_CURRENT_CONTRACT_START -->
-## MeteoNexa 20.1.1 — contratto corrente P0/P1 + P2 probabilistico + P3 Radar4 shadow operational evidence
+## MeteoNexa 20.1.1 — contratto corrente P0/P1 + P2 probabilistico + P3 Radar4 shadow + P4 Official Warning Hub
 
-Il contratto corrente del sorgente resta **MeteoNexa 20.1.1**. La compatibilità applicativa/backend resta **20.1**; P3.1–P3.4 e l'automazione operativa P3 riusano lo schema database **31** e le tabelle applicative restano **49**. Il catalogo i18n resta **4.645 chiavi × 5 lingue = 23.225 traduzioni**. Il package root e il package QA restano `20.1.1`.
+Il contratto corrente del sorgente resta **MeteoNexa 20.1.1**. La compatibilità applicativa/backend resta **20.1**; P4 porta il database allo schema **32** senza aggiungere tabelle, quindi le tabelle applicative restano **49**. Il catalogo i18n resta **4.645 chiavi × 5 lingue = 23.225 traduzioni**. Il package root e il package QA restano `20.1.1`.
 
 ### P0 — release/bootstrap reliability
 
@@ -32,7 +32,7 @@ Il Copilot dispone inoltre del tool deterministico `probabilistic_ensemble` quan
 
 ### Gate P2
 
-L'implementazione P2 è completa nel sorgente ed è coperta dai gate locali dedicati (`Forecast Reliability`, `Probabilistic Ensemble P2`, `P2 release quality`, `Final release smoke` e `Release provenance`). La chiusura **operativa/live** resta però vincolata allo stesso criterio di release: il nuovo SHA deve superare MeteoNexa QA completa, MySQL 8.4 con migrazione 15→31, Chromium + Firefox e Production Deploy dello stesso SHA. Fino a quel passaggio P2 va considerato **code-complete / release-candidate**, non ancora dichiarato live sul nuovo SHA.
+L'implementazione P2 è completa nel sorgente ed è coperta dai gate locali dedicati (`Forecast Reliability`, `Probabilistic Ensemble P2`, `P2 release quality`, `Final release smoke` e `Release provenance`). La chiusura **operativa/live** resta però vincolata allo stesso criterio di release: il nuovo SHA deve superare MeteoNexa QA completa, MySQL 8.4 con migrazione 15→32, Chromium + Firefox e Production Deploy dello stesso SHA. Fino a quel passaggio P2 va considerato **code-complete / release-candidate**, non ancora dichiarato live sul nuovo SHA.
 
 ### P3.1 — Radar4 shadow + tracking multi-frame
 
@@ -79,24 +79,36 @@ Quando il dataset live diventa maturo, P3.4 viene valutata sul ledger reale. Ogn
 
 Questa automazione non introduce migrazioni: **schema 31 / 49 tabelle**. Il gate `qa/radar4_operational_readiness_smoke.php` verifica i 12 requisiti, gli stati del workflow, il blocco dell'authority, l'integrazione nel worker/summary e il congelamento immutabile dello studio. La maturità meteorologica live non viene simulata: il gate richiede ancora evidenza reale multi-area, multi-regime e almeno **2 stagioni** prima di poter dichiarare completa la parte operativa P3.
 
-I gate dedicati sono `qa/radar4_empirical_calibration_smoke.php` e `qa/radar4_empirical_calibration_schema_smoke.py`; lo snapshot SQLite e lo schema MySQL sono allineati a schema 31. La raccolta dei campioni live necessaria a dichiarare la maturità operativa non può essere sostituita da fixture sintetiche di QA.
+I gate dedicati P3 restano `qa/radar4_empirical_calibration_smoke.php` e `qa/radar4_empirical_calibration_schema_smoke.py`; dopo P4 lo snapshot SQLite e lo schema MySQL correnti sono allineati a **schema 32**. La raccolta dei campioni live necessaria a dichiarare la maturità operativa P3 non può essere sostituita da fixture sintetiche di QA.
+
+### P4 — Official Warning Hub
+
+P4 è **code-complete** e mantiene gli avvisi ufficiali come autorità separata dalla previsione/nowcast proprietari. Il nuovo `api/official/hub_helpers.php` definisce un contratto canonico unico per feed CAP/GeoJSON: identità stabile di evento, versione e area (`eventId`, `versionId`, `areaKey`, `hubKey`), emittente/sender, severità/certainty/urgency, finestre temporali, geometria, geocodici e flag esplicito `forecastAuthoritySeparated=true`. Polygon e MultiPolygon GeoJSON vengono sanitizzati; i polygon CAP vengono convertiti da `lat,lon` a GeoJSON `lon,lat` e i circle CAP vengono trasformati in un poligono conservativo per il geofencing.
+
+La deduplica è per **evento + area** e conserva la versione più recente. Il lifecycle canonico è `issued → updated → cancelled/expired`: un `Cancel` CAP è una revisione terminale e non viene più mostrato fra gli alert attivi; la scomparsa da una risposta provider fresca/autorevole genera `expired`, mentre cache stale/fallback non può chiudere artificialmente un evento. Restano anche i change-type legacy (`new`, `escalated`, `downgraded`, ecc.) per compatibilità con UI e diagnostica.
+
+L'adapter **MeteoAlarm EDR** conserva ora geometria e metadata CAP-like invece di ridurli a solo testo; il fallback Atom estrae polygon/circle CAP e usa il geofencing geometrico prima del matching testuale. Adapter nazionali/regionali autorizzati possono essere aggiunti dietro lo stesso contratto canonico senza mescolare una fonte ufficiale con una previsione MeteoNexa. L'accesso a feed protetti resta una configurazione operativa/provider e non viene simulato nel codice.
+
+Lo schema **32** estende `official_alert_state` e `official_alert_revisions` con identità evento/versione/area, lifecycle canonico, authority/sender/source/message type e geometria, senza creare nuove tabelle (**49 totali**). La persistenza lifecycle usa ora l'upsert corretto per entrambi i driver: `ON DUPLICATE KEY UPDATE` su MySQL e `ON CONFLICT` su SQLite. I gate `qa/official_warning_hub_smoke.php` e `qa/official_warning_hub_schema_smoke.py` coprono normalizzazione CAP/GeoJSON, geofencing, deduplica, cancellation/expiry, schema/index e compatibilità MySQL/SQLite.
 <!-- METEONEXA_CURRENT_CONTRACT_END -->
 
 ## Sviluppi successivi / Roadmap
 
 - **P3 — Nowcast severo 0–120 minuti:** **sviluppo software completo**: P3.1–P3.4 sono code-complete e la raccolta/verifica live è ora automatizzata dal worker server-side. `radar4OperationalReadiness` espone i 12 deficit di maturità e P3.4 congela lo studio reale per fingerprint quando diventa disponibile. **Resta soltanto il gate di evidenza meteorologica reale**, che per definizione richiede varietà multi-area/multi-regime e almeno 2 stagioni; Radar3 resta authority e un eventuale canary è una release separata.
-- **P4 — Official Warning Hub:** normalizzazione CAP/GeoJSON, lifecycle issued/updated/cancelled/expired, deduplica per evento/versione/area, geofencing polygon-based e separazione visiva/semantica fra warning ufficiale e previsione MeteoNexa.
-- **P5 — AI Meteorologist 2.0:** decision object deterministico prima del testo LLM, tool contract tipizzato, `asOf`/fonti/confidence/limiti obbligatori, eval suite anti-hallucination e fallback template deterministico.
+- **P4 — Official Warning Hub:** **code-complete**: contratto canonico CAP/GeoJSON, lifecycle `issued/updated/cancelled/expired`, deduplica evento/versione/area, geofencing polygon-based, schema 32 e separazione semantica fra authority ufficiale e previsione MeteoNexa. L'abilitazione di eventuali feed protetti/autorizzati resta configurazione operativa.
+- **P5 — AI Meteorologist 2.0:** **prossimo sviluppo di codice**: decision object deterministico prima del testo LLM, tool contract tipizzato, `asOf`/fonti/confidence/limiti obbligatori, eval suite anti-hallucination e fallback template deterministico.
 - **P6 — Hyperlocal / Personal Weather Twin:** assimilazione di stazioni personali con quality score/outlier detection, bias correction locale e notification policy basata su cambiamenti materiali della decisione.
 - **P7 — osservabilità meteo/release:** SLO per forecast/nowcast/warning/AI, drift dashboard, golden locations europee e canary release con confronto delle metriche prima/dopo.
 
-### Stato roadmap — 30 settembre 2026
+### Stato roadmap — 1 ottobre 2026
 
 - **P0:** chiuso e validato in release.
 - **P1:** chiuso e validato in release.
 - **P2:** implementazione completa; resta il gate operativo sullo stesso SHA di QA completa + MySQL 8.4 + Chromium/Firefox + Production Deploy.
 - **P3:** **software-complete (P3.1 + P3.2 + P3.3 + P3.4 + operational evidence automation)**: tracking Radar4 0–120 min, eventi probabilistici, calibrazione empirica, raccolta server-side autonoma, progress dei 12 requisiti, dataset fingerprint, train/holdout e promotion study riproducibile su schema 31. **Stato operativo:** il codice non richiede altre tranche P3; deve soltanto maturare l'evidenza live reale. Quando `datasetMature=true`, P3.4 viene valutata sul dataset congelato e, solo se verde, apre una review manuale per una release canary separata. Radar3 resta authority fino ad allora.
-- **P4–P7:** **P4 è il prossimo sviluppo di codice** e può partire mentre P3 accumula evidenza live; le attività safety/observability P7 compatibili possono procedere in parallelo. Nessuna di queste attività cambia l'authority Radar3.
+- **P4:** **code-complete** con Official Warning Hub canonico su schema 32; eventuali credenziali/feed ufficiali protetti restano un requisito operativo, non un nuovo blocco algoritmico.
+- **P5–P7:** **P5 è il prossimo sviluppo di codice**; P6 e P7 completano personalizzazione e maturità operativa. P3 continua in parallelo a raccogliere evidenza live e Radar3 resta authority finché non esiste una release canary separata approvata.
+- **Fine roadmap corrente:** il piano post-audit termina a **P7**. Non esiste oggi una P8 pianificata: dopo P7 restano release/canary, maturazione delle evidenze live, manutenzione e hardening; una P8 richiederebbe una nuova decisione di roadmap esplicita.
 
 Nota di packaging: i file SQL sono ora dichiarati `text eol=lf` in `.gitattributes`, così i checkout/ZIP Windows non alterano più `mysql-schema.sql` rispetto ai checksum di release.
 
@@ -106,7 +118,7 @@ Nota di packaging: i file SQL sono ora dichiarati `text eol=lf` in `.gitattribut
 - `qa/production_readiness_smoke.py` usa l'indice Git solo quando `git rev-parse --show-toplevel` coincide esattamente con la root applicativa; un repository padre non viene più scambiato per il repository MeteoNexa.
 - Il contratto documentale distingue `readme.md` (source of truth) da `docs/reports/*.md` (evidenze non normative), evitando falsi failure nei bundle di audit.
 - `qa/release_provenance_smoke.py` valida l'identità VCS: nei source bundle senza `.git` opera in modalità neutra; in CI richiede repository alla root, HEAD committato e working tree pulita.
-- Le sezioni storiche dello stesso README sono rese esplicite come snapshot temporali; i numeri di schema presenti in quelle sezioni descrivono la tranche storica, mentre il contratto corrente è **schema 31**.
+- Le sezioni storiche dello stesso README sono rese esplicite come snapshot temporali; i numeri di schema presenti in quelle sezioni descrivono la tranche storica, mentre il contratto corrente è **schema 32**.
 
 ## Hotfix browser reale post-deploy — 20 settembre 2026
 
@@ -310,7 +322,7 @@ La copia SQLite distributiva e sanitizzata è:
 api/install/meteonexa-baseline.sqlite
 ```
 
-È lo snapshot SQLite da usare per localhost o per inizializzare una nuova installazione. Contiene schema 31, traduzioni e configurazioni non sensibili; le tabelle con sessioni, dispositivi, credenziali, AI e dati personali sono vuote.
+È lo snapshot SQLite da usare per localhost o per inizializzare una nuova installazione. Contiene schema 32, traduzioni e configurazioni non sensibili; le tabelle con sessioni, dispositivi, credenziali, AI e dati personali sono vuote.
 
 ---
 
@@ -1824,7 +1836,7 @@ METEONEXA_PRIVACY_CONTACT_EMAIL=privacy@dominio.tld
 - PHP 8.3+ consigliato
 - estensioni `pdo_sqlite`, `sqlite3`, `curl`, `openssl`, `mbstring`
 
-La baseline distribuita corrente è già **schema 31** ed è sanitizzata:
+La baseline distribuita corrente è già **schema 32** ed è sanitizzata:
 
 ```text
 api/install/meteonexa-baseline.sqlite
@@ -2159,7 +2171,7 @@ Il `Dockerfile` non usa più `COPY . /var/www/html`: l'immagine contiene solo en
 
 Sono aggiunti `composer.json`, `phpstan.neon`, `config/quality/php-cs-fixer.php` e `config/quality/semgrep.yml`. La CI installa PHPStan/PHP-CS-Fixer, esegue ESLint + verifica esbuild, esegue Semgrep 1.169.0 con regole locali e Trivy `v0.36.0` sia sul filesystem sia sull'immagine Docker finale. La scansione Trivy blocca finding HIGH/CRITICAL non ignorati.
 
-Il job MySQL 8.4 esegue ora sia `qa/mysql_auth_integration.php` sia `qa/mysql_full_integration.php`: quest'ultimo ricrea lo schema reale, verifica le 49 tabelle, attraversa la catena di upgrade da schema 15 fino allo schema **31** e applica i capability sync idempotenti e verifica i trigger di revisione traduzioni.
+Il job MySQL 8.4 esegue ora sia `qa/mysql_auth_integration.php` sia `qa/mysql_full_integration.php`: quest'ultimo ricrea lo schema reale, verifica le 49 tabelle, attraversa la catena di upgrade da schema 15 fino allo schema **32** e applica i capability sync idempotenti e verifica i trigger di revisione traduzioni.
 
 `qa/p4_platform_hardening_smoke.py` protegge questi contratti anche nella suite zero-dependency locale. `npm run check:p4` espone lo stesso gate.
 
@@ -2525,7 +2537,7 @@ Production ESM assets are built by pinned esbuild 0.28.2 into `.build/esbuild-pr
 
 ## P5 audit correction and startup performance
 
-The current release contract is schema **31** with `20.1-semantic-i18n-v2`; schema 31 adds the Radar4 P3.3 empirical-calibration context on top of the schema 30 event-verification ledger without changing the translation seed. A second semantic migration (`0028_semantic_i18n_residual.php`) removes the 96 hash-like `html.*`, `attr.*` and `meta.*` keys that were not covered by the original `ui/code` matcher. Active catalogs now contain **4,639 semantic keys in five locales** and the QA rule rejects any retained migration-key reference in runtime sources.
+The current release contract is schema **32** with `20.1-semantic-i18n-v2`; schema 31 added the Radar4 P3.3 empirical-calibration context and schema 32 extends the existing official-warning lifecycle ledger with canonical event/version/area, authority/source and geometry metadata, without changing the translation seed. A second semantic migration (`0028_semantic_i18n_residual.php`) removes the 96 hash-like `html.*`, `attr.*` and `meta.*` keys that were not covered by the original `ui/code` matcher. Active catalogs now contain **4,639 semantic keys in five locales** and the QA rule rejects any retained migration-key reference in runtime sources.
 
 Privacy/legal deployment identity is explicit configuration, never hardcoded application identity: controller legal name, address, privacy mailbox and optional DPO mailbox are safe public fields exposed by `api/ui-config.php`. Missing controller identity is rendered as a localized deployment warning. The configured external AI provider is exposed only as the non-secret provider name so the privacy page can show the matching provider notice.
 
@@ -2763,7 +2775,7 @@ Questa checklist è il percorso consigliato per provare e rilasciare la RC senza
 - valorizzare `METEONEXA_LEGAL_CONTROLLER_NAME`, `METEONEXA_LEGAL_CONTROLLER_ADDRESS` e `METEONEXA_PRIVACY_CONTACT_EMAIL`; `METEONEXA_DPO_EMAIL` solo se applicabile;
 - verificare che nessun secret sia committato nel repository;
 - eseguire backup DB e volume runtime prima dell'upgrade;
-- verificare che la migration DB arrivi a schema **31**.
+- verificare che la migration DB arrivi a schema **32**.
 
 ## 2. Gate di build/QA
 

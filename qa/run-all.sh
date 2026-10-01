@@ -33,6 +33,8 @@ run_py smtp_auth_plain_smoke.py
 run_php engine_smoke.php
 run_php severe_weather_engine_smoke.php
 run_php intelligence_quality_smoke.php
+run_php official_warning_hub_smoke.php
+run_py official_warning_hub_schema_smoke.py "$ROOT"
 run_php forecast_reliability_smoke.php
 run_php probabilistic_ensemble_smoke.php
 run_php nowcast_fusion_smoke.php

@@ -4,6 +4,7 @@ require_once dirname(__DIR__) . '/http_helpers.php';
 require_once dirname(__DIR__) . '/backend_i18n.php';
 require_once __DIR__ . '/verification_helpers.php';
 require_once __DIR__ . '/radar4_helpers.php';
+require_once dirname(__DIR__) . '/official/hub_helpers.php';
 function meteonexa_intel_clamp(float $value, float $min, float $max) : float {
     return max($min, min($max, $value));
 }
@@ -713,6 +714,12 @@ function meteonexa_official_atom_local(SimpleXMLElement $entry, string $name) : 
     if (!is_array($nodes)||!isset($nodes[0]))return '';
     return trim((string)$nodes[0]);
 }
+function meteonexa_official_atom_locals(SimpleXMLElement $entry, string $name) : array {
+    $nodes = $entry->xpath('.//*[local-name()="' . $name . '"]');
+    if (!is_array($nodes))return [];
+    $out=[];foreach($nodes as $node){$value=trim((string)$node);if($value!==''&&!in_array($value,$out,true))$out[]=$value;}
+    return $out;
+}
 function meteonexa_official_severity_from_text(string $text) : string {
     $text = strtolower($text);
     if (preg_match('/\b(red|rosso|rouge|rot|rojo|extreme)\b/u', $text))return 'red';
@@ -765,9 +772,18 @@ function meteonexa_official_alerts(float $lat, float $lon, string $locationName 
                         $capSeverity = meteonexa_official_atom_local($entry, 'severity');
                         $area = meteonexa_official_atom_local($entry, 'areaDesc');
                         $certainty = meteonexa_official_atom_local($entry, 'certainty');
+                        $urgency = meteonexa_official_atom_local($entry, 'urgency');
+                        $sender = meteonexa_official_atom_local($entry, 'sender');
+                        $sent = meteonexa_official_atom_local($entry, 'sent');
+                        $msgType = meteonexa_official_atom_local($entry, 'msgType');
+                        $status = meteonexa_official_atom_local($entry, 'status');
+                        $references = meteonexa_official_atom_local($entry, 'references');
+                        $instruction = meteonexa_official_atom_local($entry, 'instruction');
+                        $polygons = meteonexa_official_atom_locals($entry, 'polygon');
+                        $circles = meteonexa_official_atom_locals($entry, 'circle');
                         $text = trim($title . ' ' . $summary . ' ' . $event . ' ' . $capSeverity . ' ' . $area);
                         $severity = meteonexa_official_severity_from_text($text);
-                        $fresh[] =['id'=>$id!=='' ? $id : hash('sha256', $title . $updated . $effective . $expires), 'title'=>$title, 'summary'=>$summary, 'event'=>$event, 'area'=>$area, 'certainty'=>$certainty, 'updatedAt'=>$updated, 'startsAt'=>$effective ? : null, 'endsAt'=>$expires ? : null, 'severity'=>$severity, 'source'=>'MeteoAlarm', 'geospatialMatch'=>false,];
+                        $fresh[] =['id'=>$id!=='' ? $id : hash('sha256', $title . $updated . $effective . $expires), 'identifier'=>$id, 'title'=>$title, 'summary'=>$summary, 'event'=>$event, 'area'=>$area, 'certainty'=>$certainty, 'urgency'=>$urgency, 'sender'=>$sender, 'sentAt'=>$sent, 'messageType'=>$msgType, 'status'=>$status, 'references'=>$references, 'instruction'=>$instruction, 'polygons'=>$polygons, 'circles'=>$circles, 'updatedAt'=>$updated, 'startsAt'=>$effective ? : null, 'endsAt'=>$expires ? : null, 'severity'=>$severity, 'source'=>'MeteoAlarm Atom', 'authority'=>'MeteoAlarm / national warning authority', 'geospatialMatch'=>false,];
                         if (count($fresh)>=100)break;
                     }
                     // A syntactically valid Atom document, including a valid empty feed,
@@ -792,14 +808,27 @@ function meteonexa_official_alerts(float $lat, float $lon, string $locationName 
     $adminNeedle = strtolower(trim($admin1));
     $relevant =[];
     $regional =[];
+    $geospatialMatches = 0;
     foreach ($rows as $row) {
         if (!is_array($row))continue;
         // Never promote an explicit green/no-warning entry to yellow merely
         // because it mentions the requested region.
         if (strtolower((string)($row['severity']??''))==='green')continue;
+        $row = meteonexa_official_hub_normalize_row($row, $lat, $lon);
         $hay = strtolower(trim((string)($row['title']??'') . ' ' . (string)($row['summary']??'') . ' ' . (string)($row['area']??'')));
         $locationMatch = $locationNeedle!==''&&(function_exists('mb_strlen') ? mb_strlen($locationNeedle, 'UTF-8') : strlen($locationNeedle))>=4&&str_contains($hay, $locationNeedle);
         $adminMatch = $adminNeedle!==''&&(function_exists('mb_strlen') ? mb_strlen($adminNeedle, 'UTF-8') : strlen($adminNeedle))>=4&&str_contains($hay, $adminNeedle);
+        if (!empty($row['geometry'])) {
+            if (($row['geospatialMatch']??false)===true) {
+                $row['matchScope'] = 'polygon';
+                $relevant[] = $row;
+                $geospatialMatches++;
+            } elseif ($adminMatch) {
+                $row['matchScope'] = 'regional-polygon-outside';
+                $regional[] = $row;
+            }
+            continue;
+        }
         if ($locationMatch) {
             $row['matchScope'] = 'location-text';
             $relevant[] = $row;
@@ -808,7 +837,7 @@ function meteonexa_official_alerts(float $lat, float $lon, string $locationName 
             $regional[] = $row;
         }
     }
-    return['available'=>true, 'source'=>'MeteoAlarm', 'relevant'=>$relevant, 'regionalAdvisories'=>$regional, 'countryFeedCount'=>count($rows), 'matchedByAreaText'=>$relevant!==[], 'regionalTextMatch'=>$regional!==[], 'geospatial'=>false, 'providerFresh'=>$providerFresh||(!$staleFallback&&$cacheAge!==null&&$cacheAge < 600), 'staleProviderCache'=>$staleFallback, 'cacheAgeSeconds'=>$cacheAge];
+    return['available'=>true, 'source'=>'MeteoAlarm', 'relevant'=>$relevant, 'regionalAdvisories'=>$regional, 'countryFeedCount'=>count($rows), 'matchedByAreaText'=>$relevant!==[], 'regionalTextMatch'=>$regional!==[], 'geospatial'=>$geospatialMatches>0, 'geospatialMatchCount'=>$geospatialMatches, 'providerFresh'=>$providerFresh||(!$staleFallback&&$cacheAge!==null&&$cacheAge < 600), 'staleProviderCache'=>$staleFallback, 'cacheAgeSeconds'=>$cacheAge];
 }
 function meteonexa_intelligence_analyze(array $weather, ? array $air, array $profile, array $context =[]) : array {
     $hourly = (array)($weather['hourly']??[]);
