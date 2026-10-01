@@ -76,7 +76,7 @@ header('Content-Type: text/html; charset=utf-8');
 </main>
 <div class="qa-loader" id="qa-loader" aria-hidden="true"><span class="qa-spinner" aria-hidden="true"></span><strong data-i18n-key="qa.loading.test"></strong></div>
 <script defer src="../dist/js/security-runtime.b4dbf8677d9d.js"></script>
-<script defer src="../dist/js/i18n-runtime.7a8eb94d7015.js"></script>
+<script defer src="../dist/js/i18n-runtime.3a2c8a7aed7e.js"></script>
 <script defer src="../dist/qa/qa.2fdf8f061a7b.js"></script>
 </body>
 </html>

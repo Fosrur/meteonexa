@@ -84,6 +84,33 @@
           "--syntax-only"
         ],
         "timeout": 120
+      },
+      {
+        "id": "quality-trends-contract",
+        "category": "quality-system",
+        "command": [
+          "python3",
+          "qa/quality_trends_contract_smoke.py"
+        ],
+        "timeout": 30
+      },
+      {
+        "id": "property-weather-invariants",
+        "category": "weather",
+        "command": [
+          "php",
+          "qa/property_weather_invariants.php"
+        ],
+        "timeout": 60
+      },
+      {
+        "id": "metric-driven-weather-improvements",
+        "category": "weather",
+        "command": [
+          "php",
+          "qa/metric_driven_weather_improvements_smoke.php"
+        ],
+        "timeout": 45
       }
     ],
     "release": [
@@ -155,6 +182,15 @@
           "SHA256SUMS.txt"
         ],
         "timeout": 180
+      },
+      {
+        "id": "mutation-weather-guardrails",
+        "category": "quality-system",
+        "command": [
+          "python3",
+          "tools/mutation-runner.py"
+        ],
+        "timeout": 90
       }
     ],
     "full": [
@@ -205,6 +241,51 @@
           "qa/no_legacy_release_refs.py"
         ],
         "timeout": 180
+      },
+      {
+        "id": "build-reproducibility",
+        "category": "frontend",
+        "command": [
+          "python3",
+          "qa/build_reproducibility_smoke.py"
+        ],
+        "timeout": 180
+      },
+      {
+        "id": "quality-trends-contract",
+        "category": "quality-system",
+        "command": [
+          "python3",
+          "qa/quality_trends_contract_smoke.py"
+        ],
+        "timeout": 30
+      },
+      {
+        "id": "property-weather-invariants",
+        "category": "weather",
+        "command": [
+          "php",
+          "qa/property_weather_invariants.php"
+        ],
+        "timeout": 60
+      },
+      {
+        "id": "mutation-weather-guardrails",
+        "category": "quality-system",
+        "command": [
+          "python3",
+          "tools/mutation-runner.py"
+        ],
+        "timeout": 90
+      },
+      {
+        "id": "metric-driven-weather-improvements",
+        "category": "weather",
+        "command": [
+          "php",
+          "qa/metric_driven_weather_improvements_smoke.php"
+        ],
+        "timeout": 45
       },
       {
         "id": "asset-contract",

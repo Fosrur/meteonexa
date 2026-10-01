@@ -29,6 +29,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--report-dir", default=os.getenv("QUALITY_REPORT_DIR", ".quality-reports/latest"))
     parser.add_argument("--fail-fast", action="store_true")
     parser.add_argument("--baseline-report", help="Optional previous quality-report.json used for status/duration comparison")
+    parser.add_argument("--history-file", default=os.getenv("QUALITY_HISTORY_FILE"), help="Optional shared cross-run quality-history.jsonl")
     return parser.parse_args()
 
 
@@ -295,15 +296,23 @@ def main() -> int:
         with open(github_summary, "a", encoding="utf-8") as handle:
             handle.write(md + "\n")
 
-    history_path = report_dir.parent / "quality-history.jsonl"
+    history_path = Path(args.history_file) if args.history_file else report_dir.parent / "quality-history.jsonl"
+    if not history_path.is_absolute():
+        history_path = ROOT / history_path
+    history_path.parent.mkdir(parents=True, exist_ok=True)
     history_record = {
         "finishedAt": report["finishedAt"],
         "mode": report["mode"],
         "gitSha": report["git"]["sha"],
+        "catalogSha256": report["catalogSha256"],
+        "gateStatuses": {g["id"]: g["status"] for g in results},
+        "gateDurations": {g["id"]: g["durationSeconds"] for g in results},
         **summary,
     }
     with history_path.open("a", encoding="utf-8") as handle:
         handle.write(json.dumps(history_record, separators=(",", ":")) + "\n")
+    trend_dir = report_dir.parent
+    subprocess.run([sys.executable, str(ROOT / "tools" / "quality-trends.py"), "--history", str(history_path), "--out-dir", str(trend_dir), "--mode", args.mode], cwd=ROOT, check=False)
 
     print(f"Summary: {summary['status'].upper()} {summary['passed']}/{summary['total']} in {summary['durationSeconds']:.2f}s")
     if failed:

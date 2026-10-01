@@ -24,9 +24,9 @@ Il runner **non si ferma al primo test fallito** salvo richiesta esplicita `--fa
 
 ### Livelli
 
-- `npm run qa:fast` — **9 gate**: self-contract del quality system, P3/P4/P5/P6/P7, schema/roadmap e syntax. È il loop locale rapido.
-- `npm run qa:release` — fast + **7 gate release/integrity**, inclusi release audit, production readiness, deploy contract, P2 release quality, final release, provenance e checksum. Va eseguito sulla working tree finale/committata.
-- `npm run qa:full` — **80 gate di regressione** catalogati individualmente. Sostituisce il precedente comportamento `set -e` di `qa/run-all.sh`, che nascondeva i failure successivi al primo.
+- `npm run qa:fast` — **12 gate**: self-contract del quality system, P3/P4/P5/P6/P7, schema/roadmap e syntax. È il loop locale rapido.
+- `npm run qa:release` — fast + **8 gate release/integrity** (**20 gate effettivi**), inclusi release audit, production readiness, deploy contract, P2 release quality, final release, provenance e checksum. Va eseguito sulla working tree finale/committata.
+- `npm run qa:full` — **85 gate di regressione** catalogati individualmente. Sostituisce il precedente comportamento `set -e` di `qa/run-all.sh`, che nascondeva i failure successivi al primo.
 
 Il vecchio `bash qa/run-all.sh` resta supportato ma delega al runner `full`.
 
@@ -60,14 +60,29 @@ Nessuna metrica singola promuove automaticamente una release o Radar4. Canary e 
 
 P2 resta operationally closed solo dopo i gate live sullo stesso SHA. P3 Radar4 resta shadow finché la maturità empirica e il Promotion Study reale non sono verdi; Radar3 resta authority fino a una release canary separata e manualmente approvata.
 
-## Backlog miglioramenti successivi
+## Chiusura dei quattro punti post-roadmap
 
-Ora che il test system è disponibile, il lavoro successivo non viene numerato P8. Le priorità vengono ordinate da dati misurati:
+Al **1 ottobre 2026** i quattro punti di chiusura sono implementati:
 
-1. **Build reproducibility:** eliminare il disallineamento storico `source ↔ dist` e rendere riproducibile anche il build locale offline/cache-aware.
-2. **Trend cross-run:** consolidare i report conservati dalla CI in una serie storica consultabile per durata, failure rate e flakiness, senza usare la storia come scorciatoia per ignorare test rossi.
-3. **Flaky-test detection:** identificare test intermittenti Chromium/Firefox e backend; nessuna quarantena silenziosa, ogni eccezione deve avere owner/issue e scadenza.
-4. **Property/mutation testing:** aumentare la capacità di trovare regressioni nei motori critici (probabilità, warning lifecycle, decision object, Radar4) oltre agli smoke test a esempi fissi.
-5. **Metric-driven weather improvements:** usare P7 observability e i ledger P1/P2/P3 per ordinare accuratezza, calibrazione, latency/provider reliability e qualità delle notifiche in base al beneficio misurabile.
+1. **Build reproducibility — CHIUSO.** `tools/reproducible-build.py` sceglie esbuild `0.28.2` quando presente e, in ambienti offline, un fallback ESM source-preserving. Il fallback è ammesso solo finché i moduli non contengono static import; il relativo gate lo verifica. Due build consecutive devono produrre gli stessi digest. `dist/build-attestation.json` registra source/manifest/dist SHA-256. Il vecchio `source↔dist` è rimosso.
+2. **Trend cross-run + flakiness — CHIUSO.** Lo storico contiene stato e durata per gate; `tools/quality-trends.py` produce `quality-trends.json/.md` con failure rate, P50/P95, transizioni e timing regression. La CI tenta di recuperare lo storico dal precedente artifact tramite API GitHub; l'assenza di storico non blocca il run. Nessuna quarantena automatica.
+3. **Property/mutation testing — CHIUSO.** Le invarianti coprono probability/timing Radar4, Wilson interval, geofencing warning, AI decision ID e guardrail metric-driven. Il mutation gate modifica realmente il helper critico in file temporanei e richiede **100% mutant-kill** sulla baseline corrente.
+4. **Metric-driven weather improvements — CHIUSO come ciclo sicuro di ottimizzazione.** P7 provider health/SLO/drift produce un improvement backlog e candidate weights. Solo drift maturo può ridurre il peso candidato di un modello; i pesi restano normalizzati e `productionApplied=false`. Ogni applicazione reale resta subordinata al canary/golden comparison.
 
-Una nuova roadmap viene aperta soltanto per una capability sostanziale nuova, non per la manutenzione di questi gate.
+### Stato finale del quality system
+
+- `qa:fast`: **12/12** gate sulla baseline di chiusura;
+- `qa:release`: **20 gate effettivi** (12 fast + 8 release/integrity);
+- `qa:full`: **85 gate** catalogati; la verifica di chiusura ha ottenuto **85/85 PASS**. Nell'ambiente di lavoro è stata eseguita in segmenti per il limite temporale del tool, senza saltare gate;
+- build offline a due passaggi: **PASS**;
+- `asset-contract`: **PASS**;
+- mutation score baseline: **5/5 = 100%**.
+
+## Dopo la chiusura
+
+Non esiste una P8 implicita e non resta un backlog software obbligatorio per dichiarare completato il progetto. Restano soltanto:
+
+- gate operativi/live che richiedono il commit pubblicato, infrastruttura reale o campioni meteorologici reali;
+- manutenzione dipendenze/security;
+- eventuali miglioramenti futuri scelti dai dati P7 e validati con il quality system;
+- una nuova roadmap solo se verrà richiesta una capability sostanziale nuova.

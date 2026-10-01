@@ -36,11 +36,11 @@ for mode in ('fast', 'release', 'full'):
     require(f'qa:{mode}' in scripts, f'package script qa:{mode} missing')
 
 runner = runner_path.read_text()
-for token in ('quality-report.json', 'quality-report.md', 'quality-junit.xml', 'quality-history.jsonl', '--baseline-report', 'GITHUB_STEP_SUMMARY'):
+for token in ('quality-report.json', 'quality-report.md', 'quality-junit.xml', 'quality-history.jsonl', '--baseline-report', 'gateStatuses', 'quality-trends.py', 'GITHUB_STEP_SUMMARY'):
     require(token in runner, f'quality runner missing {token}')
 
 workflow = workflow_path.read_text()
-for token in ('QUALITY_REPORT_DIR', 'quality-reports', 'upload-artifact'):
+for token in ('QUALITY_REPORT_DIR', 'quality-reports', 'quality-fetch-history.py', 'upload-artifact'):
     require(token in workflow, f'CI workflow missing quality evidence token {token}')
 
 if failures:

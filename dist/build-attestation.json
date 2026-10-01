@@ -1,0 +1,10 @@
+{
+  "assetCount": 66,
+  "contractVersion": 1,
+  "distSha256": "becf5b0df230d4360716f75a0c348ff7751f0ff64d5a38f6679c76ca69b78655",
+  "esbuildPinnedVersion": "0.28.2",
+  "manifestSha256": "6b86e7067daf20820fbee3b54a6ba538e24b481ea0d7729f59060c472ac0385b",
+  "mode": "source-preserving-offline",
+  "offlineFallbackPolicy": "source-preserving-esm-no-static-imports",
+  "sourceSha256": "8973b37a87ed4dbfa6fb2fd1257c75b764c3a039b48e65fc620c68433925c15b"
+}

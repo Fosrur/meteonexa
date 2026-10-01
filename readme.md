@@ -10,6 +10,19 @@ Il repository **non può modificare da solo il flag GitHub “Allow write access
 <!-- METEONEXA_CURRENT_CONTRACT_START -->
 ## MeteoNexa 20.1.1 — contratto corrente P0→P7 / roadmap post-audit completa
 
+### Chiusura progetto software — 1 ottobre 2026
+
+La roadmap **P0→P7 è completata** e anche il backlog tecnico post-roadmap definito per la chiusura è stato implementato. Non viene aperta una P8. Lo stato corrente è **software/project closure**: il repository conserva solo gate operativi/live che dipendono da infrastruttura o dati reali (in particolare P2 sullo stesso SHA pubblicato e maturità P3 Radar4), oltre alla manutenzione ordinaria.
+
+Sono chiusi anche i quattro punti finali:
+
+1. **Build reproducibility:** `tools/reproducible-build.py` esegue due build consecutive e ne verifica l'identità. Con esbuild `0.28.2` installato usa il builder production; offline usa un fallback ESM source-preserving verificato sicuro dall'assenza di static import. `dist/build-attestation.json` lega sorgenti, manifest e artifact con SHA-256. Il precedente `source↔dist` è risolto e `qa/asset_contract.py` è verde.
+2. **Trend/flakiness cross-run:** `quality-history.jsonl` conserva stato e durata per gate; `tools/quality-trends.py` calcola pass/failure rate, P50/P95, transizioni, flaky gate e timing regressions. La CI ripristina fail-soft lo storico dall'artifact precedente tramite `tools/quality-fetch-history.py`. Nessun flaky test viene quarantinato automaticamente.
+3. **Property + mutation testing:** `qa/property_weather_invariants.php` esercita invarianti randomizzati/deterministici su reliability, Radar4, Warning Hub, AI decision ID e guardrail metric-driven. `tools/mutation-runner.py` deve uccidere tutti i mutant critici; baseline finale **5/5 mutant killed (100%)**.
+4. **Metric-driven weather improvement loop:** `api/observability/weather_improvement_helpers.php` trasforma provider health, SLO e model drift P7 in un backlog ordinato e in pesi **candidato** penalizzati solo con evidenza statistica sufficiente. Nessun candidato modifica automaticamente production: serve confronto canary/golden dataset. Il piano è esposto anche dalla diagnostica weather observability.
+
+Il quality system finale contiene **12 gate fast, 20 gate release effettivi e 85 gate full**. La verifica locale di chiusura ha coperto tutti gli **85/85 gate full PASS**, inclusi build reproducibility e asset contract; l'esecuzione è stata suddivisa in segmenti soltanto per il limite temporale dell'ambiente di lavoro.
+
 Il contratto corrente del sorgente resta **MeteoNexa 20.1.1**. La compatibilità applicativa/backend resta **20.1**; la chiusura P5–P7 porta il database allo schema **35** con **53 tabelle applicative**. Il catalogo i18n resta **4.645 chiavi × 5 lingue = 23.225 traduzioni**. Il package root e il package QA restano `20.1.1`.
 
 ### P0 — release/bootstrap reliability

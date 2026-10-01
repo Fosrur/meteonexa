@@ -7,6 +7,7 @@ on:
     - cron: '20 4 * * *'
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: meteonexa-qa-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
@@ -28,6 +29,11 @@ jobs:
           test -f package-lock.json
           test -f qa/package-lock.json
           test -f composer.lock
+      - name: Restore cross-run quality history
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 tools/quality-fetch-history.py --destination quality-reports/quality-history.jsonl
       - name: Post-roadmap fast quality gate
         env:
           QUALITY_REPORT_DIR: quality-reports/fast

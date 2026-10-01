@@ -50,7 +50,13 @@
     "check:roadmap-complete": "npm run check:ai-v2 && npm run check:personal-twin && npm run check:weather-observability && python3 qa/roadmap_contract_smoke.py",
     "qa:fast": "bash qa/continuous-quality.sh fast",
     "qa:release": "bash qa/continuous-quality.sh release",
-    "qa:full": "bash qa/continuous-quality.sh full"
+    "qa:full": "bash qa/continuous-quality.sh full",
+    "build:reproducible": "python3 tools/reproducible-build.py --check-twice",
+    "check:build-reproducibility": "python3 qa/build_reproducibility_smoke.py",
+    "check:quality-trends": "python3 qa/quality_trends_contract_smoke.py",
+    "check:property": "php qa/property_weather_invariants.php",
+    "check:mutation": "python3 tools/mutation-runner.py",
+    "check:weather-improvements": "php qa/metric_driven_weather_improvements_smoke.php"
   },
   "engines": {
     "node": ">=20.19"

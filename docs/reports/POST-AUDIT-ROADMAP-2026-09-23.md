@@ -371,3 +371,18 @@ QA dedicata: `qa/official_warning_hub_smoke.php` copre normalizzazione, geofenci
 - **Poi:** P6 Hyperlocal / Personal Weather Twin e P7 Observability/Release.
 - **Fine del piano corrente:** **P7 è l'ultimo milestone della roadmap post-audit**. Non esiste una P8 definita in questo documento; una fase successiva richiederà una nuova roadmap esplicita.
 - P3 continua in parallelo a raccogliere evidenza Radar4 live; nessun punto P4/P5 modifica automaticamente l'authority Radar3.
+
+
+## Aggiornamento 1 ottobre 2026 — chiusura definitiva roadmap e backlog post-roadmap
+
+La roadmap post-audit **P0→P7 è definitivamente code-complete**. Non viene definita una P8. Anche i quattro interventi di chiusura successivi a P7 sono implementati: build riproducibile/offline con attestation, trend/flakiness cross-run, property+mutation testing e ciclo di miglioramento meteo guidato da P7.
+
+Baseline quality di chiusura: **12 fast**, **20 release effettivi**, **85 full**. Tutti gli **85 gate full** sono stati verificati verdi sulla working tree di chiusura; il vecchio failure `source↔dist` è risolto tramite rigenerazione deterministica degli artifact e doppio-pass build check. Il mutation gate uccide **5/5** mutant critici.
+
+### Stato finale
+
+- **Sviluppo software roadmap:** CHIUSO.
+- **Backlog tecnico obbligatorio post-roadmap:** CHIUSO.
+- **P2 live:** resta subordinato ai gate reali sullo stesso SHA pubblicato.
+- **P3 Radar4:** software completo, raccolta evidence live ancora necessaria prima di qualunque canary; Radar3 resta authority.
+- **Nuovi sviluppi:** solo maintenance/miglioramenti metric-driven o una nuova roadmap esplicita per nuove capability.
