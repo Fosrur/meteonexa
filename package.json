@@ -8,7 +8,7 @@
     "check:syntax": "node tools/static-analysis.mjs --syntax-only",
     "lint:eslint": "eslint \"modules/esm/**/*.mjs\"",
     "bundle:verify": "node tools/esbuild-verify.mjs",
-    "check:full": "npm run check && npm run check:workflow-supply-chain && npm run check:graph && npm run check:services && npm run check:di && npm run check:shell && npm run check:final && npm run check:p4 && npm run check:p4:backend && npm run check:p4:css && npm run check:p4:i18n && npm run check:p4:build && npm run check:p5 && npm run check:p6 && npm run check:layout && npm run check:maintenance && npm run check:i18n-copy && npm run check:i18n-runtime && npm run check:p2:release && npm run check:release && npm run lint:eslint && npm run bundle:verify",
+    "check:full": "npm run check && npm run check:workflow-supply-chain && npm run check:graph && npm run check:services && npm run check:di && npm run check:shell && npm run check:final && npm run check:p4 && npm run check:p4:backend && npm run check:p4:css && npm run check:p4:i18n && npm run check:p4:build && npm run check:p5 && npm run check:p6 && npm run check:roadmap-complete && npm run check:layout && npm run check:maintenance && npm run check:i18n-copy && npm run check:i18n-runtime && npm run check:p2:release && npm run check:release && npm run lint:eslint && npm run bundle:verify",
     "build:assets": "python3 tools/fingerprint_assets.py",
     "build": "npm run check && npm run build:production",
     "qa": "bash qa/run-all.sh",
@@ -43,7 +43,14 @@
     "check:radar4:p32": "php qa/radar4_probabilistic_shadow_smoke.php",
     "check:radar4:p33": "php qa/radar4_empirical_calibration_smoke.php && python3 qa/radar4_empirical_calibration_schema_smoke.py",
     "check:radar4:p34": "php qa/radar4_promotion_study_smoke.php",
-    "check:radar4:ops": "php qa/radar4_operational_readiness_smoke.php"
+    "check:radar4:ops": "php qa/radar4_operational_readiness_smoke.php",
+    "check:ai-v2": "php qa/ai_meteorologist_v2_smoke.php",
+    "check:personal-twin": "php qa/personal_weather_twin_v2_smoke.php",
+    "check:weather-observability": "php qa/weather_observability_release_smoke.php && python3 qa/roadmap_complete_schema_smoke.py",
+    "check:roadmap-complete": "npm run check:ai-v2 && npm run check:personal-twin && npm run check:weather-observability && python3 qa/roadmap_contract_smoke.py",
+    "qa:fast": "bash qa/continuous-quality.sh fast",
+    "qa:release": "bash qa/continuous-quality.sh release",
+    "qa:full": "bash qa/continuous-quality.sh full"
   },
   "engines": {
     "node": ">=20.19"

@@ -276,6 +276,18 @@ function meteonexa_copilot_orchestrate(PDO $pdo, array $config, string $deviceId
         $sources[] = ['id' => 'official-alerts', 'type' => 'official', 'available' => !empty($official['relevant'])];
     }
 
+    if (in_array('forecast_change', $selected, true)) {
+        $changeTimeline = meteonexa_forecast_change_timeline($pdo, $deviceId, $locationKey, [], $nowcast);
+        $tools['forecast_change'] = [
+            'available' => !empty($changeTimeline['available']),
+            'events' => array_slice((array)($changeTimeline['events'] ?? []), 0, 8),
+            'notifyRecommended' => !empty($changeTimeline['notifyRecommended']),
+            'noiseFilter' => $changeTimeline['noiseFilter'] ?? null,
+            'generatedAt' => $changeTimeline['generatedAt'] ?? gmdate('c'),
+        ];
+        $sources[] = ['id' => 'forecast-change-history', 'type' => 'change-history', 'available' => !empty($changeTimeline['available'])];
+    }
+
     $accountHash = meteonexa_account_sync_hash($config, $session);
     $profiles = meteonexa_account_activity_load($pdo, $accountHash);
     $trust = meteonexa_trust_scoreboard($pdo, $deviceId, $locationKey);

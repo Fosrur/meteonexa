@@ -8,9 +8,9 @@ Il repository **non può modificare da solo il flag GitHub “Allow write access
 
 
 <!-- METEONEXA_CURRENT_CONTRACT_START -->
-## MeteoNexa 20.1.1 — contratto corrente P0/P1 + P2 probabilistico + P3 Radar4 shadow + P4 Official Warning Hub
+## MeteoNexa 20.1.1 — contratto corrente P0→P7 / roadmap post-audit completa
 
-Il contratto corrente del sorgente resta **MeteoNexa 20.1.1**. La compatibilità applicativa/backend resta **20.1**; P4 porta il database allo schema **32** senza aggiungere tabelle, quindi le tabelle applicative restano **49**. Il catalogo i18n resta **4.645 chiavi × 5 lingue = 23.225 traduzioni**. Il package root e il package QA restano `20.1.1`.
+Il contratto corrente del sorgente resta **MeteoNexa 20.1.1**. La compatibilità applicativa/backend resta **20.1**; la chiusura P5–P7 porta il database allo schema **35** con **53 tabelle applicative**. Il catalogo i18n resta **4.645 chiavi × 5 lingue = 23.225 traduzioni**. Il package root e il package QA restano `20.1.1`.
 
 ### P0 — release/bootstrap reliability
 
@@ -32,7 +32,7 @@ Il Copilot dispone inoltre del tool deterministico `probabilistic_ensemble` quan
 
 ### Gate P2
 
-L'implementazione P2 è completa nel sorgente ed è coperta dai gate locali dedicati (`Forecast Reliability`, `Probabilistic Ensemble P2`, `P2 release quality`, `Final release smoke` e `Release provenance`). La chiusura **operativa/live** resta però vincolata allo stesso criterio di release: il nuovo SHA deve superare MeteoNexa QA completa, MySQL 8.4 con migrazione 15→32, Chromium + Firefox e Production Deploy dello stesso SHA. Fino a quel passaggio P2 va considerato **code-complete / release-candidate**, non ancora dichiarato live sul nuovo SHA.
+L'implementazione P2 è completa nel sorgente ed è coperta dai gate locali dedicati (`Forecast Reliability`, `Probabilistic Ensemble P2`, `P2 release quality`, `Final release smoke` e `Release provenance`). La chiusura **operativa/live** resta però vincolata allo stesso criterio di release: il nuovo SHA deve superare MeteoNexa QA completa, MySQL 8.4 con migrazione 15→35, Chromium + Firefox e Production Deploy dello stesso SHA. Fino a quel passaggio P2 va considerato **code-complete / release-candidate**, non ancora dichiarato live sul nuovo SHA.
 
 ### P3.1 — Radar4 shadow + tracking multi-frame
 
@@ -90,25 +90,51 @@ La deduplica è per **evento + area** e conserva la versione più recente. Il li
 L'adapter **MeteoAlarm EDR** conserva ora geometria e metadata CAP-like invece di ridurli a solo testo; il fallback Atom estrae polygon/circle CAP e usa il geofencing geometrico prima del matching testuale. Adapter nazionali/regionali autorizzati possono essere aggiunti dietro lo stesso contratto canonico senza mescolare una fonte ufficiale con una previsione MeteoNexa. L'accesso a feed protetti resta una configurazione operativa/provider e non viene simulato nel codice.
 
 Lo schema **32** estende `official_alert_state` e `official_alert_revisions` con identità evento/versione/area, lifecycle canonico, authority/sender/source/message type e geometria, senza creare nuove tabelle (**49 totali**). La persistenza lifecycle usa ora l'upsert corretto per entrambi i driver: `ON DUPLICATE KEY UPDATE` su MySQL e `ON CONFLICT` su SQLite. I gate `qa/official_warning_hub_smoke.php` e `qa/official_warning_hub_schema_smoke.py` coprono normalizzazione CAP/GeoJSON, geofencing, deduplica, cancellation/expiry, schema/index e compatibilità MySQL/SQLite.
+
+
+### P5 — AI Meteorologist 2.0
+
+P5 è **code-complete**. `api/ai/meteorologist_v2.php` introduce un contratto tipizzato per forecast/consensus, ensemble, nowcast, rischio convettivo, warning ufficiali, route, skill/trust, change history, confidence e decisione. Ogni risposta AI parte da un `decision object` deterministico e pubblica `asOf`, `decisionId`, fonti, confidence, limiti e policy: l'LLM può spiegare e prioritizzare, ma non può modificare severità né introdurre numeri non presenti nell'evidenza strutturata. Il grounding guard rifiuta claim numerici non supportati o frasi in conflitto con lo stato decisionale.
+
+Se il provider AI è assente, lento oltre il latency budget o produce una risposta non grounded, viene usato un **fallback template deterministico** in IT/EN/ES/FR/DE. Lo schema **33** aggiunge `ai_semantic_cache`: la cache è breve, keyed su domanda normalizzata + decision ID + tool context equivalente e fresco, non memorizza coordinate precise e non amplia la memoria utente oltre preferenze meteo esplicite. `qa/ai_meteorologist_v2_smoke.php` copre tool contract, metadata, grounding, multilingual parity, fallback e cache-equivalence.
+
+### P6 — Hyperlocal / Personal Weather Twin
+
+P6 è **code-complete**. Le osservazioni Netatmo/personali passano attraverso quality score, freshness/distance checks, range fisici e outlier detection. La correzione locale mantiene il modello come base autorevole: il contributo della stazione è shrinked con pochi campioni e limitato a un peso massimo del **35%**, con componenti separate per temperatura/quota-UHI-esposizione/costa quando il contesto è disponibile e correzioni conservative per vento/pioggia.
+
+I profili attività includono corsa, bici, moto, cantiere, mare e pendolarismo oltre ai profili già supportati. La notification policy persiste uno stato decisionale per attività e raccomanda una notifica solo su variazioni materiali: cambio di stato, almeno **15 punti** di score, almeno **20 punti** di confidence o almeno **30 minuti** di shift temporale. Lo schema **34** aggiunge `personal_station_samples` e `material_decision_state`; le coordinate precise e il nome stazione non vengono persistiti, lo station reference è hashato e la retention delle osservazioni personali è esplicita/configurabile (30 giorni di default). Il gate dedicato è `qa/personal_weather_twin_v2_smoke.php`.
+
+### P7 — Weather Observability / Release
+
+P7 è **code-complete** ed è l'ultimo milestone della roadmap post-audit. `api/observability/weather_release_helpers.php` espone dashboard provider con latency/error streak/cache age, SLO distinti per `home-forecast`, `nowcast`, `official-warning` e `ai-explanation`, drift verificato per area/modello/metrica/lead time e confronto canary sulle metriche forecast verificate prima/dopo. Il canary può soltanto produrre `manualPromotionReviewEligible`; `automaticPromotion=false` resta hard-coded.
+
+Lo schema **35** aggiunge `release_canary_snapshots`; il dataset `config/golden-locations-europe.json` copre casi pianura, montagna, costa e città in più paesi europei. Il percorso synthetic release resta quello eseguibile della CI/deploy: **maintenance ON → exact SHA deploy → external 503/security smoke → maintenance OFF → live smoke**. `api/diagnostics/weather-observability.php` rende provider/SLO/drift disponibili alla diagnostica amministrativa e `tools/release-canary-report.php` produce snapshot baseline/candidate riproducibili. I gate `qa/weather_observability_release_smoke.php` e `qa/roadmap_complete_schema_smoke.py` verificano policy, golden set, schema 35/53 tabelle e ordine del synthetic release path.
+
+### Chiusura roadmap P0→P7 e qualità continua
+
+La roadmap post-audit è **completa lato sviluppo software**. Non viene aperta automaticamente una P8. I gate live già esplicitati restano distinti dal code-complete: P2 richiede ancora un pass completo sullo stesso SHA e P3 Radar4 continua a maturare evidenza reale in shadow con Radar3 authority. Il lavoro successivo passa a un backlog di miglioramenti misurabili e al sistema di qualità continua documentato in `docs/reports/POST-ROADMAP-QUALITY-PLAN.md`. `qa/continuous-quality.sh` fornisce livelli `fast`, `release` e `full`, mentre la GitHub Action continua automaticamente su push, pull request e schedulazione giornaliera, incluso MySQL 8.4.
+
 <!-- METEONEXA_CURRENT_CONTRACT_END -->
 
-## Sviluppi successivi / Roadmap
+## Sviluppi successivi / Roadmap — COMPLETA
 
-- **P3 — Nowcast severo 0–120 minuti:** **sviluppo software completo**: P3.1–P3.4 sono code-complete e la raccolta/verifica live è ora automatizzata dal worker server-side. `radar4OperationalReadiness` espone i 12 deficit di maturità e P3.4 congela lo studio reale per fingerprint quando diventa disponibile. **Resta soltanto il gate di evidenza meteorologica reale**, che per definizione richiede varietà multi-area/multi-regime e almeno 2 stagioni; Radar3 resta authority e un eventuale canary è una release separata.
-- **P4 — Official Warning Hub:** **code-complete**: contratto canonico CAP/GeoJSON, lifecycle `issued/updated/cancelled/expired`, deduplica evento/versione/area, geofencing polygon-based, schema 32 e separazione semantica fra authority ufficiale e previsione MeteoNexa. L'abilitazione di eventuali feed protetti/autorizzati resta configurazione operativa.
-- **P5 — AI Meteorologist 2.0:** **prossimo sviluppo di codice**: decision object deterministico prima del testo LLM, tool contract tipizzato, `asOf`/fonti/confidence/limiti obbligatori, eval suite anti-hallucination e fallback template deterministico.
-- **P6 — Hyperlocal / Personal Weather Twin:** assimilazione di stazioni personali con quality score/outlier detection, bias correction locale e notification policy basata su cambiamenti materiali della decisione.
-- **P7 — osservabilità meteo/release:** SLO per forecast/nowcast/warning/AI, drift dashboard, golden locations europee e canary release con confronto delle metriche prima/dopo.
+- **P3 — Nowcast severo 0–120 minuti:** sviluppo software completo; raccolta/verifica live automatizzata, Radar3 resta authority finché i gate reali P3.3/P3.4 non aprono una review canary separata.
+- **P4 — Official Warning Hub:** **code-complete**, contratto canonico CAP/GeoJSON e lifecycle ufficiale separato dal forecast proprietario.
+- **P5 — AI Meteorologist 2.0:** **code-complete**, decision object deterministico, tool contract, metadata/grounding obbligatori, cache semantica fresca, fallback deterministico e eval suite multilingual.
+- **P6 — Hyperlocal / Personal Weather Twin:** **code-complete**, assimilazione quality-gated, bias correction shrinked, profili attività, privacy/retention e notifiche solo su cambiamenti materiali.
+- **P7 — osservabilità meteo/release:** **code-complete**, provider dashboard, SLO separati, model drift, golden locations, canary metric comparison e synthetic release monitoring.
 
 ### Stato roadmap — 1 ottobre 2026
 
 - **P0:** chiuso e validato in release.
 - **P1:** chiuso e validato in release.
-- **P2:** implementazione completa; resta il gate operativo sullo stesso SHA di QA completa + MySQL 8.4 + Chromium/Firefox + Production Deploy.
-- **P3:** **software-complete (P3.1 + P3.2 + P3.3 + P3.4 + operational evidence automation)**: tracking Radar4 0–120 min, eventi probabilistici, calibrazione empirica, raccolta server-side autonoma, progress dei 12 requisiti, dataset fingerprint, train/holdout e promotion study riproducibile su schema 31. **Stato operativo:** il codice non richiede altre tranche P3; deve soltanto maturare l'evidenza live reale. Quando `datasetMature=true`, P3.4 viene valutata sul dataset congelato e, solo se verde, apre una review manuale per una release canary separata. Radar3 resta authority fino ad allora.
-- **P4:** **code-complete** con Official Warning Hub canonico su schema 32; eventuali credenziali/feed ufficiali protetti restano un requisito operativo, non un nuovo blocco algoritmico.
-- **P5–P7:** **P5 è il prossimo sviluppo di codice**; P6 e P7 completano personalizzazione e maturità operativa. P3 continua in parallelo a raccogliere evidenza live e Radar3 resta authority finché non esiste una release canary separata approvata.
-- **Fine roadmap corrente:** il piano post-audit termina a **P7**. Non esiste oggi una P8 pianificata: dopo P7 restano release/canary, maturazione delle evidenze live, manutenzione e hardening; una P8 richiederebbe una nuova decisione di roadmap esplicita.
+- **P2:** sviluppo completo; resta il gate operativo sullo stesso SHA di QA completa + MySQL 8.4 + Chromium/Firefox + Production Deploy.
+- **P3:** software-complete e raccolta evidenza live automatizzata; Radar4 resta shadow/Radar3 authority finché dataset reale e promotion study non superano i gate.
+- **P4:** code-complete su schema 32.
+- **P5:** code-complete su schema 33.
+- **P6:** code-complete su schema 34.
+- **P7:** code-complete su schema 35; **53 tabelle applicative** nella baseline corrente.
+- **Fine roadmap corrente:** **RAGGIUNTA.** P7 è il termine del piano post-audit. Non esiste una P8 pianificata; il prossimo ciclo è `continuous quality + improvement backlog`, oppure una nuova roadmap soltanto se viene approvata una nuova capability sostanziale.
 
 Nota di packaging: i file SQL sono ora dichiarati `text eol=lf` in `.gitattributes`, così i checkout/ZIP Windows non alterano più `mysql-schema.sql` rispetto ai checksum di release.
 
@@ -118,7 +144,7 @@ Nota di packaging: i file SQL sono ora dichiarati `text eol=lf` in `.gitattribut
 - `qa/production_readiness_smoke.py` usa l'indice Git solo quando `git rev-parse --show-toplevel` coincide esattamente con la root applicativa; un repository padre non viene più scambiato per il repository MeteoNexa.
 - Il contratto documentale distingue `readme.md` (source of truth) da `docs/reports/*.md` (evidenze non normative), evitando falsi failure nei bundle di audit.
 - `qa/release_provenance_smoke.py` valida l'identità VCS: nei source bundle senza `.git` opera in modalità neutra; in CI richiede repository alla root, HEAD committato e working tree pulita.
-- Le sezioni storiche dello stesso README sono rese esplicite come snapshot temporali; i numeri di schema presenti in quelle sezioni descrivono la tranche storica, mentre il contratto corrente è **schema 32**.
+- Le sezioni storiche dello stesso README sono rese esplicite come snapshot temporali; i numeri di schema presenti in quelle sezioni descrivono la tranche storica, mentre il contratto corrente è **schema 35**.
 
 ## Hotfix browser reale post-deploy — 20 settembre 2026
 

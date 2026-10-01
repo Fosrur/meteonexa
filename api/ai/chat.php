@@ -5,6 +5,7 @@ require_once dirname(__DIR__) . '/bootstrap.php';
 require_once dirname(__DIR__) . '/http_helpers.php';
 require_once dirname(__DIR__) . '/public_helpers.php';
 require_once __DIR__ . '/orchestrator.php';
+require_once __DIR__ . '/meteorologist_v2.php';
 require_once dirname(__DIR__) . '/intelligence/verification_helpers.php';
 
 function meteonexa_ai_text(mixed $value, int $max = 160): string
@@ -365,14 +366,6 @@ $language = meteonexa_backend_language($input['language'] ?? null);
 $requestedMode = strtolower(trim((string)($input['mode'] ?? 'assistant')));
 $mode = in_array($requestedMode, ['assistant','briefing','proactive'], true) ? $requestedMode : 'assistant';
 
-if ($provider['key'] === '') {
-    respond([
-        'ok' => false,
-        'code' => 'AI_NOT_CONFIGURED',
-        'message' => 'api.ai.not_configured',
-    ], 503);
-}
-
 $messageRaw = trim((string)($input['message'] ?? ''));
 if ($messageRaw === '' || meteonexa_text_length($messageRaw) > 1800) {
     respond(['ok' => false, 'code' => 'AI_MESSAGE_INVALID', 'message' => 'api.ai.message_invalid'], 422);
@@ -399,7 +392,7 @@ if ($mode === 'proactive') {
     }
 }
 
-if ($provider['name'] === 'openrouter' && substr((string)$provider['model'], -5) === ':free') {
+if ($provider['key'] !== '' && $provider['name'] === 'openrouter' && substr((string)$provider['model'], -5) === ':free') {
     $freeDayLimit = max(1, min(50, (int)($ai['max_requests_global_day_free'] ?? 45)));
     $freeDayRate = meteonexa_rate_limit($pdo, 'ai_free_global_day', 'deployment', $secret, $freeDayLimit, 86400);
     if (!$freeDayRate['allowed']) {
@@ -414,10 +407,25 @@ $lat=is_numeric($input['latitude']??null)?(float)$input['latitude']:999.0;$lon=i
 $routePlan=is_array($input['routePlan']??null)?$input['routePlan']:[];
 if(abs($lat)<=90&&abs($lon)<=180){try{$toolRun=meteonexa_copilot_orchestrate($pdo,$config,$device,$session,$message,$lat,$lon,$locationName,$routePlan);}catch(Throwable $ignored){}}
 $hasAuthoritativeTools = !empty($toolRun['tools']);
+$aiContract = meteonexa_ai_v2_contract($toolRun, $language, $mode);
+$contractMeta = [
+    'contractVersion'=>$aiContract['contractVersion'],
+    'asOf'=>$aiContract['asOf'],
+    'decisionId'=>$aiContract['decisionId'],
+    'confidence'=>$aiContract['confidence'],
+    'sources'=>$aiContract['sources'],
+    'limitations'=>$aiContract['limitations'],
+    'policy'=>$aiContract['policy'],
+    'toolContracts'=>array_map(static fn($row)=>$row['contract']??[], (array)$aiContract['tools']),
+];
+$toolRun['decision']['decisionId']=$aiContract['decisionId'];
+$toolRun['toolRun']['contractVersion']=$aiContract['contractVersion'];
+$toolRun['toolRun']['decisionId']=$aiContract['decisionId'];
 $context=[
     'authoritativeTools'=>$toolRun['tools'],
     'deterministicDecision'=>$toolRun['decision'],
     'toolSources'=>$toolRun['sources'],
+    'responseContract'=>$contractMeta,
     // When server tools ran successfully they supersede the browser context.
     // This keeps the LLM payload smaller and makes the trust boundary explicit.
     'browserFallback'=>$hasAuthoritativeTools ? [] : $browserContext,
@@ -434,6 +442,35 @@ if (!is_string($contextJson) || strlen($contextJson) > 72000) {
 }
 if (!is_string($contextJson) || strlen($contextJson) > 72000) {
     $contextJson = '{}';
+}
+
+$cacheTtl=max(30,min(600,(int)($ai['semantic_cache_ttl_seconds']??180)));
+if ($hasAuthoritativeTools) {
+    $cached=meteonexa_ai_v2_cache_get($pdo,$aiContract,$message);
+    if (is_array($cached)) {
+        meteonexa_record_runtime_metric($pdo,'ai','semantic-cache','hit',1,['mode'=>$mode,'decisionId'=>$aiContract['decisionId']]);
+        meteonexa_record_runtime_metric($pdo,'slo','ai-explanation','ok',null,['provider'=>'cache','mode'=>$mode],0);
+        respond([
+            'ok'=>true,'answer'=>$cached['answer'],'model'=>'deterministic-context-cache','provider'=>'cache',
+            'toolRun'=>$toolRun['toolRun'],'sources'=>$aiContract['sources'],'decision'=>$toolRun['decision'],
+            'asOf'=>$aiContract['asOf'],'confidence'=>$aiContract['confidence'],'limitations'=>$aiContract['limitations'],
+            'decisionId'=>$aiContract['decisionId'],'fallbackUsed'=>false,'cacheHit'=>true,'generatedAt'=>gmdate('c'),
+        ]);
+    }
+}
+if ($provider['key']==='' && $hasAuthoritativeTools) {
+    $fallback=meteonexa_ai_v2_fallback($aiContract,$language);
+    meteonexa_record_runtime_metric($pdo,'ai','deterministic-fallback','ok',null,['reason'=>'provider_not_configured','mode'=>$mode]);
+    meteonexa_record_runtime_metric($pdo,'slo','ai-explanation','fallback',null,['provider'=>'deterministic','reason'=>'provider_not_configured'],0);
+    respond([
+        'ok'=>true,'answer'=>$fallback,'model'=>'deterministic-template-v2','provider'=>'deterministic',
+        'toolRun'=>$toolRun['toolRun'],'sources'=>$aiContract['sources'],'decision'=>$toolRun['decision'],
+        'asOf'=>$aiContract['asOf'],'confidence'=>$aiContract['confidence'],'limitations'=>$aiContract['limitations'],
+        'decisionId'=>$aiContract['decisionId'],'fallbackUsed'=>true,'cacheHit'=>false,'generatedAt'=>gmdate('c'),
+    ]);
+}
+if ($provider['key']==='') {
+    respond(['ok'=>false,'code'=>'AI_NOT_CONFIGURED','message'=>'api.ai.not_configured'],503);
 }
 
 $answerLanguage = meteonexa_backend_text('language.' . $language, [], $language);
@@ -459,6 +496,7 @@ if ($mode === 'briefing') {
     $systemParts[] = meteonexa_backend_text('proactive.ai.system', [], $language);
 }
 $system = implode(' ', array_filter($systemParts, static fn($value): bool => trim((string)$value) !== ''))
+    . ' The deterministic decision object is authoritative: never change its severity/status or invent numeric weather values. Every numeric claim must be present in the structured evidence.'
     . "\n\n" . meteonexa_backend_text('ai.system.context_heading', [], $language) . "\n" . $contextJson;
 
 $messages = [['role' => 'system', 'content' => $system]];
@@ -509,9 +547,12 @@ if ($provider['name'] === 'openrouter') {
     $headers[] = 'X-OpenRouter-Title: ' . $siteName;
 }
 
-$providerTimeout = max(10, min(60, (int)($ai['timeout_seconds'] ?? 30)));
+$providerTimeout = max(5, min(60, (int)($ai['timeout_seconds'] ?? 30)));
+$latencyBudgetMs=max(3000,min(60000,(int)($ai['max_latency_ms']??35000)));
+$providerStarted=microtime(true);
 $lastProviderError = null;
 for ($attempt = 0; $attempt < 2; $attempt++) {
+    if ((microtime(true)-$providerStarted)*1000 >= $latencyBudgetMs) { $lastProviderError='latency_budget'; break; }
     $attemptMessages = $messages;
     if ($attempt > 0) {
         $attemptMessages[] = [
@@ -552,21 +593,28 @@ for ($attempt = 0; $attempt < 2; $attempt++) {
             $lastProviderError = 'invalid_answer';
             continue;
         }
+        $grounding=meteonexa_ai_v2_grounding_check($answer,$aiContract);
+        if (empty($grounding['ok'])) {
+            $lastProviderError = 'grounding_guard_' . (string)($grounding['reason']??'failed');
+            meteonexa_record_runtime_metric($pdo,'ai','grounding-guard','rejected',null,['reason'=>$grounding['reason']??'unknown','mode'=>$mode]);
+            continue;
+        }
         if ($mode === 'briefing' && $attempt === 0 && $previousBriefing !== ''
             && meteonexa_ai_briefing_similarity($previousBriefing, $answer) >= 0.68) {
             $lastProviderError = 'repetitive_answer';
             continue;
         }
-        meteonexa_record_runtime_metric($pdo,'ai',$provider['name'],'ok',null,['model'=>$provider['model'],'mode'=>$mode]);
+        $answer=meteonexa_text_substr($answer,0,$mode==='briefing'?4500:6000);
+        $elapsedMs=(int)round((microtime(true)-$providerStarted)*1000);
+        meteonexa_record_runtime_metric($pdo,'ai',$provider['name'],'ok',$elapsedMs,['model'=>$provider['model'],'mode'=>$mode,'decisionId'=>$aiContract['decisionId']],$elapsedMs);
+        meteonexa_record_runtime_metric($pdo,'slo','ai-explanation','ok',null,['provider'=>$provider['name'],'mode'=>$mode],$elapsedMs);
+        if ($hasAuthoritativeTools) meteonexa_ai_v2_cache_put($pdo,$aiContract,$message,$answer,$cacheTtl);
         respond([
-            'ok' => true,
-            'answer' => meteonexa_text_substr($answer, 0, $mode === 'briefing' ? 4500 : 6000),
-            'model' => meteonexa_ai_text($data['model'] ?? $provider['model'], 120),
-            'provider' => $provider['name'],
-            'toolRun' => $toolRun['toolRun'],
-            'sources' => array_slice($toolRun['sources'],0,12),
-            'decision' => $toolRun['decision'],
-            'generatedAt' => gmdate('c'),
+            'ok'=>true,'answer'=>$answer,
+            'model'=>meteonexa_ai_text($data['model']??$provider['model'],120),'provider'=>$provider['name'],
+            'toolRun'=>$toolRun['toolRun'],'sources'=>$aiContract['sources'],'decision'=>$toolRun['decision'],
+            'asOf'=>$aiContract['asOf'],'confidence'=>$aiContract['confidence'],'limitations'=>$aiContract['limitations'],
+            'decisionId'=>$aiContract['decisionId'],'fallbackUsed'=>false,'cacheHit'=>false,'latencyMs'=>$elapsedMs,'generatedAt'=>gmdate('c'),
         ]);
     } catch (Throwable $error) {
         $lastProviderError = 'transport';
@@ -577,7 +625,16 @@ for ($attempt = 0; $attempt < 2; $attempt++) {
 }
 
 meteonexa_observability_event('ai',$provider['name'],$lastProviderError?:'unavailable',['mode'=>$mode]);
-if ($lastProviderError === 'invalid_answer') {
-    respond(['ok' => false, 'code' => 'AI_EMPTY_RESPONSE', 'message' => 'api.ai.empty_response'], 502);
+if ($hasAuthoritativeTools) {
+    $fallback=meteonexa_ai_v2_fallback($aiContract,$language);
+    meteonexa_record_runtime_metric($pdo,'ai','deterministic-fallback','ok',null,['reason'=>$lastProviderError?:'unavailable','mode'=>$mode]);
+    meteonexa_record_runtime_metric($pdo,'slo','ai-explanation','fallback',null,['provider'=>'deterministic','reason'=>$lastProviderError?:'unavailable'],null);
+    respond([
+        'ok'=>true,'answer'=>$fallback,'model'=>'deterministic-template-v2','provider'=>'deterministic',
+        'toolRun'=>$toolRun['toolRun'],'sources'=>$aiContract['sources'],'decision'=>$toolRun['decision'],
+        'asOf'=>$aiContract['asOf'],'confidence'=>$aiContract['confidence'],'limitations'=>$aiContract['limitations'],
+        'decisionId'=>$aiContract['decisionId'],'fallbackUsed'=>true,'cacheHit'=>false,'providerFailure'=>$lastProviderError?:'unavailable','generatedAt'=>gmdate('c'),
+    ]);
 }
-respond(['ok' => false, 'code' => 'AI_UNAVAILABLE', 'message' => 'api.ai.unavailable'], 502);
+if ($lastProviderError === 'invalid_answer') respond(['ok'=>false,'code'=>'AI_EMPTY_RESPONSE','message'=>'api.ai.empty_response'],502);
+respond(['ok'=>false,'code'=>'AI_UNAVAILABLE','message'=>'api.ai.unavailable'],502);

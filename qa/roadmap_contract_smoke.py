@@ -43,8 +43,8 @@ ck('crosswindKmh' in route and 'windKmh' in route and 'gustKmh' in route,'Route 
 hub=t('api/official/hub_helpers.php'); life=t('api/official/lifecycle_helpers.php'); readme=t('readme.md')
 ck(all(x in hub for x in ['eventId','versionId','areaKey','forecastAuthoritySeparated','meteonexa_official_hub_geometry_contains']),'P4 Official Warning Hub retains canonical identity/geofencing/authority separation')
 ck(all(x in life for x in ['terminalRevisions','freshAuthoritative','ON DUPLICATE KEY UPDATE','ON CONFLICT(location_key,alert_key)']),'P4 warning lifecycle retains cancellation/expiry and dual-driver persistence')
-ck('P4 — Official Warning Hub:** **code-complete**' in readme and 'P5 — AI Meteorologist 2.0:** **prossimo sviluppo di codice**' in readme,'roadmap marks P4 complete and P5 next')
-ck('Fine roadmap corrente' in readme and 'termina a **P7**' in readme and 'P8' in readme,'roadmap has an explicit endpoint at P7')
+ck(all(x in readme for x in ['P5 — AI Meteorologist 2.0:** **code-complete**','P6 — Hyperlocal / Personal Weather Twin:** **code-complete**','P7 — osservabilità meteo/release:** **code-complete**']),'roadmap marks P5/P6/P7 code-complete')
+ck('Fine roadmap corrente:** **RAGGIUNTA.**' in readme and 'P7 è il termine' in readme and 'P8' in readme,'roadmap endpoint P7 is explicitly reached')
 
 print('\nRoadmap contract: '+('PASS' if not fail else 'FAIL'))
 sys.exit(bool(fail))

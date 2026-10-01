@@ -111,6 +111,9 @@ return [
         'client_secret' => getenv('METEONEXA_XWEATHER_CLIENT_SECRET') ?: '',
         'radius_km' => 100,
     ],
+    'personal_twin' => [
+        'retention_days' => max(1, min(90, (int)(getenv('METEONEXA_PERSONAL_STATION_RETENTION_DAYS') ?: 30))),
+    ],
     'ai' => [
         // Optional online LLM. The standard OpenRouter profile is pinned to
         // NVIDIA Nemotron 3 Super's explicit :free endpoint; Groq remains an
@@ -129,7 +132,11 @@ return [
         'groq_model' => getenv('METEONEXA_GROQ_MODEL') ?: 'openai/gpt-oss-20b',
         'site_url' => getenv('METEONEXA_AI_SITE_URL') ?: '',
         'site_name' => getenv('METEONEXA_AI_SITE_NAME') ?: 'MeteoNexa',
-        'timeout_seconds' => 45,
+        'timeout_seconds' => max(5, min(60, (int)(getenv('METEONEXA_AI_TIMEOUT_SECONDS') ?: 45))),
+        // AI Meteorologist 2.0 must fail over to the deterministic template before
+        // an explanation can block the weather decision path.
+        'max_latency_ms' => max(3000, min(60000, (int)(getenv('METEONEXA_AI_MAX_LATENCY_MS') ?: 35000))),
+        'semantic_cache_ttl_seconds' => max(30, min(600, (int)(getenv('METEONEXA_AI_CACHE_TTL_SECONDS') ?: 180))),
         'max_requests_per_hour' => 40,
         // Deployment-wide guard against distributed API-credit exhaustion.
         'max_requests_global_hour' => 600,

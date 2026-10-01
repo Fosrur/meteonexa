@@ -9,7 +9,7 @@ require_method('GET', 'POST');
 $config = load_config();
 $pdo = meteonexa_db($config);
 
-$allowedActivities = ['run','sea','laundry','motorcycle','trekking','kids'];
+$allowedActivities = ['run','bike','sea','laundry','motorcycle','trekking','worksite','commute','kids','pets'];
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET') {
     $deviceId = clean_device_id($_GET['deviceId'] ?? '');
@@ -55,10 +55,10 @@ $json = json_encode($activities, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
 if (!is_string($json)) {
     respond(['ok'=>false,'code'=>'PERSONAL_PREFERENCES_INVALID','message'=>'api.personal.invalid'],422);
 }
-$statement = $pdo->prepare('INSERT INTO personal_weather_preferences(device_id,activities_json,briefing_enabled,briefing_hour,briefing_hour_set,proactive_enabled,updated_at)
-    VALUES(:device,:activities,:enabled,:hour,:hour_set,:proactive,:updated)
-    ON CONFLICT(device_id) DO UPDATE SET activities_json=excluded.activities_json,briefing_enabled=excluded.briefing_enabled,
-    briefing_hour=excluded.briefing_hour,briefing_hour_set=excluded.briefing_hour_set,proactive_enabled=excluded.proactive_enabled,updated_at=excluded.updated_at');
+$sql = meteonexa_pdo_driver($pdo)==='mysql'
+    ? 'INSERT INTO personal_weather_preferences(device_id,activities_json,briefing_enabled,briefing_hour,briefing_hour_set,proactive_enabled,updated_at) VALUES(:device,:activities,:enabled,:hour,:hour_set,:proactive,:updated) ON DUPLICATE KEY UPDATE activities_json=VALUES(activities_json),briefing_enabled=VALUES(briefing_enabled),briefing_hour=VALUES(briefing_hour),briefing_hour_set=VALUES(briefing_hour_set),proactive_enabled=VALUES(proactive_enabled),updated_at=VALUES(updated_at)'
+    : 'INSERT INTO personal_weather_preferences(device_id,activities_json,briefing_enabled,briefing_hour,briefing_hour_set,proactive_enabled,updated_at) VALUES(:device,:activities,:enabled,:hour,:hour_set,:proactive,:updated) ON CONFLICT(device_id) DO UPDATE SET activities_json=excluded.activities_json,briefing_enabled=excluded.briefing_enabled,briefing_hour=excluded.briefing_hour,briefing_hour_set=excluded.briefing_hour_set,proactive_enabled=excluded.proactive_enabled,updated_at=excluded.updated_at';
+$statement = $pdo->prepare($sql);
 $statement->execute([
     ':device'=>$deviceId,
     ':activities'=>$json,

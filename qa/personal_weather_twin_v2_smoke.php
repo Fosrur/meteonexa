@@ -1,0 +1,40 @@
+<?php
+declare(strict_types=1);
+$root=dirname(__DIR__);
+require_once $root.'/api/database/driver.php';
+require_once $root.'/api/database/schema.php';
+require_once $root.'/api/database/migrations.php';
+require_once $root.'/api/intelligence/personal_twin_helpers.php';
+require_once $root.'/api/account/account_helpers.php';
+require_once $root.'/api/intelligence/intelligence_extensions.php';
+$fail=[];$ok=static function(bool $c,string $m)use(&$fail){echo ($c?'[ OK ] ':'[FAIL] ').$m."\n";if(!$c)$fail[]=$m;};
+$now=time();
+$station=['available'=>true,'distanceKm'=>2.4,'station'=>'Home roof station','observation'=>['observedAt'=>$now-120,'temperature'=>21.5,'humidity'=>65,'pressure'=>1014,'rain'=>0.2,'wind'=>12,'gust'=>20]];
+$reference=['temperature'=>19.5,'windSpeed'=>10,'windGust'=>18,'rain'=>0.0];
+$q=meteonexa_personal_station_quality($station,$reference);$ok(($q['accepted']??false)===true&&($q['score']??0)>=55,'fresh nearby station accepted');
+$cor=meteonexa_personal_twin_bias_correction($station,$reference,['targetElevationM'=>100,'stationElevationM'=>120,'urbanHeatIndex'=>.2],2);
+$ok(!empty($cor['applied'])&&($cor['weight']??1)<=.35,'few-sample correction is shrinked and capped');
+$ok(abs((float)($cor['corrected']['temperature']??19.5)-19.5)<1.0,'few samples cannot overwrite base model');
+$outlier=$station;$outlier['observation']['temperature']=93;$q2=meteonexa_personal_station_quality($outlier,$reference);$ok(empty($q2['accepted'])&&!empty($q2['outlier']),'physical outlier rejected');
+$profiles=meteonexa_account_activity_defaults();foreach(['run','bike','motorcycle','worksite','sea','commute'] as $a)$ok(isset($profiles[$a]),"activity profile $a");
+$twin=meteonexa_personal_weather_twin(['run'=>$profiles['run'],'bike'=>$profiles['bike']],[['activity'=>'run','score'=>82,'startsAt'=>'2026-10-01T09:00:00Z','endsAt'=>'2026-10-01T10:00:00Z']],['available'=>true,'retentionDays'=>30]);
+$ok(($twin['method']??'')==='personal-weather-twin-v2'&&!empty($twin['notificationPolicy']['materialDecisionOnly']),'v2 twin exposes material notification policy');
+$ok(($twin['privacy']['aggregateBeforeAccuracyPublication']??false)===true,'privacy aggregation policy explicit');
+if(in_array('sqlite',PDO::getAvailableDrivers(),true)){
+ $pdo=new PDO('sqlite::memory:');$pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);$pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE,PDO::FETCH_ASSOC);
+ $pdo->exec('CREATE TABLE app_metadata(meta_key TEXT PRIMARY KEY,meta_value TEXT NOT NULL,updated_at TEXT NOT NULL)');
+ $pdo->exec("INSERT INTO app_metadata VALUES('schema_version','33','2026-10-01T00:00:00Z')");
+ $m=require $root.'/api/database/migrations/0034_personal_weather_twin_v2.php';$v=($m['up'])($pdo,33,'sqlite');
+ $ok($v===34&&meteonexa_db_table_exists($pdo,'personal_station_samples')&&meteonexa_db_table_exists($pdo,'material_decision_state'),'schema 34 P6 tables');
+ $config=['personal_twin'=>['retention_days'=>30]];$a=meteonexa_personal_station_assimilate($pdo,$config,'device-x','44.0:9.0',$station,$reference,['targetElevationM'=>100]);
+ $row=$pdo->query('SELECT * FROM personal_station_samples LIMIT 1')->fetch();
+ $ok(is_array($row)&&!array_key_exists('latitude',$row)&&!array_key_exists('longitude',$row)&&($row['station_ref']??'')!=='Home roof station','persistence minimizes precise location and station identity');
+ $d1=meteonexa_material_decision_change($pdo,'device-x','44.0:9.0','run',['status'=>'good','score'=>82,'confidence'=>80,'startsAt'=>'2026-10-01T09:00:00Z','endsAt'=>'2026-10-01T10:00:00Z']);
+ $d2=meteonexa_material_decision_change($pdo,'device-x','44.0:9.0','run',['status'=>'good','score'=>85,'confidence'=>83,'startsAt'=>'2026-10-01T09:10:00Z','endsAt'=>'2026-10-01T10:10:00Z']);
+ $d3=meteonexa_material_decision_change($pdo,'device-x','44.0:9.0','run',['status'=>'avoid','score'=>45,'confidence'=>82,'startsAt'=>'2026-10-01T10:00:00Z','endsAt'=>'2026-10-01T11:00:00Z']);
+ $ok(empty($d1['material'])&&empty($d2['material']),'baseline and small numeric changes do not notify');
+ $ok(!empty($d3['material'])&&!empty($d3['notifyRecommended'])&&in_array('status',$d3['reasons'],true),'material decision change recommends notification');
+}
+$push=file_get_contents($root.'/api/push/dispatch.php');
+$ok(str_contains($push,'meteonexa_material_decision_change')&&str_contains($push,"'smart-alert:'"),'push dispatch enforces material-decision notification gate');
+if($fail){fwrite(STDERR,'Personal Weather Twin P6 smoke FAILED: '.implode(', ',$fail)."\n");exit(1);} echo "Personal Weather Twin P6 smoke PASS\n";

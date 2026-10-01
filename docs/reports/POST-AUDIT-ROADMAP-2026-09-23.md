@@ -3,7 +3,7 @@
 Data audit: 23 settembre 2026  
 Stato riallineato: 1 ottobre 2026
 
-> **Stato corrente:** P0 e P1 sono chiusi; P2 ensemble probabilistico/CRPS è implementato nel sorgente e coperto dai gate locali dedicati. La chiusura live di P2 richiede ancora QA completa, MySQL 8.4, Chromium/Firefox e Production Deploy sul medesimo SHA. **P3.1, P3.2, P3.3 e P3.4 sono code-complete e anche la raccolta operativa live P3 è automatizzata server-side**, mantenendo Radar3 come authority. **P4 Official Warning Hub è code-complete su schema 32 / 49 tabelle**, con contratto canonico CAP/GeoJSON, lifecycle e geofencing geometrico. Il prossimo sviluppo di codice è **P5 — AI Meteorologist 2.0**. La maturità meteorologica P3 **live** resta un gate di evidenza reale e continua in parallelo. La roadmap post-audit corrente termina a **P7**: non è pianificata una P8; dopo P7 restano release/canary, evidenza live, manutenzione e hardening salvo nuova decisione esplicita di roadmap. Le sezioni più sotto descrivono anche lo storico dell'audit del 23–24 settembre e vanno lette nel loro contesto temporale.
+> **Stato corrente:** la roadmap post-audit **P0→P7 è completa lato sviluppo software**. P5 AI Meteorologist 2.0, P6 Personal Weather Twin e P7 Weather Observability/Release sono chiusi; la baseline corrente è **schema 35 / 53 tabelle**. Restano separati i gate operativi già dichiarati: P2 richiede ancora QA completa + MySQL 8.4 + Chromium/Firefox + Production Deploy sullo stesso SHA; P3 Radar4 continua in shadow a raccogliere evidenza reale e Radar3 resta authority. Non è pianificata una P8: il lavoro successivo passa a continuous quality + improvement backlog, oppure a una nuova roadmap esplicita se verrà approvata una nuova capability sostanziale. Le sezioni storiche più sotto descrivono il piano originario nel loro contesto temporale.
 
 ## Sintesi dell'audit
 
@@ -125,6 +125,25 @@ L'architettura attuale è corretta nel principio: il modello linguistico spiega 
 - release canary con confronto delle metriche forecast prima/dopo;
 - dataset di golden locations europee con casi pianura/montagna/costa/città;
 - synthetic monitoring del percorso completo `maintenance on -> deploy -> external 503 security smoke -> maintenance off`.
+
+
+## Chiusura roadmap — 1 ottobre 2026
+
+### P5 completata — AI Meteorologist 2.0
+
+Contratto AI tipizzato, decision object deterministico obbligatorio prima del testo LLM, `asOf`/fonti/confidence/limiti/decision ID in output, grounding anti-hallucination numerica, fallback deterministico IT/EN/ES/FR/DE, latency budget e cache semantica solo per contesti equivalenti/freschi. Lo schema 33 aggiunge `ai_semantic_cache`; la memoria resta limitata a preferenze meteo esplicite e la cache non persiste coordinate precise.
+
+### P6 completata — Hyperlocal / Personal Weather Twin
+
+Quality score e outlier detection sulle stazioni personali; correzione locale conservativa con shrinkage e peso massimo 35%; profili corsa/bici/moto/cantiere/mare/pendolarismo; policy notifiche solo su cambiamento materiale; retention esplicita e minimizzazione dei dati personali. Lo schema 34 aggiunge `personal_station_samples` e `material_decision_state`.
+
+### P7 completata — Weather Observability / Release
+
+Dashboard provider latency/error/cache age, SLO distinti per forecast/nowcast/warning/AI, model drift per area/lead time, golden locations europee pianura/montagna/costa/città, canary baseline↔candidate su metriche verificate e synthetic release path completo. Lo schema 35 aggiunge `release_canary_snapshots`; la baseline corrente ha 53 tabelle. Nessun canary o promotion study può promuovere automaticamente una release.
+
+### Fine del piano e fase successiva
+
+**P7 è il punto finale della roadmap post-audit.** Non viene creata una P8 automaticamente. La fase successiva è un backlog di miglioramenti con metrica prima/dopo e un sistema di test automatico stratificato (`fast`, `release`, `full`), documentato in `POST-ROADMAP-QUALITY-PLAN.md`. La GitHub Action resta automatica su push/PR/nightly e mantiene il job MySQL 8.4 separato.
 
 ## Ordine suggerito
 

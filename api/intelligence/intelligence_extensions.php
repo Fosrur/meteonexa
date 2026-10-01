@@ -131,7 +131,7 @@ function meteonexa_confidence_timeline(array $consensus, array $weatherConfidenc
     }
     return['available'=>$timeline!==[], 'method'=>'confidence-timeline-v2', 'score'=>(int)($weatherConfidence['score']??($timeline[0]['score']??0)), 'timeline'=>$timeline, 'freshnessScore'=>$freshScore, 'verifiedSamples'=>$samples, 'forecastChange'=>['material'=>$material, 'reasons'=>$reasons, 'notifyRecommended'=>$material, 'timeShiftMinutes'=>$forecastChange['timeShiftMinutes']??null, 'rainProbabilityDelta'=>$forecastChange['rainProbabilityDelta']??null, 'agreementDelta'=>$forecastChange['agreementDelta']??null], 'generatedAt'=>gmdate('c')];
 }
-function meteonexa_personal_weather_twin(array $activityProfiles, array $decisionWindows) : array {
+function meteonexa_personal_weather_twin(array $activityProfiles, array $decisionWindows, array $stationAssimilation =[]) : array {
     $defaults = meteonexa_account_activity_defaults();
     $windows =[];
     foreach ($decisionWindows as $row) {
@@ -145,7 +145,7 @@ function meteonexa_personal_weather_twin(array $activityProfiles, array $decisio
         $rows[] =['activity'=>$activity, 'thresholds'=>$thresholds, 'score'=>(int)($window['score']??0), 'bestStart'=>$window['startsAt']??null, 'bestEnd'=>$window['endsAt']??null, 'reasons'=>$window['reasons']??[], 'status'=>!$window ? 'learning' :(((int)$window['score']>=75) ? 'good' :(((int)$window['score']>=50) ? 'caution' : 'avoid'))];
     }
     usort($rows, static fn($a, $b)=>$b['score']<=>$a['score']);
-    return['available'=>$rows!==[], 'profiles'=>$rows, 'supportedActivities'=>array_keys($defaults), 'method'=>'personal-weather-twin-v1', 'generatedAt'=>gmdate('c')];
+    return['available'=>$rows!==[], 'profiles'=>$rows, 'supportedActivities'=>array_keys($defaults), 'stationAssimilation'=>$stationAssimilation, 'notificationPolicy'=>['materialDecisionOnly'=>true,'scoreDeltaMin'=>15,'confidenceDeltaMin'=>20,'timingShiftMinutesMin'=>30], 'privacy'=>['preciseCoordinatesPersisted'=>false,'stationObservationsRetentionDays'=>$stationAssimilation['retentionDays']??null,'aggregateBeforeAccuracyPublication'=>true], 'method'=>'personal-weather-twin-v2', 'generatedAt'=>gmdate('c')];
 }
 function meteonexa_recency_skill(PDO $pdo, string $deviceId, string $locationKey) : array {
     $definitions = array_keys(meteonexa_intelq_model_definitions());

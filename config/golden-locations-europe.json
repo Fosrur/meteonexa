@@ -1,0 +1,10 @@
+[
+  {"id":"milan","name":"Milano","country":"IT","latitude":45.4642,"longitude":9.1900,"cases":["plain","city"]},
+  {"id":"genoa","name":"Genova","country":"IT","latitude":44.4056,"longitude":8.9463,"cases":["coast","city"]},
+  {"id":"innsbruck","name":"Innsbruck","country":"AT","latitude":47.2692,"longitude":11.4041,"cases":["mountain","city"]},
+  {"id":"chamonix","name":"Chamonix","country":"FR","latitude":45.9237,"longitude":6.8694,"cases":["mountain"]},
+  {"id":"amsterdam","name":"Amsterdam","country":"NL","latitude":52.3676,"longitude":4.9041,"cases":["coast","plain","city"]},
+  {"id":"barcelona","name":"Barcelona","country":"ES","latitude":41.3874,"longitude":2.1686,"cases":["coast","city"]},
+  {"id":"munich","name":"München","country":"DE","latitude":48.1351,"longitude":11.5820,"cases":["plain","city"]},
+  {"id":"copenhagen","name":"København","country":"DK","latitude":55.6761,"longitude":12.5683,"cases":["coast","plain","city"]}
+]

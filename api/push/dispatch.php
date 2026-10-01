@@ -8,6 +8,7 @@ require_once dirname(__DIR__) . '/i18n.php';
 require_once dirname(__DIR__) . '/intelligence/engine_helpers.php';
 require_once dirname(__DIR__) . '/intelligence/quality_helpers.php';
 require_once dirname(__DIR__) . '/intelligence/severe_outlook_helpers.php';
+require_once dirname(__DIR__) . '/intelligence/personal_twin_helpers.php';
 require_once dirname(__DIR__) . '/official/lifecycle_helpers.php';
 require_once dirname(__DIR__) . '/pipeline/helpers.php';
 $config = load_config();
@@ -78,6 +79,24 @@ foreach ($rows as $row) {
             break;
         }
         if (!$notice)continue;
+        $materialNotice = meteonexa_material_decision_change(
+            $pdo,
+            $device,
+            meteonexa_intelligence_location_key($lat, $lon),
+            'smart-alert:' . (string)($notice['type']??'weather'),
+            [
+                'status'=>(string)($notice['severity']??'yellow'),
+                'score'=>($severityRank[(string)($notice['severity']??'yellow')]??1) * 25,
+                'confidence'=>(int)($notice['confidence']??0),
+                'startsAt'=>(string)($notice['startsAt']??''),
+                'endsAt'=>(string)($notice['endsAt']??''),
+            ],
+            true
+        );
+        if (!empty($materialNotice['available']) && empty($materialNotice['notifyRecommended'])) {
+            $suppressed++;
+            continue;
+        }
         // Quiet hours suppress routine alerts, but a red-severity event is a
         // deliberate safety override. This keeps DND useful without hiding
         // the highest severity official or predictive warning.

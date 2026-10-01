@@ -35,6 +35,10 @@ run_php severe_weather_engine_smoke.php
 run_php intelligence_quality_smoke.php
 run_php official_warning_hub_smoke.php
 run_py official_warning_hub_schema_smoke.py "$ROOT"
+run_php ai_meteorologist_v2_smoke.php
+run_php personal_weather_twin_v2_smoke.php
+run_php weather_observability_release_smoke.php
+run_py roadmap_complete_schema_smoke.py
 run_php forecast_reliability_smoke.php
 run_php probabilistic_ensemble_smoke.php
 run_php nowcast_fusion_smoke.php

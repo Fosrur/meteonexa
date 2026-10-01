@@ -40,23 +40,23 @@ $executeSqlFile($pdo, $root . '/api/install/mysql-schema.sql');
 $executeSqlFile($pdo, $root . '/api/install/mysql-triggers.sql');
 
 $tableCount = (int)$pdo->query("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema=DATABASE() AND table_type='BASE TABLE'")->fetchColumn();
-if ($tableCount !== 49) {
-    fwrite(STDERR, "expected 49 MySQL tables, got {$tableCount}\n");
+if ($tableCount !== 53) {
+    fwrite(STDERR, "expected 53 MySQL tables, got {$tableCount}\n");
     exit(1);
 }
 
 // Exercise the real historical upgrade path on a current baseline. The DDL is
-// intentionally idempotent: a deployment restored from schema 15 must reach 32
+// intentionally idempotent: a deployment restored from schema 15 must reach 35
 // without destructive drops or duplicate-column failures.
 $metadata = $pdo->prepare("INSERT INTO app_metadata(meta_key,meta_value,updated_at) VALUES('schema_version',:version,:updated) ON DUPLICATE KEY UPDATE meta_value=VALUES(meta_value),updated_at=VALUES(updated_at)");
 $metadata->execute([':version' => '15', ':updated' => gmdate('c')]);
 $version = meteonexa_run_mysql_migrations($pdo, 15);
-if ($version !== 32) {
-    fwrite(STDERR, "explicit MySQL migrations stopped at {$version}, expected 32\n");
+if ($version !== 35) {
+    fwrite(STDERR, "explicit MySQL migrations stopped at {$version}, expected 35\n");
     exit(1);
 }
-if (array_keys(meteonexa_migration_manifest()) !== range(16, 32)) {
-    fwrite(STDERR, "migration manifest is not contiguous from 16 to 32\n");
+if (array_keys(meteonexa_migration_manifest()) !== range(16, 35)) {
+    fwrite(STDERR, "migration manifest is not contiguous from 16 to 35\n");
     exit(1);
 }
 // Runtime capability sync remains idempotent self-heal after the versioned chain.
@@ -66,11 +66,11 @@ meteonexa_sync_product_metrics_schema($pdo);
 meteonexa_sync_current_metadata($pdo);
 
 $current = (int)$pdo->query("SELECT meta_value FROM app_metadata WHERE meta_key='schema_version'")->fetchColumn();
-if ($current !== 32) {
-    fwrite(STDERR, "current MySQL schema metadata is {$current}, expected 32\n");
+if ($current !== 35) {
+    fwrite(STDERR, "current MySQL schema metadata is {$current}, expected 35\n");
     exit(1);
 }
-foreach (['runtime_metrics', 'radar_eta_predictions', 'radar4_event_predictions', 'predictive_alert_opportunities', 'product_metrics_daily', 'ensemble_verification_samples'] as $table) {
+foreach (['runtime_metrics', 'radar_eta_predictions', 'radar4_event_predictions', 'predictive_alert_opportunities', 'product_metrics_daily', 'ensemble_verification_samples', 'ai_semantic_cache', 'personal_station_samples', 'material_decision_state', 'release_canary_snapshots'] as $table) {
     if (!meteonexa_db_table_exists($pdo, $table)) {
         fwrite(STDERR, "missing current capability table {$table}\n");
         exit(1);

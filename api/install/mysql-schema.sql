@@ -712,7 +712,84 @@ CREATE TABLE IF NOT EXISTS radar_frame_quality (
   KEY idx_radar_quality_checked(checked_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-INSERT INTO app_metadata(meta_key,meta_value,updated_at) VALUES('schema_version','32',UTC_TIMESTAMP(6))
+
+
+-- P5 — AI Meteorologist 2.0 privacy-safe semantic cache.
+CREATE TABLE IF NOT EXISTS ai_semantic_cache (
+  cache_key VARCHAR(64) PRIMARY KEY,
+  language VARCHAR(8) NOT NULL,
+  mode VARCHAR(24) NOT NULL,
+  decision_id VARCHAR(64) NOT NULL,
+  context_hash VARCHAR(64) NOT NULL,
+  answer MEDIUMTEXT NOT NULL,
+  sources_json MEDIUMTEXT NOT NULL,
+  confidence INT NOT NULL DEFAULT 0,
+  limitations_json MEDIUMTEXT NOT NULL,
+  expires_at VARCHAR(40) NOT NULL,
+  created_at VARCHAR(40) NOT NULL,
+  last_hit_at VARCHAR(40) NOT NULL DEFAULT '',
+  hit_count BIGINT UNSIGNED NOT NULL DEFAULT 0,
+  KEY idx_ai_semantic_cache_expiry(expires_at),
+  KEY idx_ai_semantic_cache_decision(decision_id,language,mode)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- P6 — Personal Weather Twin quality/bias evidence and material-decision state.
+CREATE TABLE IF NOT EXISTS personal_station_samples (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  device_id VARCHAR(191) NOT NULL,
+  location_key VARCHAR(96) NOT NULL,
+  station_ref VARCHAR(64) NOT NULL,
+  observed_at VARCHAR(40) NOT NULL,
+  quality_score INT NOT NULL DEFAULT 0,
+  outlier TINYINT(1) NOT NULL DEFAULT 0,
+  temperature DOUBLE NULL,
+  humidity DOUBLE NULL,
+  pressure DOUBLE NULL,
+  rain DOUBLE NULL,
+  wind DOUBLE NULL,
+  gust DOUBLE NULL,
+  correction_json MEDIUMTEXT NOT NULL,
+  expires_at VARCHAR(40) NOT NULL,
+  created_at VARCHAR(40) NOT NULL,
+  UNIQUE KEY uq_personal_station_sample(device_id,location_key,station_ref,observed_at),
+  KEY idx_personal_station_retention(expires_at),
+  KEY idx_personal_station_location(device_id,location_key,id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS material_decision_state (
+  device_id VARCHAR(191) NOT NULL,
+  location_key VARCHAR(96) NOT NULL,
+  activity VARCHAR(48) NOT NULL,
+  decision_hash VARCHAR(64) NOT NULL,
+  status VARCHAR(24) NOT NULL,
+  score INT NOT NULL DEFAULT 0,
+  confidence INT NOT NULL DEFAULT 0,
+  starts_at VARCHAR(40) NOT NULL DEFAULT '',
+  ends_at VARCHAR(40) NOT NULL DEFAULT '',
+  changed_at VARCHAR(40) NOT NULL,
+  notified_at VARCHAR(40) NOT NULL DEFAULT '',
+  updated_at VARCHAR(40) NOT NULL,
+  PRIMARY KEY(device_id,location_key,activity),
+  KEY idx_material_decision_change(changed_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- P7 — verified canary release comparison snapshots.
+CREATE TABLE IF NOT EXISTS release_canary_snapshots (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  release_sha VARCHAR(64) NOT NULL,
+  phase VARCHAR(24) NOT NULL,
+  window_start VARCHAR(40) NOT NULL,
+  window_end VARCHAR(40) NOT NULL,
+  sample_count INT NOT NULL DEFAULT 0,
+  mae DOUBLE NULL,
+  brier DOUBLE NULL,
+  metrics_json MEDIUMTEXT NOT NULL,
+  created_at VARCHAR(40) NOT NULL,
+  KEY idx_release_canary_sha(release_sha,phase,id),
+  KEY idx_release_canary_window(window_end)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+INSERT INTO app_metadata(meta_key,meta_value,updated_at) VALUES('schema_version','35',UTC_TIMESTAMP(6))
 ON DUPLICATE KEY UPDATE meta_value=VALUES(meta_value),updated_at=VALUES(updated_at);
 INSERT INTO app_metadata(meta_key,meta_value,updated_at) VALUES('app_version','20.1',UTC_TIMESTAMP(6))
 ON DUPLICATE KEY UPDATE meta_value=VALUES(meta_value),updated_at=VALUES(updated_at);
