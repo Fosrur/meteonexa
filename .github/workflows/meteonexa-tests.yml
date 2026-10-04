@@ -33,10 +33,10 @@ jobs:
         continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python3 tools/quality-fetch-history.py --destination quality-reports/quality-history.jsonl
+        run: python3 tools/quality-fetch-history.py --destination "$RUNNER_TEMP/quality-reports/quality-history.jsonl"
       - name: Post-roadmap fast quality gate
         env:
-          QUALITY_REPORT_DIR: quality-reports/fast
+          QUALITY_REPORT_DIR: ${{ runner.temp }}/quality-reports/fast
         run: npm run qa:fast
       - name: Verify committed release provenance
         run: python3 qa/release_provenance_smoke.py . --require-git --require-clean
@@ -48,14 +48,14 @@ jobs:
           npm run build:production
       - name: Current release and regression suite
         env:
-          QUALITY_REPORT_DIR: quality-reports/full
+          QUALITY_REPORT_DIR: ${{ runner.temp }}/quality-reports/full
         run: npm run qa:full
       - name: Upload continuous-quality evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: continuous-quality-${{ github.run_id }}-${{ github.run_attempt }}
-          path: quality-reports/
+          path: ${{ runner.temp }}/quality-reports/
           if-no-files-found: warn
           retention-days: 30
 

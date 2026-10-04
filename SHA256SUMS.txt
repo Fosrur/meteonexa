@@ -5,7 +5,7 @@ d695b25f257a92ff1f62aaa1462f9a1ca6c40ab294a7dcfe5e6934e45577c291  ./.gitattribut
 dbdf47f62a27badc00789cd9369768de4d210117e6b04d534677154701c19435  ./.github/.htaccess
 a4ff7fed1a80ba5e269f62c732ee83073b5a5c7c6f2d02b83fdef82d080e338c  ./.github/workflows/dependency-security.yml
 f20b3799f3b23a665a4faffde0074d70877ef55f3ac10e33768c8db186c51fda  ./.github/workflows/deploy-production.yml
-521314231ab0ce588fd02e86f9da6e5ff8566df6e9635cd644d6984aef655fa5  ./.github/workflows/meteonexa-tests.yml
+874e88c6fcee1c897488af6c297bc18d73a9ed81cde47d7a51f3db8ae4250302  ./.github/workflows/meteonexa-tests.yml
 b1201f22e6ca77aecf5c07c6b5952f9f1b39f93579839db8fff798f4558c897b  ./.gitignore
 bfe0b3de025cb68ef33d52f5113f6e3b2b575566ce1de7968ecc4280ebbb8f6f  ./.htaccess
 a390584903816dcba203fbe8fd3a200d4aa9538593f0913fe5de5d67ccc40d0b  ./.trivyignore
