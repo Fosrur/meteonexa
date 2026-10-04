@@ -62,3 +62,6 @@ Queste condizioni non riaprono la roadmap software.
 ## CI hardening follow-up — 4 ottobre 2026
 
 Il primo run GitHub successivo alla chiusura ha fatto emergere due problemi di ambiente/test, non regressioni funzionali della roadmap: il gate P4 usava fixture CAP con date assolute ormai scadute e il runner SQLite non rispettava il target parziale richiesto dai test di migrazione; inoltre il tag mobile `php:8.3-apache` era passato a Debian 13 e conteneva pacchetti OS con fix di sicurezza già disponibili. Il follow-up rende le fixture P4 relative al tempo di esecuzione, limita correttamente le migrazioni SQLite al target richiesto e fissa il runtime production a `php:8.3-apache-bookworm` applicando gli aggiornamenti di sicurezza durante la build. I report quality continuano a essere prodotti in `$RUNNER_TEMP`, fuori dal working tree Git, così il provenance gate `--require-clean` resta valido.
+
+
+Follow-up CI P3.4: la fixture sintetica del Promotion Study usa ora una coverage deterministica stabile (~85%) compatibile con lo split SHA256 train/holdout; le soglie reali di holdout/stabilità non sono state allentate. Il fix elimina un falso rosso del test senza modificare Radar4 né l’autorità production di Radar3.

@@ -39,7 +39,7 @@ if (extension_loaded('pdo_sqlite')) {
             $score = hexdec(substr(hash('sha256', 'obs|'.$key), 0, 6)) % 100;
             $observed = $score < (int)$prob ? 1 : 0;
             $signedError = $observed ? (($i + $kindIndex) % 7) - 3 : null;
-            $within = $observed ? (($i % 5) === 0 ? 0 : 1) : 0;
+            $within = $observed ? (($i % 7) === 0 ? 0 : 1) : 0;
             $brier = (($prob / 100) - $observed) ** 2;
             $event->execute([
                 ':loc'=>$areas[$i%3], ':key'=>$key, ':kind'=>$kind, ':at'=>'2026-09-15T12:00:00Z', ':prob'=>$prob,
