@@ -10,6 +10,10 @@ Il repository **non può modificare da solo il flag GitHub “Allow write access
 <!-- METEONEXA_CURRENT_CONTRACT_START -->
 ## MeteoNexa 20.1.1 — contratto corrente P0→P7 / roadmap post-audit completa
 
+### CI hardening post-closure — 4 ottobre 2026
+
+Il primo run GitHub sullo SHA di chiusura ha evidenziato tre condizioni di CI ora corrette: i report quality vengono scritti in `$RUNNER_TEMP` per non sporcare il working tree del provenance gate; il test Official Warning Hub usa finestre CAP relative al tempo corrente e il runner SQLite rispetta il target di migrazione richiesto; l'immagine production è fissata a `php:8.3-apache-bookworm` e applica gli aggiornamenti di sicurezza OS durante la build prima dell'installazione delle estensioni.
+
 ### Chiusura progetto software — 1 ottobre 2026
 
 La roadmap **P0→P7 è completata** e anche il backlog tecnico post-roadmap definito per la chiusura è stato implementato. Non viene aperta una P8. Lo stato corrente è **software/project closure**: il repository conserva solo gate operativi/live che dipendono da infrastruttura o dati reali (in particolare P2 sullo stesso SHA pubblicato e maturità P3 Radar4), oltre alla manutenzione ordinaria.

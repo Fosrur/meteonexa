@@ -89,10 +89,17 @@ function meteonexa_write_schema_version(PDO $pdo, int $version): void
     ]);
 }
 
-function meteonexa_run_explicit_migrations(PDO $pdo, int $schemaVersion, string $driver): int
+function meteonexa_run_explicit_migrations(PDO $pdo, int $schemaVersion, string $driver, ?int $targetSchema = null): int
 {
+    $targetSchema = $targetSchema === null
+        ? meteonexa_current_schema_version()
+        : min($targetSchema, meteonexa_current_schema_version());
+
     foreach (meteonexa_database_migrations() as $migration) {
         $targetVersion = $migration['version'];
+        if ($targetVersion > $targetSchema) {
+            break;
+        }
         if ($schemaVersion >= $targetVersion || !in_array($driver, $migration['drivers'], true)) {
             continue;
         }
@@ -125,7 +132,7 @@ function meteonexa_run_sqlite_migrations(PDO $pdo, int $schemaVersion, int $curr
     }
 
     if ($schemaVersion < $currentSchema) {
-        $schemaVersion = meteonexa_run_explicit_migrations($pdo, $schemaVersion, 'sqlite');
+        $schemaVersion = meteonexa_run_explicit_migrations($pdo, $schemaVersion, 'sqlite', $currentSchema);
     }
 
     return $schemaVersion;

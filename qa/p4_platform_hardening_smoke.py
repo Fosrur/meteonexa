@@ -16,6 +16,7 @@ semgrep = read('config/quality/semgrep.yml')
 checks = {
     'production Dockerfile uses an explicit runtime allowlist': 'COPY . /var/www/html' not in dockerfile and ('/var/www/html/api' in dockerfile and '/var/www/html/dist' in dockerfile and 'COPY --from=frontend-build' in dockerfile),
     'production image drops root': 'USER www-data:www-data' in dockerfile,
+    'production runtime base is distro-pinned and OS security-updated': 'FROM php:8.3-apache-bookworm' in dockerfile and 'apt-get upgrade -y' in dockerfile,
     'web container is read-only and non-root': re.search(r'web:\n(?:(?:    |      ).*\n)*?    user: "33:33"', compose) is not None and 'read_only: true' in compose,
     'containers enable no-new-privileges': compose.count('no-new-privileges:true') >= 2,
     'containers drop Linux capabilities': compose.count('cap_drop:') >= 2 and compose.count('- ALL') >= 2,

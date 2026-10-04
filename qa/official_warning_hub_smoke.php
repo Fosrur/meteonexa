@@ -12,16 +12,21 @@ $ok(is_array($geometry)&&($geometry['type']??'')==='Polygon','CAP polygon normal
 $ok(meteonexa_official_hub_geometry_contains((array)$geometry,44.5,9.2),'polygon geofencing accepts inside point');
 $ok(!meteonexa_official_hub_geometry_contains((array)$geometry,43.5,9.2),'polygon geofencing rejects outside point');
 
+$fixtureNow=time();
+$issuedAt=gmdate('c',$fixtureNow-15*60);
+$updatedAt=gmdate('c',$fixtureNow-5*60);
+$cancelledAt=gmdate('c',$fixtureNow);
+$endsAt=gmdate('c',$fixtureNow+12*3600);
 $base=[
     'id'=>'root-alert','identifier'=>'root-alert','source'=>'MeteoAlarm EDR','authority'=>'National Weather Service',
     'sender'=>'warnings@example.test','messageType'=>'Alert','status'=>'Actual','event'=>'Thunderstorm','title'=>'Thunderstorm warning',
-    'severity'=>'yellow','certainty'=>'Likely','urgency'=>'Expected','sentAt'=>'2026-10-01T06:00:00Z','updatedAt'=>'2026-10-01T06:00:00Z',
-    'startsAt'=>'2026-10-01T06:00:00Z','endsAt'=>'2026-10-02T06:00:00Z','geometry'=>$geometry,'geospatialMatch'=>true,
+    'severity'=>'yellow','certainty'=>'Likely','urgency'=>'Expected','sentAt'=>$issuedAt,'updatedAt'=>$issuedAt,
+    'startsAt'=>$issuedAt,'endsAt'=>$endsAt,'geometry'=>$geometry,'geospatialMatch'=>true,
 ];
 $update=$base;
 $update['id']=$update['identifier']='update-alert';
-$update['references']='warnings@example.test,root-alert,2026-10-01T06:00:00Z';
-$update['messageType']='Update';$update['severity']='orange';$update['updatedAt']='2026-10-01T07:00:00Z';
+$update['references']='warnings@example.test,root-alert,' . $issuedAt;
+$update['messageType']='Update';$update['severity']='orange';$update['updatedAt']=$updatedAt;
 $rows=meteonexa_official_hub_dedupe([$base,$update],44.5,9.2);
 $ok(count($rows)===1,'event+area dedupe keeps one current version');
 $ok(($rows[0]['eventId']??'')==='root-alert','CAP references keep stable root event identity');
@@ -32,7 +37,7 @@ $adapterRows=meteonexa_official_hub_dedupe([$base,$atomDuplicate],44.5,9.2);
 $ok(count($adapterRows)===1,'MeteoAlarm transport adapters do not duplicate the same event+area');
 $ok(($rows[0]['origin']??'')==='official-warning-authority'&&($rows[0]['forecastAuthoritySeparated']??false)===true,'official warning remains semantically separate from MeteoNexa forecast');
 
-$cancel=$update;$cancel['id']=$cancel['identifier']='cancel-alert';$cancel['messageType']='Cancel';$cancel['updatedAt']='2026-10-01T08:00:00Z';
+$cancel=$update;$cancel['id']=$cancel['identifier']='cancel-alert';$cancel['messageType']='Cancel';$cancel['updatedAt']=$cancelledAt;
 $normalized=meteonexa_official_normalize(['available'=>true,'providerFresh'=>true,'geospatial'=>true,'relevant'=>[$cancel]]);
 $ok(count((array)($normalized['relevant']??[]))===0&&count((array)($normalized['terminalRevisions']??[]))===1,'CAP cancellation is terminal and not rendered active');
 $ok(($normalized['hub']['lifecycle']??[])===['issued','updated','cancelled','expired'],'hub contract publishes canonical lifecycle');
