@@ -13,6 +13,7 @@ require_once dirname(__DIR__) . '/intelligence/severe_outlook_helpers.php';
 require_once dirname(__DIR__) . '/intelligence/convective_v4.php';
 require_once dirname(__DIR__) . '/account/account_helpers.php';
 require_once dirname(__DIR__) . '/route/weather_engine.php';
+require_once dirname(__DIR__) . '/official/administrative_area_match.php';
 
 function meteonexa_copilot_keywords(string $message): string
 {
@@ -239,6 +240,7 @@ function meteonexa_copilot_orchestrate(PDO $pdo, array $config, string $deviceId
         $lightning = meteonexa_intelligence_lightning($config, $lat, $lon);
         $satellite = meteonexa_intelligence_satellite($lat, $lon);
         $official = meteonexa_official_alerts($lat, $lon, $locationName, '');
+        $official = meteonexa_official_apply_position_area_match($official, $locationName, '');
         $fusion = meteonexa_nowcast_fusion($consensus, $motion, $cell, $lightning, $satellite, $official, ['sourceCount' => 0], $lat);
         $nowcast = meteonexa_object_nowcast($pdo, $deviceId, $locationKey, $fusion, $consensus, $cell, $motion);
         $tools['nowcast'] = $nowcast;

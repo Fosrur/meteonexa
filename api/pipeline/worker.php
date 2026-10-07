@@ -8,6 +8,7 @@ require_once dirname(__DIR__) . '/intelligence/quality_helpers.php';
 require_once dirname(__DIR__) . '/intelligence/radar4_operational_helpers.php';
 require_once dirname(__DIR__) . '/observations/providers.php';
 require_once dirname(__DIR__) . '/official/lifecycle_helpers.php';
+require_once dirname(__DIR__) . '/official/administrative_area_match.php';
 require_once dirname(__DIR__) . '/calibration/helpers.php';
 require_once dirname(__DIR__) . '/radar/archive_helpers.php';
 require_once dirname(__DIR__) . '/plans/watch_engine.php';
@@ -47,6 +48,7 @@ foreach ($locations as $loc) {
         $started = meteonexa_pipeline_ms();
         try {
             $official = meteonexa_intelq_meteoalarm_edr($config, $loc['latitude'], $loc['longitude'], 'it')??meteonexa_official_alerts($loc['latitude'], $loc['longitude'], $loc['locationName'], $loc['admin1']);
+            $official = meteonexa_official_apply_position_area_match($official, $loc['locationName'], $loc['admin1']);
             if (!isset($official['mode'])) {
                 $official['mode'] = 'atom-text-fallback';
                 $official['geospatial'] = false;

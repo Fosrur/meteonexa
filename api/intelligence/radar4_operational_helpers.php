@@ -17,6 +17,7 @@ require_once __DIR__ . '/radar4_probabilistic_helpers.php';
 require_once __DIR__ . '/radar4_calibration_helpers.php';
 require_once __DIR__ . '/radar4_promotion_study_helpers.php';
 require_once dirname(__DIR__) . '/official/lifecycle_helpers.php';
+require_once dirname(__DIR__) . '/official/administrative_area_match.php';
 
 function meteonexa_radar4_p3_progress_check(string $id, int $actual, int $required): array {
     $required = max(1, $required);
@@ -201,6 +202,7 @@ function meteonexa_radar4_live_shadow_cycle(PDO $pdo, array $config, array $loc,
     $motion['cellTracking'] = $cellTracking;
     $satellite = meteonexa_intelligence_satellite($lat, $lon);
     $official = meteonexa_intelq_meteoalarm_edr($config, $lat, $lon, 'it') ?? meteonexa_official_alerts($lat, $lon, (string)($loc['locationName'] ?? ''), (string)($loc['admin1'] ?? ''));
+    $official = meteonexa_official_apply_position_area_match($official, (string)($loc['locationName'] ?? ''), (string)($loc['admin1'] ?? ''));
     if (!isset($official['mode'])) {
         $official['mode'] = 'atom-text-fallback';
         $official['geospatial'] = false;

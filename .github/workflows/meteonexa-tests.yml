@@ -24,6 +24,10 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '20'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            qa/package-lock.json
       - name: Verify deterministic dependency manifests
         run: |
           test -f package-lock.json
@@ -100,6 +104,10 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '20'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            qa/package-lock.json
       - name: Install PHP and Composer
         run: |
           sudo apt-get update
@@ -254,7 +262,6 @@ jobs:
     name: browser-regression (${{ matrix.browser }})
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [release-gates, mysql-auth-regression, quality-security, backup-restore-drill, staging-compose]
     strategy:
       fail-fast: false
       matrix:
@@ -265,6 +272,10 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '20'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            qa/package-lock.json
       - name: Build production frontend for browser regression
         run: |
           npm ci --ignore-scripts --no-audit --no-fund

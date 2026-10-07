@@ -10,6 +10,7 @@ require_once dirname(__DIR__) . '/intelligence/quality_helpers.php';
 require_once dirname(__DIR__) . '/intelligence/severe_outlook_helpers.php';
 require_once dirname(__DIR__) . '/intelligence/personal_twin_helpers.php';
 require_once dirname(__DIR__) . '/official/lifecycle_helpers.php';
+require_once dirname(__DIR__) . '/official/administrative_area_match.php';
 require_once dirname(__DIR__) . '/pipeline/helpers.php';
 $config = load_config();
 $secret = trim((string)($config['push']['cron_secret']??''));
@@ -56,7 +57,13 @@ foreach ($rows as $row) {
         $eventsCfg = (array)($profile['events']??[]);
         $lightning =((!array_key_exists('storm', $eventsCfg)||$eventsCfg['storm'])||(!array_key_exists('hail', $eventsCfg)||$eventsCfg['hail'])) ? meteonexa_intelligence_lightning($config, $lat, $lon) :['available'=>false];
         $satellite = meteonexa_intelligence_satellite($lat, $lon);
-        $official =(!array_key_exists('official', $eventsCfg)||$eventsCfg['official']) ? meteonexa_official_track($pdo, $lat, $lon, $location, meteonexa_official_alerts($lat, $lon, $location, '')) :['relevant'=>[]];
+        if (!array_key_exists('official', $eventsCfg)||$eventsCfg['official']) {
+            $official = meteonexa_official_alerts($lat, $lon, $location, '');
+            $official = meteonexa_official_apply_position_area_match($official, $location, '');
+            $official = meteonexa_official_track($pdo, $lat, $lon, $location, $official);
+        } else {
+            $official = ['relevant'=>[]];
+        }
         // Hyperlocal observations are fused only for authenticated devices that
         // actually connected a Netatmo account. Provider failure never blocks alerts.
         $hyperlocal = meteonexa_intelligence_hyperlocal($pdo, $config, $device, $lat, $lon);

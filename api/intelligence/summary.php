@@ -23,6 +23,7 @@ require_once __DIR__ . '/personal_twin_helpers.php';
 require_once dirname(__DIR__) . '/observations/providers.php';
 require_once dirname(__DIR__) . '/account/account_helpers.php';
 require_once dirname(__DIR__) . '/official/lifecycle_helpers.php';
+require_once dirname(__DIR__) . '/official/administrative_area_match.php';
 require_once dirname(__DIR__) . '/pipeline/helpers.php';
 require_once dirname(__DIR__) . '/calibration/helpers.php';
 require_method('GET');
@@ -81,6 +82,7 @@ $cellTracking = meteonexa_enrich_cell_tracking(meteonexa_intelq_cell_tracking($p
 $motion['cellTracking'] = $cellTracking;
 $satellite = meteonexa_intelligence_satellite($lat, $lon);
 $official = meteonexa_intelq_meteoalarm_edr($config, $lat, $lon, $locale)??meteonexa_official_alerts($lat, $lon, $locationName, $admin1);
+$official = meteonexa_official_apply_position_area_match($official, $locationName, $admin1);
 if (!isset($official['mode'])) {
     $official['mode'] = 'atom-text-fallback';
     $official['geospatial'] = false;

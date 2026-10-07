@@ -29,16 +29,31 @@ function meteonexa_official_municipality_severity(array $data): string {
     };
 }
 
-function meteonexa_official_municipality_risks(array $data): array {
+function meteonexa_official_municipality_detail_severity(string $description, string $fallback = ''): string {
+    $text = meteonexa_official_place_token($description);
+    if ($text === '' || str_contains($text, 'nessuna allerta') || str_contains($text, 'assenza di fenomeni')) return 'green';
+    if (str_contains($text, 'allerta rossa') || preg_match('/\brosso\b|\brossa\b|\bred\b/', $text)) return 'red';
+    if (str_contains($text, 'allerta arancione') || preg_match('/\barancione\b|\borange\b/', $text)) return 'orange';
+    if (str_contains($text, 'allerta gialla') || preg_match('/\bgiallo\b|\bgialla\b|\byellow\b/', $text)) return 'yellow';
+    return in_array($fallback, ['yellow','orange','red'], true) ? $fallback : '';
+}
+
+function meteonexa_official_municipality_risk_severities(array $data): array {
     $today = is_array($data['oggi'] ?? null) ? (array)$data['oggi'] : [];
     $details = is_array($today['dettagli'] ?? null) ? (array)$today['dettagli'] : [];
+    $fallback = meteonexa_official_municipality_severity($data);
     $out = [];
     foreach ($details as $risk=>$description) {
-        $text = meteonexa_official_place_token((string)$description);
-        if ($text === '' || str_contains($text, 'nessuna allerta') || str_contains($text, 'assenza di fenomeni')) continue;
-        $out[] = meteonexa_official_place_token((string)$risk);
+        $key = meteonexa_official_place_token((string)$risk);
+        if ($key === '') continue;
+        $severity = meteonexa_official_municipality_detail_severity((string)$description, $fallback);
+        if ($severity !== '' && $severity !== 'green') $out[$key] = $severity;
     }
-    return array_values(array_unique(array_filter($out)));
+    return $out;
+}
+
+function meteonexa_official_municipality_risks(array $data): array {
+    return array_keys(meteonexa_official_municipality_risk_severities($data));
 }
 
 function meteonexa_official_municipality_fetch(string $locationName): ?array {
@@ -61,7 +76,7 @@ function meteonexa_official_municipality_fetch(string $locationName): ?array {
     try {
         $url = 'https://allertameteo.app/api/alert/' . rawurlencode($municipality);
         $fresh = meteonexa_http_json($url, [
-            'timeout'=>10,
+            'timeout'=>6,
             'headers'=>['Accept: application/json'],
             'max_bytes'=>350000
         ]);
@@ -79,39 +94,67 @@ function meteonexa_official_municipality_fetch(string $locationName): ?array {
     return null;
 }
 
+function meteonexa_official_municipality_event_matches_risk(array $row, string $risk): bool {
+    $event = meteonexa_official_place_token(
+        (string)($row['event'] ?? '') . ' ' .
+        (string)($row['title'] ?? '') . ' ' .
+        (string)($row['summary'] ?? '')
+    );
+    $risk = meteonexa_official_place_token($risk);
+    $patterns = [
+        'temporali'=>['thunder','storm','tempor','orage','gewitter','tormenta'],
+        'idrogeologico'=>['rain','flood','piogg','precipit','pluie','regen','lluvia','hydro'],
+        'idraulico'=>['rain','flood','piogg','precipit','pluie','regen','lluvia','hydro'],
+        'vento'=>['wind','vento','vent','windstorm'],
+        'neve'=>['snow','neve','schnee','nieve'],
+        'ghiaccio'=>['ice','ghiacc','eis','hielo'],
+        'mareggiate'=>['coastal','sea','wave','mare','onda','costa'],
+        'temperature estreme'=>['heat','cold','caldo','freddo','temperature'],
+    ];
+    foreach ($patterns[$risk] ?? [$risk] as $needle) {
+        if ($needle !== '' && str_contains($event, $needle)) return true;
+    }
+    return false;
+}
+
 function meteonexa_official_municipality_row_score(array $row, array $risks): int {
-    $event = meteonexa_official_place_token((string)($row['event'] ?? '') . ' ' . (string)($row['title'] ?? ''));
     $score = 0;
     $state = strtolower((string)($row['windowState'] ?? ''));
     if ($state === 'active') $score += 30;
     elseif ($state === 'upcoming') $score += 20;
+    elseif ($state === 'expired' || $state === 'inactive') $score -= 100;
     $rank = ['green'=>0,'yellow'=>1,'orange'=>2,'red'=>3];
     $score += 4 * ($rank[strtolower((string)($row['severity'] ?? 'green'))] ?? 0);
-    foreach ($risks as $risk) {
-        if ($risk === 'temporali' && (str_contains($event, 'thunder') || str_contains($event, 'storm') || str_contains($event, 'tempor'))) $score += 40;
-        if ($risk === 'idrogeologico' && (str_contains($event, 'rain') || str_contains($event, 'flood') || str_contains($event, 'piogg'))) $score += 32;
-        if ($risk === 'idraulico' && (str_contains($event, 'rain') || str_contains($event, 'flood') || str_contains($event, 'piogg'))) $score += 28;
-    }
+    foreach ($risks as $risk) if (meteonexa_official_municipality_event_matches_risk($row, (string)$risk)) $score += 40;
+    if (($row['geospatialMatch'] ?? false) === true) $score += 8;
     return $score;
 }
 
-function meteonexa_official_apply_position_area_match(array $alerts, string $locationName, string $admin1): array {
-    if (!empty($alerts['relevant'])) return $alerts;
+function meteonexa_official_municipality_candidate_rows(array $alerts): array {
+    $rows = [];
+    $seen = [];
+    foreach (['relevant','regionalAdvisories'] as $bucket) {
+        foreach ((array)($alerts[$bucket] ?? []) as $row) {
+            if (!is_array($row)) continue;
+            if (function_exists('meteonexa_official_window_state')) $row = meteonexa_official_window_state($row);
+            elseif (function_exists('meteonexa_official_enrich_window')) $row = meteonexa_official_enrich_window($row);
+            $key = (string)($row['hubKey'] ?? $row['id'] ?? $row['identifier'] ?? hash('sha256', json_encode($row)));
+            if (isset($seen[$key])) continue;
+            $seen[$key] = true;
+            $rows[] = $row;
+        }
+    }
+    return $rows;
+}
 
-    $municipality = trim(explode(',', $locationName, 2)[0]);
-    if ($municipality === '') return $alerts;
-
-    $verification = meteonexa_official_municipality_fetch($municipality);
-    if (!is_array($verification) || !is_array($verification['data'] ?? null)) return $alerts;
-
-    $data = (array)$verification['data'];
+function meteonexa_official_apply_municipality_data(array $alerts, array $data, string $municipality, string $admin1 = '', array $cacheMeta = []): array {
     $providerMunicipality = trim((string)($data['comune'] ?? ''));
     $providerRegion = trim((string)($data['regione'] ?? ''));
     if ($providerMunicipality === '' || meteonexa_official_place_token($providerMunicipality) !== meteonexa_official_place_token($municipality)) return $alerts;
     if ($admin1 !== '' && $providerRegion !== '' && meteonexa_official_place_token($providerRegion) !== meteonexa_official_place_token($admin1)) return $alerts;
 
     $severity = meteonexa_official_municipality_severity($data);
-    $cacheMeta = is_array($verification['_meteonexaMunicipalityCache'] ?? null) ? (array)$verification['_meteonexaMunicipalityCache'] : [];
+    $stale = !empty($cacheMeta['stale']);
     $alerts['municipalityVerification'] = [
         'verified'=>true,
         'municipality'=>$providerMunicipality,
@@ -119,64 +162,110 @@ function meteonexa_official_apply_position_area_match(array $alerts, string $loc
         'zone'=>(string)($data['zona'] ?? ''),
         'severity'=>$severity,
         'source'=>'Allerta Meteo Italia / Protezione Civile data',
-        'stale'=>!empty($cacheMeta['stale']),
+        'stale'=>$stale,
         'cacheAgeSeconds'=>(int)($cacheMeta['ageSeconds'] ?? 0)
     ];
+    if ($severity === '') return $alerts;
+    if ($stale && !empty($alerts['relevant'])) return $alerts;
 
-    if ($severity === '' || $severity === 'green') return $alerts;
-
-    $risks = meteonexa_official_municipality_risks($data);
-    $candidates = [];
-    foreach ((array)($alerts['regionalAdvisories'] ?? []) as $row) {
-        if (!is_array($row)) continue;
-        $row = meteonexa_official_enrich_window($row);
-        $candidates[] = ['score'=>meteonexa_official_municipality_row_score($row, $risks),'row'=>$row];
+    if ($severity === 'green') {
+        if (!$stale) {
+            $alerts['regionalAdvisories'] = meteonexa_official_municipality_candidate_rows($alerts);
+            $alerts['relevant'] = [];
+            $alerts['municipalityMatch'] = true;
+            $alerts['territorialSeverityVerified'] = true;
+            $alerts['mode'] = 'municipality-external-verification';
+        }
+        return $alerts;
     }
-    usort($candidates, static fn(array $a, array $b): int => $b['score'] <=> $a['score']);
 
-    $selected = $candidates[0]['row'] ?? [
-        'id'=>'municipality-' . substr(hash('sha256', meteonexa_official_place_token($providerMunicipality) . '|' . date('Y-m-d')), 0, 32),
-        'identifier'=>'municipality-' . meteonexa_official_place_token($providerMunicipality),
-        'title'=>'Allerta Protezione Civile - ' . $providerMunicipality,
-        'summary'=>(string)($data['oggi']['allerta']['descrizione'] ?? ''),
-        'event'=>$risks ? implode(', ', $risks) : 'official warning',
-        'area'=>(string)($data['zona'] ?? $providerMunicipality),
-        'certainty'=>'Likely',
-        'urgency'=>'Expected',
-        'sender'=>'',
-        'sentAt'=>null,
-        'updatedAt'=>null,
-        'startsAt'=>null,
-        'endsAt'=>null,
-        'messageType'=>'Alert',
-        'status'=>'Actual',
-        'references'=>[],
-        'instruction'=>'',
-        'geometry'=>null,
-        'geocodes'=>[],
-        'source'=>'Allerta Meteo Italia',
-        'authority'=>'Protezione Civile data',
-        'official'=>true,
-        'origin'=>'official-warning-authority',
-        'forecastAuthoritySeparated'=>true,
-        'geospatialMatch'=>false
-    ];
+    $riskSeverities = meteonexa_official_municipality_risk_severities($data);
+    $risks = array_keys($riskSeverities);
+    $candidates = meteonexa_official_municipality_candidate_rows($alerts);
+    $selected = [];
+    $selectedKeys = [];
 
-    $selected['severity'] = $severity;
-    $selected['matchScope'] = 'municipality-external';
-    $selected['municipalityMatch'] = true;
-    $selected['matchedMunicipality'] = $providerMunicipality;
-    $selected['matchedAdministrativeArea'] = (string)($data['zona'] ?? '');
-    $selected['positionMatched'] = true;
-    $selected['positionMatchSource'] = 'current-location-municipality';
-    $selected['territorialVerificationSource'] = 'Allerta Meteo Italia / Protezione Civile data';
-    $selected['territorialRisks'] = $risks;
-    $selected['municipalityProviderFresh'] = empty($cacheMeta['stale']);
+    foreach ($risks as $risk) {
+        $matching = array_values(array_filter($candidates, static fn(array $row): bool => meteonexa_official_municipality_event_matches_risk($row, $risk)));
+        usort($matching, static fn(array $a, array $b): int => meteonexa_official_municipality_row_score($b, [$risk]) <=> meteonexa_official_municipality_row_score($a, [$risk]));
+        if (!$matching) continue;
+        $row = $matching[0];
+        $key = (string)($row['hubKey'] ?? $row['id'] ?? $row['identifier'] ?? hash('sha256', json_encode($row)));
+        if (isset($selectedKeys[$key])) continue;
+        $selectedKeys[$key] = true;
+        $row['providerSeverity'] = (string)($row['severity'] ?? '');
+        if (!$stale) $row['severity'] = $riskSeverities[$risk] ?? $severity;
+        $row['territorialRisk'] = $risk;
+        $selected[] = $row;
+    }
 
-    $alerts['relevant'] = [$selected];
+    if (!$selected && $candidates) {
+        usort($candidates, static fn(array $a, array $b): int => meteonexa_official_municipality_row_score($b, $risks) <=> meteonexa_official_municipality_row_score($a, $risks));
+        $row = $candidates[0];
+        $row['providerSeverity'] = (string)($row['severity'] ?? '');
+        if (!$stale) $row['severity'] = $severity;
+        $selected[] = $row;
+    }
+
+    if (!$selected) {
+        $selected[] = [
+            'id'=>'municipality-' . substr(hash('sha256', meteonexa_official_place_token($providerMunicipality) . '|' . date('Y-m-d')), 0, 32),
+            'identifier'=>'municipality-' . meteonexa_official_place_token($providerMunicipality),
+            'title'=>'Allerta Protezione Civile - ' . $providerMunicipality,
+            'summary'=>(string)($data['oggi']['allerta']['descrizione'] ?? ''),
+            'event'=>$risks ? implode(', ', $risks) : 'official warning',
+            'area'=>(string)($data['zona'] ?? $providerMunicipality),
+            'severity'=>$severity,
+            'certainty'=>'Likely',
+            'urgency'=>'Expected',
+            'sender'=>'',
+            'sentAt'=>null,
+            'updatedAt'=>null,
+            'startsAt'=>null,
+            'endsAt'=>null,
+            'messageType'=>'Alert',
+            'status'=>'Actual',
+            'references'=>[],
+            'instruction'=>'',
+            'geometry'=>null,
+            'geocodes'=>[],
+            'source'=>'Allerta Meteo Italia',
+            'authority'=>'Protezione Civile data',
+            'official'=>true,
+            'origin'=>'official-warning-authority',
+            'forecastAuthoritySeparated'=>true,
+            'geospatialMatch'=>false
+        ];
+    }
+
+    foreach ($selected as &$row) {
+        $row['matchScope'] = 'municipality-external';
+        $row['municipalityMatch'] = true;
+        $row['matchedMunicipality'] = $providerMunicipality;
+        $row['matchedAdministrativeArea'] = (string)($data['zona'] ?? '');
+        $row['positionMatched'] = true;
+        $row['positionMatchSource'] = 'current-location-municipality';
+        $row['territorialVerificationSource'] = 'Allerta Meteo Italia / Protezione Civile data';
+        $row['territorialRisks'] = $risks;
+        $row['territorialSeverityVerified'] = !$stale;
+        $row['municipalityProviderFresh'] = !$stale;
+    }
+    unset($row);
+
+    $alerts['relevant'] = $selected;
     $alerts['administrativeAreaMatch'] = false;
     $alerts['municipalityMatch'] = true;
     $alerts['matchedByAreaText'] = false;
+    $alerts['territorialSeverityVerified'] = !$stale;
     $alerts['mode'] = 'municipality-external-verification';
     return $alerts;
+}
+
+function meteonexa_official_apply_position_area_match(array $alerts, string $locationName, string $admin1): array {
+    $municipality = trim(explode(',', $locationName, 2)[0]);
+    if ($municipality === '') return $alerts;
+    $verification = meteonexa_official_municipality_fetch($municipality);
+    if (!is_array($verification) || !is_array($verification['data'] ?? null)) return $alerts;
+    $cacheMeta = is_array($verification['_meteonexaMunicipalityCache'] ?? null) ? (array)$verification['_meteonexaMunicipalityCache'] : [];
+    return meteonexa_official_apply_municipality_data($alerts, (array)$verification['data'], $municipality, $admin1, $cacheMeta);
 }

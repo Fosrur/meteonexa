@@ -45,15 +45,46 @@ $greenFixture['oggi']['dettagli']['temporali']='Assenza di fenomeni significativ
 $ok(meteonexa_official_municipality_severity($yellowFixture)==='yellow','municipality provider severity normalizes yellow');
 $ok(meteonexa_official_municipality_severity($greenFixture)==='green','municipality provider severity normalizes green');
 $ok(meteonexa_official_municipality_risks($yellowFixture)===['temporali'],'municipality provider extracts only active risks');
+$ok(meteonexa_official_municipality_risk_severities($yellowFixture)===['temporali'=>'yellow'],'municipality provider preserves per-risk warning colour');
 
 $storm=array_replace($base,['id'=>'storm','identifier'=>'storm','geometry'=>null,'geospatialMatch'=>false,'event'=>'Orange Thunderstorm Warning','title'=>'Orange Thunderstorm Warning','severity'=>'orange','windowState'=>'active']);
 $rain=array_replace($base,['id'=>'rain','identifier'=>'rain','geometry'=>null,'geospatialMatch'=>false,'event'=>'Orange Rain Warning','title'=>'Orange Rain Warning','severity'=>'orange','windowState'=>'active']);
 $ok(meteonexa_official_municipality_row_score($storm,['temporali'])>meteonexa_official_municipality_row_score($rain,['temporali']),'municipality verification prefers provider event matching the active local risk');
 
+$providerRows=[
+    'available'=>true,
+    'providerFresh'=>true,
+    'relevant'=>[
+        array_replace($storm,['geometry'=>$geometry,'geospatialMatch'=>true]),
+        array_replace($rain,['geometry'=>$geometry,'geospatialMatch'=>true])
+    ],
+    'regionalAdvisories'=>[]
+];
+$verifiedYellow=meteonexa_official_apply_municipality_data($providerRows,$yellowFixture,'Example City','Example Region',['stale'=>false,'ageSeconds'=>0]);
+$verifiedRows=(array)($verifiedYellow['relevant']??[]);
+$ok(count($verifiedRows)===1&&($verifiedRows[0]['id']??'')==='storm','fresh municipality verification keeps only warnings matching the active local risk');
+$ok(($verifiedRows[0]['severity']??'')==='yellow'&&($verifiedRows[0]['providerSeverity']??'')==='orange','fresh municipality warning colour overrides broader provider severity');
+$ok(($verifiedYellow['territorialSeverityVerified']??false)===true,'fresh municipality severity is marked as territorially verified');
+
+$verifiedGreen=meteonexa_official_apply_municipality_data($providerRows,$greenFixture,'Example City','Example Region',['stale'=>false,'ageSeconds'=>0]);
+$ok(count((array)($verifiedGreen['relevant']??[]))===0,'fresh municipality no-warning state suppresses broader provider warnings');
+
+$staleYellow=meteonexa_official_apply_municipality_data($providerRows,$yellowFixture,'Example City','Example Region',['stale'=>true,'ageSeconds'=>900]);
+$staleRows=(array)($staleYellow['relevant']??[]);
+$ok(count($staleRows)===2&&($staleRows[0]['severity']??'')==='orange'&&!isset($staleYellow['territorialSeverityVerified']),'stale municipality cache never changes fresh provider warnings');
+
 $appSource=(string)file_get_contents(dirname(__DIR__).'/js/app.js');
 $apiSource=(string)file_get_contents(dirname(__DIR__).'/api/official/alerts.php');
 $matchSource=(string)file_get_contents(dirname(__DIR__).'/api/official/administrative_area_match.php');
 $styleSource=(string)file_get_contents(dirname(__DIR__).'/styles/main/99-reliability-patches.css');
+$officialConsumers=[
+    dirname(__DIR__).'/api/intelligence/summary.php',
+    dirname(__DIR__).'/api/demo/intelligence.php',
+    dirname(__DIR__).'/api/pipeline/worker.php',
+    dirname(__DIR__).'/api/intelligence/radar4_operational_helpers.php',
+    dirname(__DIR__).'/api/push/dispatch.php',
+    dirname(__DIR__).'/api/ai/orchestrator.php',
+];
 
 $ok(str_contains($apiSource,'meteonexa_intelq_meteoalarm_edr')&&str_contains($apiSource,'meteonexa_official_alerts'),'MeteoAlarm remains the primary official warning provider');
 $ok(str_contains($matchSource,'allertameteo.app/api/alert/'),'municipality fallback uses an external municipality-level service');
@@ -61,6 +92,12 @@ $ok(!preg_match('/\b(?:Lavagna|Genova|Liguria|Roma|Milano)\b/i',$matchSource),'m
 $ok(!str_contains($matchSource,"if (\$admin !== '' && in_array(\$admin"),'region-wide administrative promotion is removed');
 $ok(!str_contains($appSource,"params.set('deviceId'")&&str_contains($appSource,'api/official/alerts.php?${params}'),'guest and authenticated Home use the same public official-alert request');
 $ok(!str_contains($apiSource,'require_authenticated_device_session')&&str_contains($apiSource,'meteonexa_verify_device_proof')&&str_contains($apiSource,'meteonexa_official_public_snapshot'),'public official-alert API degrades invalid device proof instead of failing weather data');
+$localizedConsumers=true;
+foreach($officialConsumers as $consumer){
+    $source=(string)file_get_contents($consumer);
+    $localizedConsumers=$localizedConsumers&&str_contains($source,'meteonexa_official_apply_position_area_match');
+}
+$ok($localizedConsumers,'guest, authenticated, background, push and AI official-warning consumers use the same municipality verification');
 
 $colorStates=true;
 foreach(['green','yellow','orange','red'] as $colorState){

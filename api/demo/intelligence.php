@@ -3,6 +3,7 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/bootstrap.php';
 require_once dirname(__DIR__) . '/public_helpers.php';
 require_once dirname(__DIR__) . '/intelligence/quality_helpers.php';
+require_once dirname(__DIR__) . '/official/administrative_area_match.php';
 require_method('GET');
 assert_same_origin();
 $config = load_config();
@@ -26,6 +27,7 @@ $models = meteonexa_intelq_fetch_models($rLat, $rLon, true, 72);
 $consensus = meteonexa_intelq_canonical_consensus($models);
 $satellite = meteonexa_intelligence_satellite($rLat, $rLon);
 $official = meteonexa_intelq_meteoalarm_edr($config, $rLat, $rLon, $locale)??meteonexa_official_alerts($rLat, $rLon, $location, $admin1);
+$official = meteonexa_official_apply_position_area_match($official, $location, $admin1);
 if (!isset($official['mode'])) {
     $official['mode'] = 'atom-text-fallback';
     $official['geospatial'] = false;
