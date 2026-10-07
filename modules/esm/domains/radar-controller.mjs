@@ -949,6 +949,8 @@ export function install(services, host = globalThis) {
                     $('#radar-frame-count').textContent = frames.length ? String(frames.length) : '0';
                     const frame = frames[frames.length - 1];
                     $('#radar-last-scan').textContent = frame?.time ? new Intl.DateTimeFormat(appLocale(), { hour: '2-digit', minute: '2-digit' }).format(new Date(Number(frame.time) * 1000)) : '--:--';
+                    if (state.radar.presentationLayer === 'satellite' || state.radar.presentationLayer === 'lightning')
+                        return;
                     $('#radar-source').textContent = state.radar.mode === 'live' ? "" + meteonexaText("radar.updateradarmodeui.librewxr_radar") : "" + meteonexaText("radar.updateradarmodeui.open_meteo_forecast");
                 }
                 function scheduleRadarRefresh() {
@@ -985,16 +987,21 @@ export function install(services, host = globalThis) {
                             state.radar.failedTiles = 0;
                         }
                         setRadarStatus('', "" + meteonexaText("radar.task.connecting_weather_sources"));
+                        const selectedOverlay = state.radar.presentationLayer === 'satellite' || state.radar.presentationLayer === 'lightning'
+                            ? state.radar.presentationLayer
+                            : '';
                         const [liveResult, forecastResult] = await Promise.allSettled([loadLiveRadar(), loadForecastRadar()]);
                         const liveOk = liveResult.status === 'fulfilled' && liveResult.value;
                         const forecastOk = forecastResult.status === 'fulfilled' && forecastResult.value;
                         state.radar.loaded = true;
                         $('#radar-empty').hidden = true;
-                        let desired = state.settings.radarMode || 'live';
-                        if (desired === 'forecast' && !forecastOk)
+                        let desired = selectedOverlay ? 'live' : (state.settings.radarMode || 'live');
+                        if (!selectedOverlay && desired === 'live' && !liveOk && forecastOk)
+                            desired = 'forecast';
+                        if (!selectedOverlay && desired === 'forecast' && !forecastOk)
                             desired = liveOk ? 'live' : 'forecast';
                         state.radar.mode = desired;
-                        state.radar.presentationLayer = desired === 'forecast' ? 'forecast' : 'radar';
+                        state.radar.presentationLayer = selectedOverlay || (desired === 'forecast' ? 'forecast' : 'radar');
                         state.radar.frames = activeRadarFrames();
                         state.radar.index = desired === 'forecast' ? 0 : Math.max(0, state.radar.frames.length - 1);
                         if (liveOk)

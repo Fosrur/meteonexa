@@ -88,6 +88,8 @@ function factory(window, deps, provided) {
         });
         qa('[data-suite-map-layer]').forEach(b => b.classList.remove('active'));
         const features = (data.strikes || []).map(row => ({ type: 'Feature', properties: { age: row.ageSeconds, polarity: row.polarity || 'unknown', amperage: row.amperage, distance: row.distanceKm, label: meteonexaText('lightning.marker.distance_age', { distance: Math.round(row.distanceKm), minutes: Math.round(row.ageSeconds / 60) }) }, geometry: { type: 'Point', coordinates: [row.longitude, row.latitude] } }));
+        state.radar.mode = 'live';
+        state.radar.presentationLayer = 'lightning';
         map.addSource('suite-lightning-source', { type: 'geojson', data: { type: 'FeatureCollection', features } });
         map.addLayer({ id: 'suite-lightning-halo', type: 'circle', source: 'suite-lightning-source', paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 3, 8, 9, 25], 'circle-color': '#ffd456', 'circle-opacity': .18 } });
         map.addLayer({ id: 'suite-lightning-layer', type: 'circle', source: 'suite-lightning-source', paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 3, 4, 9, 10], 'circle-color': ['match', ['get', 'polarity'], 'negative', '#66b8ff', 'positive', '#ff8a5f', '#ffd456'], 'circle-stroke-color': '#fff', 'circle-stroke-width': 1.5, 'circle-opacity': ['interpolate', ['linear'], ['get', 'age'], 0, 1, 300, .35] } });

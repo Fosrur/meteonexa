@@ -3,7 +3,7 @@ from pathlib import Path
 import sys
 R=Path(__file__).resolve().parents[1]
 def t(p): return (R/p).read_text(encoding="utf-8")
-app=t("js/app.js"); nav=t("modules/esm/domains/navigation.mjs"); account=t("modules/esm/domains/account.mjs"); assistant=t("modules/esm/domains/suite-assistant.mjs"); support=t("modules/esm/domains/suite-support.mjs"); suite=t("js/suite.js"); suite_css=t("css/suite.css"); advanced=t("js/advanced.js"); integ=t("modules/esm/domains/suite-integrations.mjs"); ht=t(".htaccess"); html=t("index.html"); e2e=t("qa/e2e/ui-controls.spec.mjs"); charts=t("qa/e2e/charts.spec.mjs"); workflow=t(".github/workflows/meteonexa-tests.yml"); helper=t("qa/e2e/test-helpers.mjs")
+app=t("js/app.js"); nav=t("modules/esm/domains/navigation.mjs"); account=t("modules/esm/domains/account.mjs"); assistant=t("modules/esm/domains/suite-assistant.mjs"); support=t("modules/esm/domains/suite-support.mjs"); suite=t("js/suite.js"); suite_css=t("css/suite.css"); advanced=t("js/advanced.js"); integ=t("modules/esm/domains/suite-integrations.mjs"); radar=t("modules/esm/domains/radar-controller.mjs"); ht=t(".htaccess"); html=t("index.html"); e2e=t("qa/e2e/ui-controls.spec.mjs"); charts=t("qa/e2e/charts.spec.mjs"); workflow=t(".github/workflows/meteonexa-tests.yml"); helper=t("qa/e2e/test-helpers.mjs")
 checks={
  "guest local assistant visible": "'feature.assistant': { guest: true, authenticated: true }" in app and "featureKey === 'feature.assistant' && mode === 'guest'" in nav,
  "guest assistant opens local": 'button.hidden = guest' in assistant and "if (guest) setAssistantMode('local', false)" in assistant,
@@ -18,6 +18,10 @@ checks={
  "lightning button not cloned": 'cloneNode(true)' not in integ and "SERVICES.get('suiteIntegrations') || SERVICES.get('suite')" in advanced,
  "radar layers use delegated click binding": "closest?.('[data-advanced-radar-layer]')" in advanced and "qa('[data-advanced-radar-layer]').forEach(button => button.addEventListener" not in advanced,
  "lightning refresh follows active radar page": "q('#page-radar')?.classList.contains('active-page')" in integ and "q('#page-radar')?.classList.contains('active')" not in integ,
+ "radar live outage falls back to precipitation forecast": "desired === 'live' && !liveOk && forecastOk" in radar and "desired = 'forecast'" in radar,
+ "radar vector overlays switch out of forecast canvas": "function activateAdvancedVectorLayer(layer)" in advanced and "setRadarMode('live', { notify: false, persist: false })" in advanced and "renderRadarMap();" in advanced,
+ "radar refresh preserves satellite and lightning selection": "const selectedOverlay = state.radar.presentationLayer === 'satellite' || state.radar.presentationLayer === 'lightning'" in radar and "state.radar.presentationLayer = selectedOverlay ||" in radar,
+ "radar overlay source label survives frame refresh": "state.radar.presentationLayer === 'satellite' || state.radar.presentationLayer === 'lightning'" in radar and "return;" in radar[radar.find('function updateRadarStats'):radar.find('function scheduleRadarRefresh')],
  "www canonical redirect": '^meteonexa\\.com$' in ht and 'https://www.meteonexa.com%{REQUEST_URI}' in ht,
  "www metadata": 'https://www.meteonexa.com/' in html,
  "live security uses www": 'qa/live_security_check.py https://www.meteonexa.com/' in workflow,

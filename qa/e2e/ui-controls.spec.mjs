@@ -222,6 +222,10 @@ test.describe('MeteoNexa custom controls and loaders', () => {
         // and that selecting forecast switches the radar surface into forecast mode.
         await expect(page.locator('#radar-map')).toHaveClass(/forecast-mode/);
       }
+      if (selector.includes('satellite') || selector.includes('lightning')) {
+        await expect(page.locator('#radar-map')).toHaveClass(/live-mode/);
+        await expect(page.locator('#radar-map')).not.toHaveClass(/forecast-mode/);
+      }
     }
   });
 

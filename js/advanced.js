@@ -448,20 +448,25 @@
         const map = appState().radar?.vectorMap;
         if (!map)
             return;
-        ['meteonexa-satellite-layer', 'meteonexa-lightning-layer'].forEach(id => {
+        ['meteonexa-satellite-layer', 'meteonexa-lightning-layer', 'suite-lightning-halo', 'suite-lightning-layer'].forEach(id => {
             try {
                 if (map.getLayer(id))
                     map.removeLayer(id);
             }
             catch { }
         });
-        ['meteonexa-satellite-source', 'meteonexa-lightning-source'].forEach(id => {
+        ['meteonexa-satellite-source', 'meteonexa-lightning-source', 'suite-lightning-source'].forEach(id => {
             try {
                 if (map.getSource(id))
                     map.removeSource(id);
             }
             catch { }
         });
+    }
+    function activateAdvancedVectorLayer(layer) {
+        setRadarMode('live', { notify: false, persist: false });
+        appState().radar.presentationLayer = layer;
+        renderRadarMap();
     }
     function satelliteDate() { return dateValue(addDays(new Date(), -1)); }
     function applyBaseRadarPresentation(layer) {
@@ -512,8 +517,7 @@
         }
         removeAdvancedRadarLayers();
         removeRadarVectorLayer();
-        appState().radar.presentationLayer = layer;
-        appState().radar.mode = 'live';
+        activateAdvancedVectorLayer(layer);
         if (layer === 'satellite') {
             const date = satelliteDate(), tiles = `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/VIIRS_SNPP_CorrectedReflectance_TrueColor/default/${date}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`;
             map.addSource('meteonexa-satellite-source', { type: 'raster', tiles: [tiles], tileSize: 256, maxzoom: 9, attribution: meteonexaText('provider.nasa_gibs') });
@@ -528,7 +532,7 @@
                 return lightningService.showLiveLightning();
             }
             q('#radar-source').textContent = meteonexaText("suite.bind.live_lightning_unavailable");
-            toast(meteonexaText('lightning.live'), meteonexaText("advanced.setadvancedradarlayer.smtp_server_has_not_been_configured_yet"), 'warning');
+            toast(meteonexaText('lightning.live'), meteonexaText("suite.bind.live_lightning_unavailable"), 'warning');
         }
     }
 
