@@ -29,7 +29,7 @@ jobs:
       REPOSITORY: ${{ github.repository }}
     steps:
       - name: Checkout exact successful QA commit
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 1
@@ -64,9 +64,7 @@ jobs:
         shell: bash
         run: |
           PORT="${VPS_PORT:-22}"
-          ssh -i ~/.ssh/meteonexa_prod -o IdentitiesOnly=yes -o BatchMode=yes -p "$PORT" \
-            "$VPS_USER@$VPS_HOST" \
-            bash -s -- "$DEPLOY_SHA" "$REPOSITORY" <<'REMOTE'
+          ssh -i ~/.ssh/meteonexa_prod -o IdentitiesOnly=yes -o BatchMode=yes -p "$PORT"             "$VPS_USER@$VPS_HOST"             bash -s -- "$DEPLOY_SHA" "$REPOSITORY" <<'REMOTE'
           set -euo pipefail
           DEPLOY_SHA="$1"
           REPOSITORY="$2"
@@ -77,16 +75,10 @@ jobs:
           git checkout main
           git merge --ff-only "$DEPLOY_SHA"
           test "$(git rev-parse HEAD)" = "$DEPLOY_SHA"
-          # Block both new navigations and already-open guest/auth sessions before
-          # the release script starts building/replacing the candidate.
-          bash docker/maintenance-mode.sh on
-          # Existing sessions poll maintenance every 5 seconds. Keep the gate
-          # active long enough for every already-open tab to observe it before
-          # build/container replacement starts.
+          bash docker/maintenance-mode.sh on </dev/null
           sleep 6
-          METEONEXA_GITHUB_REPOSITORY="$REPOSITORY" \
-            METEONEXA_KEEP_MAINTENANCE=1 \
-            bash docker/deploy-production.sh "$DEPLOY_SHA"
+          METEONEXA_GITHUB_REPOSITORY="$REPOSITORY"             METEONEXA_KEEP_MAINTENANCE=1             bash docker/deploy-production.sh "$DEPLOY_SHA" </dev/null
+          test "$(git rev-parse HEAD)" = "$DEPLOY_SHA"
           REMOTE
 
       - name: External live production security smoke under maintenance
@@ -98,9 +90,11 @@ jobs:
         shell: bash
         run: |
           PORT="${VPS_PORT:-22}"
-          ssh -i ~/.ssh/meteonexa_prod -o IdentitiesOnly=yes -o BatchMode=yes -p "$PORT" \
-            "$VPS_USER@$VPS_HOST" \
-            "cd /opt/apps/meteonexa && bash docker/maintenance-mode.sh off"
+          ssh -i ~/.ssh/meteonexa_prod -o IdentitiesOnly=yes -o BatchMode=yes -p "$PORT"             "$VPS_USER@$VPS_HOST"             "cd /opt/apps/meteonexa && bash docker/maintenance-mode.sh off"
+
+      - name: Verify exact public release identity
+        shell: bash
+        run: python3 qa/live_release_identity_check.py https://www.meteonexa.com/ "$DEPLOY_SHA"
 
       - name: External live production security smoke after release
         id: live_release_smoke
@@ -114,6 +108,4 @@ jobs:
           echo "Production deployment/security validation failed."
           echo "Re-enabling maintenance so a failed post-release validation cannot leave an unverified release exposed."
           PORT="${VPS_PORT:-22}"
-          ssh -i ~/.ssh/meteonexa_prod -o IdentitiesOnly=yes -o BatchMode=yes -p "$PORT" \
-            "$VPS_USER@$VPS_HOST" \
-            "cd /opt/apps/meteonexa && bash docker/maintenance-mode.sh on" || true
+          ssh -i ~/.ssh/meteonexa_prod -o IdentitiesOnly=yes -o BatchMode=yes -p "$PORT"             "$VPS_USER@$VPS_HOST"             "cd /opt/apps/meteonexa && bash docker/maintenance-mode.sh on" || true

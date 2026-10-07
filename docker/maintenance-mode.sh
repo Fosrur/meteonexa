@@ -11,8 +11,8 @@ container_write() {
   local web_id
   web_id="$(docker compose ps -q web 2>/dev/null || true)"
   [ -n "$web_id" ] || return 1
-  if [ "$action" = on ]; then docker compose exec -T web sh -c 'umask 007; : > /var/lib/meteonexa/maintenance.flag';
-  else docker compose exec -T web rm -f /var/lib/meteonexa/maintenance.flag; fi
+  if [ "$action" = on ]; then docker compose exec -T web sh -c 'umask 007; : > /var/lib/meteonexa/maintenance.flag' </dev/null;
+  else docker compose exec -T web rm -f /var/lib/meteonexa/maintenance.flag </dev/null; fi
 }
 host_write() {
   mkdir -p "$RUNTIME_DIR" 2>/dev/null || true
