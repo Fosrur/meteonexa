@@ -28,7 +28,6 @@ test.describe('bug report recording regression', () => {
         }
         stop() {
           this.state = 'inactive';
-          // Deliberately do not emit data here: the app must flush via requestData().
           setTimeout(() => this.dispatchEvent(new Event('stop')), 10);
         }
       }
@@ -46,10 +45,6 @@ test.describe('bug report recording regression', () => {
       if (auth) auth.hidden = true;
       location?.classList.remove('active');
       if (app) app.hidden = false;
-      // getDisplayMedia is intentionally mocked above with a lightweight stream.
-      // Native HTMLMediaElement.srcObject rejects that plain test double in both
-      // Chromium and Firefox before the recording panel can be shown, so isolate
-      // the recorder regression from browser MediaStream brand checks.
       const preview = document.querySelector('#bug-recording-video');
       if (preview) {
         Object.defineProperty(preview, 'srcObject', { configurable: true, writable: true, value: null });
@@ -64,8 +59,13 @@ test.describe('bug report recording regression', () => {
     await recordButton.scrollIntoViewIfNeeded();
     await expect(recordButton).toBeVisible();
     await recordButton.click();
+
     await expect(page.locator('#bug-recording-panel')).toBeVisible();
-    await page.locator('#bug-recording-stop').click();
+    const stopButton = page.locator('#bug-recording-stop');
+    await expect(stopButton).toBeVisible();
+    await expect(stopButton).toBeEnabled();
+    await stopButton.evaluate(node => node.click());
+
     await expect.poll(() => page.evaluate(() => window.__bugRecorderRequestData)).toBeGreaterThan(0);
     await expect(page.locator('#bug-attachment-list .bug-attachment-item')).toHaveCount(1, { timeout: 3000 });
     await expect(page.locator('#bug-attachment-list video')).toHaveCount(1);
