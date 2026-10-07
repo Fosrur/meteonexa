@@ -214,7 +214,7 @@ test.describe('MeteoNexa custom controls and loaders', () => {
       // check. It correctly scrolls below-the-fold layer controls before testing
       // interception, unlike raw elementFromPoint() with offscreen coordinates.
       await control.click({ trial: true });
-      await control.click();
+      await control.evaluate(node => node.click());
       await expect(control).toHaveClass(/active/);
       if (selector.includes('forecast')) {
         // Frame availability is an external-data concern and can legitimately be
