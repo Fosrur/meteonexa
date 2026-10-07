@@ -16,6 +16,11 @@ Il primo run GitHub sullo SHA di chiusura ha evidenziato tre condizioni di CI or
 
 
 Follow-up CI P3.4: la fixture sintetica del Promotion Study usa ora una coverage deterministica stabile (~85%) compatibile con lo split SHA256 train/holdout; le soglie reali di holdout/stabilità non sono state allentate. Il fix elimina un falso rosso del test senza modificare Radar4 né l’autorità production di Radar3.
+
+### Hotfix allerte ufficiali Liguria — 7 ottobre 2026
+
+Il fallback delle allerte ufficiali non degrada più automaticamente un avviso MeteoAlarm testuale per l'intera Liguria a semplice “avviso regionale da verificare” quando il comune può essere associato in modo deterministico alla zona di allertamento ufficiale. Il backend usa la tabella comuni→zone pubblicata da AllertaLiguria/ARPAL e verifica lo stato corrente della zona sulla fonte regionale; solo se la zona del comune è effettivamente gialla/arancione/rossa il warning viene promosso a `relevant` con `matchScope=official-municipality-zone`. Quando il feed MeteoAlarm contiene una finestra di validità, start/end vengono conservati. In assenza di conferma regionale resta il comportamento conservativo precedente. Lavagna è coperta come zona C; i comuni multi-zona mantengono tutte le zone dichiarate dalla tabella ufficiale.
+
 ### Chiusura progetto software — 1 ottobre 2026
 
 La roadmap **P0→P7 è completata** e anche il backlog tecnico post-roadmap definito per la chiusura è stato implementato. Non viene aperta una P8. Lo stato corrente è **software/project closure**: il repository conserva solo gate operativi/live che dipendono da infrastruttura o dati reali (in particolare P2 sullo stesso SHA pubblicato e maturità P3 Radar4), oltre alla manutenzione ordinaria.

@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require dirname(__DIR__) . '/api/database.php';
 require dirname(__DIR__) . '/api/official/lifecycle_helpers.php';
+require dirname(__DIR__) . '/api/official/liguria_zone_fallback.php';
 
 $fail=[];
 $ok=static function(bool $condition,string $label)use(&$fail):void{echo ($condition?'[ OK ] ':'[FAIL] ').$label."\n";if(!$condition)$fail[]=$label;};
@@ -41,6 +42,25 @@ $cancel=$update;$cancel['id']=$cancel['identifier']='cancel-alert';$cancel['mess
 $normalized=meteonexa_official_normalize(['available'=>true,'providerFresh'=>true,'geospatial'=>true,'relevant'=>[$cancel]]);
 $ok(count((array)($normalized['relevant']??[]))===0&&count((array)($normalized['terminalRevisions']??[]))===1,'CAP cancellation is terminal and not rendered active');
 $ok(($normalized['hub']['lifecycle']??[])===['issued','updated','cancelled','expired'],'hub contract publishes canonical lifecycle');
+
+$ok(meteonexa_liguria_municipality_zones('Lavagna')===['C'],'Lavagna resolves to official Liguria alert zone C');
+$ok(meteonexa_liguria_municipality_zones('Uscio')===['B','C'],'cross-zone municipality keeps both official alert zones');
+$zoneStatuses=meteonexa_liguria_parse_zone_statuses('<h3>zona </h3><h4>C</h4><h6>Emessa allerta gialla</h6><h3>zona D</h3><h6>Nessuna allerta</h6>');
+$ok(($zoneStatuses['C']??'')==='yellow'&&($zoneStatuses['D']??'')==='green','AllertaLiguria zone status parser distinguishes warning from no-warning');
+$regionalFixture=[
+    'available'=>true,'source'=>'MeteoAlarm','relevant'=>[],
+    'regionalAdvisories'=>[array_replace($base,[
+        'id'=>'regional-liguria','identifier'=>'regional-liguria','source'=>'MeteoAlarm Atom','authority'=>'MeteoAlarm / national warning authority',
+        'title'=>'Thunderstorm warning issued for Italy - Liguria','summary'=>'Liguria','area'=>'Liguria','geometry'=>null,'geospatialMatch'=>false,
+    ])],
+];
+$zonePromoted=meteonexa_liguria_apply_zone_status($regionalFixture,'Lavagna',['C'],['zones'=>['C'=>'yellow'],'fetchedAt'=>$updatedAt,'providerFresh'=>true]);
+$promoted=$zonePromoted['relevant'][0]??[];
+$ok(count((array)($zonePromoted['relevant']??[]))===1&&($promoted['severity']??'')==='yellow','official zone warning promotes the regional text fallback to relevant');
+$ok(($promoted['officialZone']??'')==='C'&&($promoted['matchScope']??'')==='official-municipality-zone'&&($promoted['municipalityZoneVerified']??false)===true,'promotion records authoritative municipality-zone verification');
+$ok(($promoted['startsAt']??'')===$issuedAt&&($promoted['endsAt']??'')===$endsAt,'promotion preserves MeteoAlarm validity window when available');
+$zoneClear=meteonexa_liguria_apply_zone_status($regionalFixture,'Lavagna',['C'],['zones'=>['C'=>'green'],'providerFresh'=>true]);
+$ok(count((array)($zoneClear['relevant']??[]))===0,'official green zone never promotes a regional advisory');
 
 if (in_array('sqlite', PDO::getAvailableDrivers(), true)) {
     $pdo=new PDO('sqlite::memory:');$pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);$pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE,PDO::FETCH_ASSOC);
