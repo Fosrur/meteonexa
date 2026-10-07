@@ -13,14 +13,13 @@ concurrency:
   cancel-in-progress: true
 jobs:
   release-gates:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - name: Install runtimes
+      - name: Verify hosted PHP runtime
         run: |
-          sudo apt-get update
-          sudo apt-get install -y php-cli php-sqlite3 php-curl php-gd
+          php -r '$required=["curl","gd","pdo_sqlite","sqlite3"]; foreach($required as $extension){if(!extension_loaded($extension)){fwrite(STDERR,"Missing PHP extension: $extension\n"); exit(1);}}'
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '20'
@@ -64,7 +63,7 @@ jobs:
           retention-days: 30
 
   mysql-auth-regression:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     services:
       mysql:
@@ -80,7 +79,10 @@ jobs:
           --health-interval=5s --health-timeout=5s --health-retries=20
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - run: sudo apt-get update && sudo apt-get install -y php-cli php-mysql default-mysql-client
+      - name: Verify hosted MySQL runtime
+        run: |
+          php -r 'if(!extension_loaded("pdo_mysql")){fwrite(STDERR,"Missing PHP extension: pdo_mysql\n"); exit(1);}'
+          mysql --version
       - name: Real MySQL integration
         env:
           MYSQL_HOST: 127.0.0.1
@@ -94,7 +96,7 @@ jobs:
           php qa/mysql_full_integration.php
 
   quality-security:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 35
     permissions:
       contents: read
@@ -108,10 +110,10 @@ jobs:
           cache-dependency-path: |
             package-lock.json
             qa/package-lock.json
-      - name: Install PHP and Composer
+      - name: Verify hosted PHP and Composer
         run: |
-          sudo apt-get update
-          sudo apt-get install -y php-cli php-mbstring php-xml php-curl composer
+          php -r '$required=["curl","dom","mbstring","xml"]; foreach($required as $extension){if(!extension_loaded($extension)){fwrite(STDERR,"Missing PHP extension: $extension\n"); exit(1);}}'
+          composer --version
       - name: Install quality dependencies
         run: |
           composer validate --strict --no-check-publish
@@ -183,7 +185,7 @@ jobs:
           test "$TRIVY_IMAGE" = success
 
   backup-restore-drill:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -220,7 +222,7 @@ jobs:
         run: docker compose down -v --remove-orphans || true
 
   staging-compose:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -260,7 +262,7 @@ jobs:
 
   browser-regression:
     name: browser-regression (${{ matrix.browser }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -268,7 +270,9 @@ jobs:
         browser: [chromium, firefox]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - run: sudo apt-get update && sudo apt-get install -y php-cli php-sqlite3 php-curl php-gd
+      - name: Verify hosted PHP runtime
+        run: |
+          php -r '$required=["curl","gd","pdo_sqlite","sqlite3"]; foreach($required as $extension){if(!extension_loaded($extension)){fwrite(STDERR,"Missing PHP extension: $extension\n"); exit(1);}}'
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '20'
@@ -289,11 +293,16 @@ jobs:
           for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8088/?preview >/dev/null && exit 0; sleep 1; done
           cat "$RUNNER_TEMP/meteonexa/php-server.log"; exit 1
       - run: python3 qa/http_smoke.py http://127.0.0.1:8088/
+      - name: Restore Playwright browser cache
+        uses: actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ matrix.browser }}-${{ hashFiles('qa/package-lock.json') }}
       - name: Install Playwright browser
         working-directory: qa
         run: |
           npm ci --no-audit --no-fund
-          npx playwright install --with-deps "${{ matrix.browser }}"
+          npx playwright install "${{ matrix.browser }}"
       - name: Chromium and Firefox E2E
         working-directory: qa
         env:
@@ -324,7 +333,7 @@ jobs:
 
   live-production-security:
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4

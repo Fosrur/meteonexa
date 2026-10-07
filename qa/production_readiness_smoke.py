@@ -79,10 +79,11 @@ browser_ci_monolithic = (
     'chromium firefox' in workflow
     and 'npm run test:e2e' in workflow
 )
+browser_job = workflow.split('  browser-regression:', 1)[1].split('  live-production-security:', 1)[0] if '  browser-regression:' in workflow else ''
 browser_ci_matrix = (
     bool(re.search(r'browser:\s*\[\s*chromium\s*,\s*firefox\s*\]', workflow))
     and 'matrix.browser' in workflow
-    and 'npx playwright install --with-deps "${{ matrix.browser }}"' in workflow
+    and 'npx playwright install "${{ matrix.browser }}"' in workflow
     and 'npm run test:e2e -- --project="${{ matrix.browser }}"' in workflow
 )
 
@@ -108,6 +109,8 @@ checks = {
     'CI and Docker build use npm ci without npm install fallback': workflow.count('npm ci') >= 2 and 'npm ci --ignore-scripts --no-audit --no-fund' in dockerfile and 'npm install ' not in dockerfile,
     'Playwright lock is exact': qa_pkgs.get('node_modules/@playwright/test', {}).get('version') == '1.55.1' and qa_pkgs.get('node_modules/playwright', {}).get('version') == '1.55.1',
     'browser CI covers Chromium + Firefox': browser_ci_monolithic or browser_ci_matrix,
+    'browser CI avoids apt network setup on hosted runner': 'runs-on: ubuntu-24.04' in browser_job and 'apt-get' not in browser_job and 'npx playwright install --with-deps' not in browser_job,
+    'browser CI caches Playwright downloads': 'actions/cache@1bd1e32a3bdc45362d1e726936510720a7c30a57' in browser_job and '~/.cache/ms-playwright' in browser_job,
     'MySQL CI is real 8.4': 'image: mysql:8.4' in workflow and 'qa/mysql_full_integration.php' in workflow,
     'security CI includes Semgrep and Trivy': 'semgrep/semgrep:1.169.0' in workflow and len(re.findall(r'uses:\s*aquasecurity/trivy-action@[0-9a-f]{40}\b', workflow)) >= 2,
     'production env template exposes legal identity': all(re.search(rf'^{re.escape(k)}=', env, re.M) for k in ['METEONEXA_PRIVACY_CONTACT_EMAIL','METEONEXA_LEGAL_CONTROLLER_NAME','METEONEXA_LEGAL_CONTROLLER_ADDRESS','METEONEXA_DPO_STATUS','METEONEXA_DPO_EMAIL','METEONEXA_LEGAL_SITE_URL']),
