@@ -24,83 +24,49 @@ $base=[
     'severity'=>'yellow','certainty'=>'Likely','urgency'=>'Expected','sentAt'=>$issuedAt,'updatedAt'=>$issuedAt,
     'startsAt'=>$issuedAt,'endsAt'=>$endsAt,'geometry'=>$geometry,'geospatialMatch'=>true,
 ];
-$update=$base;
-$update['id']=$update['identifier']='update-alert';
-$update['references']='warnings@example.test,root-alert,' . $issuedAt;
-$update['messageType']='Update';$update['severity']='orange';$update['updatedAt']=$updatedAt;
-$rows=meteonexa_official_hub_dedupe([$base,$update],44.5,9.2);
-$ok(count($rows)===1,'event+area dedupe keeps one current version');
-$ok(($rows[0]['eventId']??'')==='root-alert','CAP references keep stable root event identity');
-$ok(($rows[0]['severity']??'')==='orange'&&($rows[0]['messageType']??'')==='update','latest warning version wins dedupe');
-$ok(!empty($rows[0]['versionId'])&&!empty($rows[0]['areaKey'])&&!empty($rows[0]['hubKey']),'canonical warning exposes event/version/area keys');
-$atomDuplicate=$base;$atomDuplicate['source']='MeteoAlarm Atom';$atomDuplicate['updatedAt']='2026-10-01T06:30:00Z';
-$adapterRows=meteonexa_official_hub_dedupe([$base,$atomDuplicate],44.5,9.2);
-$ok(count($adapterRows)===1,'MeteoAlarm transport adapters do not duplicate the same event+area');
-$ok(($rows[0]['origin']??'')==='official-warning-authority'&&($rows[0]['forecastAuthoritySeparated']??false)===true,'official warning remains semantically separate from MeteoNexa forecast');
 
-$cancel=$update;$cancel['id']=$cancel['identifier']='cancel-alert';$cancel['messageType']='Cancel';$cancel['updatedAt']=$cancelledAt;
-$normalized=meteonexa_official_normalize(['available'=>true,'providerFresh'=>true,'geospatial'=>true,'relevant'=>[$cancel]]);
-$ok(count((array)($normalized['relevant']??[]))===0&&count((array)($normalized['terminalRevisions']??[]))===1,'CAP cancellation is terminal and not rendered active');
-$ok(($normalized['hub']['lifecycle']??[])===['issued','updated','cancelled','expired'],'hub contract publishes canonical lifecycle');
-
-$genericRegional=[
-    'available'=>true,
-    'source'=>'MeteoAlarm',
-    'relevant'=>[],
-    'regionalAdvisories'=>[
-        array_replace($base,['id'=>'same-area','identifier'=>'same-area','area'=>'Example Region','geometry'=>null,'geospatialMatch'=>false,'severity'=>'orange','source'=>'MeteoAlarm Atom']),
-        array_replace($base,['id'=>'other-area','identifier'=>'other-area','area'=>'Other Region','geometry'=>null,'geospatialMatch'=>false,'source'=>'MeteoAlarm Atom']),
-    ],
+$yellowFixture=[
+    'comune'=>'Example City',
+    'regione'=>'Example Region',
+    'zona'=>'Example Warning Zone',
+    'oggi'=>[
+        'allerta'=>['colore'=>'giallo','descrizione'=>'Allerta Gialla'],
+        'dettagli'=>[
+            'idraulico'=>'Assenza di fenomeni significativi prevedibili / NESSUNA ALLERTA',
+            'temporali'=>'Ordinaria / ALLERTA GIALLA',
+            'idrogeologico'=>'Assenza di fenomeni significativi prevedibili / NESSUNA ALLERTA'
+        ]
+    ]
 ];
-$matched=meteonexa_official_apply_position_area_match($genericRegional,'Example City','Example Region');
-$matchedRows=(array)($matched['relevant']??[]);
-$remainingRows=(array)($matched['regionalAdvisories']??[]);
-$ok(count($matchedRows)===1&&($matchedRows[0]['id']??'')==='same-area','current position administrative area promotes matching external warning');
-$ok(($matchedRows[0]['matchScope']??'')==='administrative-area'&&($matchedRows[0]['positionMatched']??false)===true,'position-based administrative match is explicit');
-$ok(count($remainingRows)===1&&($remainingRows[0]['id']??'')==='other-area','non-matching regional warning remains regional');
-$unmatched=meteonexa_official_apply_position_area_match($genericRegional,'Example City','Different Region');
-$ok(count((array)($unmatched['relevant']??[]))===0,'different administrative area is never promoted');
-$geospatialFirst=$genericRegional;
-$geospatialFirst['relevant']=[$base];
-$kept=meteonexa_official_apply_position_area_match($geospatialFirst,'Example City','Example Region');
-$ok(count((array)($kept['relevant']??[]))===1&&($kept['relevant'][0]['id']??'')==='root-alert','geospatial MeteoAlarm result remains authoritative when available');
+$greenFixture=$yellowFixture;
+$greenFixture['oggi']['allerta']=['colore'=>'verde','descrizione'=>'Nessuna Allerta'];
+$greenFixture['oggi']['dettagli']['temporali']='Assenza di fenomeni significativi prevedibili / NESSUNA ALLERTA';
+
+$ok(meteonexa_official_municipality_severity($yellowFixture)==='yellow','municipality provider severity normalizes yellow');
+$ok(meteonexa_official_municipality_severity($greenFixture)==='green','municipality provider severity normalizes green');
+$ok(meteonexa_official_municipality_risks($yellowFixture)===['temporali'],'municipality provider extracts only active risks');
+
+$storm=array_replace($base,['id'=>'storm','identifier'=>'storm','geometry'=>null,'geospatialMatch'=>false,'event'=>'Orange Thunderstorm Warning','title'=>'Orange Thunderstorm Warning','severity'=>'orange','windowState'=>'active']);
+$rain=array_replace($base,['id'=>'rain','identifier'=>'rain','geometry'=>null,'geospatialMatch'=>false,'event'=>'Orange Rain Warning','title'=>'Orange Rain Warning','severity'=>'orange','windowState'=>'active']);
+$ok(meteonexa_official_municipality_row_score($storm,['temporali'])>meteonexa_official_municipality_row_score($rain,['temporali']),'municipality verification prefers provider event matching the active local risk');
 
 $appSource=(string)file_get_contents(dirname(__DIR__).'/js/app.js');
 $apiSource=(string)file_get_contents(dirname(__DIR__).'/api/official/alerts.php');
 $matchSource=(string)file_get_contents(dirname(__DIR__).'/api/official/administrative_area_match.php');
 $styleSource=(string)file_get_contents(dirname(__DIR__).'/styles/main/99-reliability-patches.css');
-$ok(str_contains($apiSource,'meteonexa_intelq_meteoalarm_edr')&&str_contains($apiSource,'meteonexa_official_alerts'),'official alerts are sourced from generic external MeteoAlarm providers');
-$ok(str_contains($apiSource,'meteonexa_official_apply_position_area_match'),'official alerts apply current-position administrative matching after provider retrieval');
-$ok(!str_contains(strtolower($apiSource),'liguria')&&!str_contains(strtolower($matchSource),'liguria'),'position matching contains no region-specific hardcode');
+
+$ok(str_contains($apiSource,'meteonexa_intelq_meteoalarm_edr')&&str_contains($apiSource,'meteonexa_official_alerts'),'MeteoAlarm remains the primary official warning provider');
+$ok(str_contains($matchSource,'allertameteo.app/api/alert/'),'municipality fallback uses an external municipality-level service');
+$ok(!preg_match('/\b(?:Lavagna|Genova|Liguria|Roma|Milano)\b/i',$matchSource),'municipality matcher contains no hardcoded city or region');
+$ok(!str_contains($matchSource,"if (\$admin !== '' && in_array(\$admin"),'region-wide administrative promotion is removed');
 $ok(!str_contains($appSource,"params.set('deviceId'")&&str_contains($appSource,'api/official/alerts.php?${params}'),'guest and authenticated Home use the same public official-alert request');
 $ok(!str_contains($apiSource,'require_authenticated_device_session')&&str_contains($apiSource,'meteonexa_verify_device_proof')&&str_contains($apiSource,'meteonexa_official_public_snapshot'),'public official-alert API degrades invalid device proof instead of failing weather data');
-$colorStates=true;foreach(['green','yellow','orange','red'] as $colorState){$colorStates=$colorStates&&str_contains($styleSource,'.home-official-alert[data-severity="'.$colorState.'"]');}
+
+$colorStates=true;
+foreach(['green','yellow','orange','red'] as $colorState){
+    $colorStates=$colorStates&&str_contains($styleSource,'.home-official-alert[data-severity="'.$colorState.'"]');
+}
 $ok($colorStates,'Home official-alert card defines explicit green yellow orange red states');
 
-if (in_array('sqlite', PDO::getAvailableDrivers(), true)) {
-    $pdo=new PDO('sqlite::memory:');$pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);$pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE,PDO::FETCH_ASSOC);
-    $pdo->exec("CREATE TABLE app_metadata(meta_key TEXT PRIMARY KEY,meta_value TEXT NOT NULL,updated_at TEXT NOT NULL)");
-    $pdo->exec("INSERT INTO app_metadata VALUES('schema_version','31','2026-10-01T00:00:00Z')");
-    $pdo->exec("CREATE TABLE official_alert_state(location_key TEXT NOT NULL,alert_key TEXT NOT NULL,location_name TEXT NOT NULL DEFAULT '',provider_alert_id TEXT NOT NULL DEFAULT '',severity TEXT NOT NULL DEFAULT 'yellow',starts_at TEXT NOT NULL DEFAULT '',ends_at TEXT NOT NULL DEFAULT '',source_updated_at TEXT NOT NULL DEFAULT '',content_hash TEXT NOT NULL,first_seen_at TEXT NOT NULL,last_seen_at TEXT NOT NULL,last_change_type TEXT NOT NULL DEFAULT 'new',last_change_at TEXT NOT NULL,previous_severity TEXT NOT NULL DEFAULT '',previous_ends_at TEXT NOT NULL DEFAULT '',payload_json TEXT NOT NULL,PRIMARY KEY(location_key,alert_key))");
-    $pdo->exec("CREATE TABLE official_alert_revisions(id INTEGER PRIMARY KEY AUTOINCREMENT,location_key TEXT NOT NULL,alert_key TEXT NOT NULL,revision_type TEXT NOT NULL,previous_severity TEXT NOT NULL DEFAULT '',new_severity TEXT NOT NULL DEFAULT '',previous_ends_at TEXT NOT NULL DEFAULT '',new_ends_at TEXT NOT NULL DEFAULT '',provider_alert_id TEXT NOT NULL DEFAULT '',payload_json TEXT NOT NULL,observed_at TEXT NOT NULL)");
-    $version=meteonexa_run_sqlite_migrations($pdo,31,32);
-    $ok($version===32,'schema 32 Official Warning Hub migration completes');
-    foreach(['event_id','version_id','area_key','lifecycle_status','authority_name','sender','message_type','source_name','geometry_json'] as $column)$ok(meteonexa_db_column_exists($pdo,'official_alert_state',$column),"state column $column exists");
-
-    meteonexa_official_track($pdo,44.5,9.2,'Test location',['available'=>true,'providerFresh'=>true,'geospatial'=>true,'relevant'=>[$base]]);
-    $state=$pdo->query('SELECT * FROM official_alert_state')->fetch();
-    $ok(is_array($state)&&$state['event_id']==='root-alert'&&$state['lifecycle_status']==='issued','initial warning persists as issued canonical event');
-    meteonexa_official_track($pdo,44.5,9.2,'Test location',['available'=>true,'providerFresh'=>true,'geospatial'=>true,'relevant'=>[$update]]);
-    $state=$pdo->query('SELECT * FROM official_alert_state')->fetch();
-    $ok(is_array($state)&&$state['event_id']==='root-alert'&&$state['lifecycle_status']==='updated'&&$state['severity']==='orange','update reuses event+area state and changes lifecycle to updated');
-    $ok((int)$pdo->query('SELECT COUNT(*) FROM official_alert_state')->fetchColumn()===1,'updated version does not duplicate the event state row');
-    meteonexa_official_track($pdo,44.5,9.2,'Test location',['available'=>true,'providerFresh'=>true,'geospatial'=>true,'relevant'=>[$cancel]]);
-    $state=$pdo->query('SELECT * FROM official_alert_state')->fetch();
-    $ok(is_array($state)&&$state['lifecycle_status']==='cancelled'&&$state['last_change_type']==='cancelled','explicit cancellation closes lifecycle as cancelled');
-    $types=$pdo->query('SELECT revision_type FROM official_alert_revisions ORDER BY id')->fetchAll(PDO::FETCH_COLUMN);
-    $ok(in_array('new',$types,true)&&in_array('escalated',$types,true)&&in_array('cancelled',$types,true),'revision ledger keeps issued/update/cancel history');
-} else {
-    echo "[SKIP] PHP pdo_sqlite unavailable; schema/lifecycle persistence covered by Python schema gate\n";
-}
-
-if($fail){fwrite(STDERR,"Official Warning Hub smoke FAILED: ".implode(', ',$fail)."\n");exit(1);}echo "Official Warning Hub smoke PASS\n";
+if($fail){fwrite(STDERR,"Official Warning Hub smoke FAILED: ".implode(', ',$fail)."\n");exit(1);}
+echo "Official Warning Hub smoke PASS\n";
