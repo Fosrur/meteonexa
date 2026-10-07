@@ -53,6 +53,9 @@ $rssZones=meteonexa_liguria_parse_arpal_rss($rssFixture,$rssNow);
 $ok(($rssZones['B']??'')==='yellow'&&($rssZones['C']??'')==='yellow'&&($rssZones['E']??'')==='yellow','ARPAL RSS fallback resolves compact BCE zone group');
 $staleRss=str_replace(date(DATE_RSS,$rssNow-600),date(DATE_RSS,$rssNow-96*3600),$rssFixture);
 $ok(meteonexa_liguria_parse_arpal_rss($staleRss,$rssNow)===[],'ARPAL RSS fallback rejects stale alert news');
+$mergedSources=meteonexa_liguria_merge_zone_snapshots([['source'=>'AllertaLiguria / ARPAL','zones'=>['A'=>'green','B'=>'green','C'=>'green','D'=>'green','E'=>'green']],['source'=>'ARPAL RSS','zones'=>['B'=>'yellow','C'=>'yellow','E'=>'yellow']]]);
+$ok(($mergedSources['zones']['C']??'')==='yellow'&&($mergedSources['zones']['D']??'')==='green','fresh ARPAL RSS warning overrides stale green homepage for affected zones');
+$ok(($mergedSources['verificationSources']??[])===['AllertaLiguria / ARPAL','ARPAL RSS'],'zone snapshot records both verification sources');
 $regionalFixture=[
     'available'=>true,'source'=>'MeteoAlarm','relevant'=>[],
     'regionalAdvisories'=>[array_replace($base,[
@@ -65,6 +68,16 @@ $promoted=$zonePromoted['relevant'][0]??[];
 $ok(count((array)($zonePromoted['relevant']??[]))===1&&($promoted['severity']??'')==='yellow','official zone warning promotes the regional text fallback to relevant');
 $ok(($promoted['officialZone']??'')==='C'&&($promoted['matchScope']??'')==='official-municipality-zone'&&($promoted['municipalityZoneVerified']??false)===true,'promotion records authoritative municipality-zone verification');
 $ok(($promoted['startsAt']??'')===$issuedAt&&($promoted['endsAt']??'')===$endsAt,'promotion preserves MeteoAlarm validity window when available');
+$multiRegional=$regionalFixture;
+$multiRegional['regionalAdvisories']=[
+    array_replace($regionalFixture['regionalAdvisories'][0],['id'=>'wind-upcoming','title'=>'Yellow Wind Warning issued for Italy - Liguria','event'=>'Yellow Wind Warning','severity'=>'yellow','windowState'=>'upcoming','startsAt'=>gmdate('c',$fixtureNow+3600),'endsAt'=>gmdate('c',$fixtureNow+7200)]),
+    array_replace($regionalFixture['regionalAdvisories'][0],['id'=>'storm-active','title'=>'Orange Thunderstorm Warning issued for Italy - Liguria','event'=>'Orange Thunderstorm Warning','severity'=>'orange','windowState'=>'active','startsAt'=>gmdate('c',$fixtureNow-3600),'endsAt'=>gmdate('c',$fixtureNow+7200)]),
+    array_replace($regionalFixture['regionalAdvisories'][0],['id'=>'rain-active','title'=>'Orange Rain Warning issued for Italy - Liguria','event'=>'Orange Rain Warning','severity'=>'orange','windowState'=>'active','startsAt'=>gmdate('c',$fixtureNow-3600),'endsAt'=>gmdate('c',$fixtureNow+7200)]),
+];
+$multiPromoted=meteonexa_liguria_apply_zone_status($multiRegional,'Lavagna',['C'],['zones'=>['C'=>'yellow'],'source'=>'AllertaLiguria / ARPAL + ARPAL RSS','verificationSources'=>['AllertaLiguria / ARPAL','ARPAL RSS'],'providerFresh'=>true]);
+$multiWarning=$multiPromoted['relevant'][0]??[];
+$ok(($multiWarning['id']??'')==='storm-active'&&($multiWarning['severity']??'')==='yellow','promotion prefers active thunderstorm over upcoming wind while keeping official zone severity');
+$ok(($multiWarning['verificationSources']??[])===['AllertaLiguria / ARPAL','ARPAL RSS'],'promoted warning exposes authoritative verification sources');
 $zoneClear=meteonexa_liguria_apply_zone_status($regionalFixture,'Lavagna',['C'],['zones'=>['C'=>'green'],'providerFresh'=>true]);
 $ok(count((array)($zoneClear['relevant']??[]))===0,'official green zone never promotes a regional advisory');
 
