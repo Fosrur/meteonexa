@@ -49,26 +49,28 @@ $alerts = meteonexa_official_normalize($alerts);
 // a non-empty deviceId; otherwise the guest branch below would be unreachable
 // and every guest request would incorrectly return INVALID_DEVICE (422).
 $rawDeviceId = trim((string)($_GET['deviceId'] ?? ''));
-if ($rawDeviceId !== '') {
-    $deviceId = clean_device_id($rawDeviceId);
-    require_authenticated_device_session($pdo, $config, $deviceId);
+$deviceId = '';
+$authenticatedDevice = false;
+if ($rawDeviceId !== '' && strlen($rawDeviceId) >= 12 && strlen($rawDeviceId) <= 96 && preg_match('/^[a-zA-Z0-9._-]+$/', $rawDeviceId) === 1) {
+    require_once dirname(__DIR__) . '/auth_session.php';
+    try {
+        $session = meteonexa_current_auth_session($pdo, $config);
+        $sessionDeviceId = is_array($session) ? trim((string)($session['device_id'] ?? '')) : '';
+        if ($sessionDeviceId !== '' && hash_equals($sessionDeviceId, $rawDeviceId) && meteonexa_verify_device_proof($pdo, $sessionDeviceId)) {
+            $deviceId = $sessionDeviceId;
+            $authenticatedDevice = true;
+        }
+    } catch (Throwable $deviceSessionError) {
+        meteonexa_log_event('official_alert_device_session_degraded', $deviceSessionError);
+    }
+}
 
-    // Device throttling is an additive guard: IP + global throttles have already
-    // been enforced above. A storage/SQL problem in this optional per-device
-    // counter must not turn a public weather read into HTTP 500 for a valid
-    // authenticated session. Explicit 429 responses still terminate in
-    // require_device_rate_limit(); only unexpected backend exceptions degrade.
+if ($authenticatedDevice) {
     try {
         require_device_rate_limit($pdo, 'official_alerts_device', $deviceId, 180, 3600);
     } catch (Throwable $rateLimitError) {
         meteonexa_log_event('official_alert_device_rate_degraded', $rateLimitError);
     }
-
-    // Lifecycle persistence enriches an alert but is not the alert source. If a
-    // write/revision fails (for example a transient MySQL schema/row issue), keep
-    // serving the provider result and, when possible, enrich it from the public
-    // read-only snapshot. This prevents a valid email session from seeing the
-    // generic INTERNAL_ERROR card while guests still receive the same weather.
     try {
         $alerts = meteonexa_official_track($pdo, $lat, $lon, $location, $alerts);
     } catch (Throwable $trackingError) {
@@ -85,9 +87,6 @@ if ($rawDeviceId !== '') {
     try {
         $alerts = meteonexa_official_public_snapshot($pdo, $lat, $lon, $alerts, $location, $admin1);
     } catch (Throwable $snapshotError) {
-        // The provider response remains useful even if lifecycle storage is
-        // temporarily unavailable. Guest reads must fail soft for the same
-        // reason as authenticated reads.
         meteonexa_log_event('official_alert_guest_snapshot_degraded', $snapshotError);
         $alerts['lifecycleTracked'] = false;
         $alerts['lifecycleDegraded'] = true;

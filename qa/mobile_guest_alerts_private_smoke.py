@@ -4,6 +4,7 @@ import json,sys
 ROOT=Path(__file__).resolve().parents[1]
 app=(ROOT/'js/app.js').read_text(encoding='utf-8')
 account=(ROOT/'modules/esm/domains/account.mjs').read_text(encoding='utf-8')
+official_api=(ROOT/'api/official/alerts.php').read_text(encoding='utf-8')
 device_sessions=(ROOT/'modules/esm/domains/device-sessions.mjs').read_text(encoding='utf-8')
 account_frontend=app+'\n'+account
 html=(ROOT/'index.html').read_text(encoding='utf-8')
@@ -22,6 +23,9 @@ checks={
  'privacy/cookie disclosure': all(x in privacy for x in ['privacy.guest.official_alerts','privacy.private_browsing']) and all(x in cookie for x in ['cookie.private_browsing.copy','cookie.guest.official_alerts.copy']),
  'translation seed': trans.get('version')=='20.1-semantic-i18n-v2',
  'guest Home official alert fail-soft parity': all(x in app for x in ['renderHomeOfficialAlert({ loading: true })','loadHomeOfficialAlerts({force}).catch','home.official.unavailable.title','state.officialAlertsRequest']) and 'if (isGuestSession()) await loadHomeOfficialAlerts' not in app and 'id="home-official-alert"' in html,
+ 'official alerts use one public request for guest and login': "params.set('deviceId'" not in app and 'api/official/alerts.php?${params}' in app,
+ 'official alerts API degrades invalid device proof to public data': 'require_authenticated_device_session' not in official_api and 'meteonexa_verify_device_proof' in official_api and 'meteonexa_official_public_snapshot' in official_api,
+ 'home official alert has explicit green yellow orange red states': all(f'.home-official-alert[data-severity="{severity}"]' in styles for severity in ['green','yellow','orange','red']),
 }
 rows=trans.get('rows',[])
 for key in ['guest.alerts.public.title','guest.alerts.official.kicker','privacy.guest.official_alerts','privacy.private_browsing','cookie.private_browsing.copy','home.official.loading.title','home.official.unavailable.title']:

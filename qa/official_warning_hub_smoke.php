@@ -47,6 +47,12 @@ $ok(meteonexa_liguria_municipality_zones('Lavagna')===['C'],'Lavagna resolves to
 $ok(meteonexa_liguria_municipality_zones('Uscio')===['B','C'],'cross-zone municipality keeps both official alert zones');
 $zoneStatuses=meteonexa_liguria_parse_zone_statuses('<h3>zona </h3><h4>C</h4><h6>Emessa allerta gialla</h6><h3>zona D</h3><h6>Nessuna allerta</h6>');
 $ok(($zoneStatuses['C']??'')==='yellow'&&($zoneStatuses['D']??'')==='green','AllertaLiguria zone status parser distinguishes warning from no-warning');
+$rssNow=time();
+$rssFixture='<rss><channel><item><title>Prolungamento allerta gialla sul centro levante</title><description><![CDATA[Arpal prolunga l’allerta gialla per temporali sul centro-levante della regione (Zone BCE) fino alle 15:00 di domani. Sul ponente (Zona A) l’allerta termina alle 15:00 di oggi.]]></description><pubDate>'.date(DATE_RSS,$rssNow-600).'</pubDate></item></channel></rss>';
+$rssZones=meteonexa_liguria_parse_arpal_rss($rssFixture,$rssNow);
+$ok(($rssZones['B']??'')==='yellow'&&($rssZones['C']??'')==='yellow'&&($rssZones['E']??'')==='yellow','ARPAL RSS fallback resolves compact BCE zone group');
+$staleRss=str_replace(date(DATE_RSS,$rssNow-600),date(DATE_RSS,$rssNow-96*3600),$rssFixture);
+$ok(meteonexa_liguria_parse_arpal_rss($staleRss,$rssNow)===[],'ARPAL RSS fallback rejects stale alert news');
 $regionalFixture=[
     'available'=>true,'source'=>'MeteoAlarm','relevant'=>[],
     'regionalAdvisories'=>[array_replace($base,[
@@ -61,6 +67,14 @@ $ok(($promoted['officialZone']??'')==='C'&&($promoted['matchScope']??'')==='offi
 $ok(($promoted['startsAt']??'')===$issuedAt&&($promoted['endsAt']??'')===$endsAt,'promotion preserves MeteoAlarm validity window when available');
 $zoneClear=meteonexa_liguria_apply_zone_status($regionalFixture,'Lavagna',['C'],['zones'=>['C'=>'green'],'providerFresh'=>true]);
 $ok(count((array)($zoneClear['relevant']??[]))===0,'official green zone never promotes a regional advisory');
+
+$appSource=(string)file_get_contents(dirname(__DIR__).'/js/app.js');
+$apiSource=(string)file_get_contents(dirname(__DIR__).'/api/official/alerts.php');
+$styleSource=(string)file_get_contents(dirname(__DIR__).'/styles/main/99-reliability-patches.css');
+$ok(!str_contains($appSource,"params.set('deviceId'")&&str_contains($appSource,'api/official/alerts.php?${params}'),'guest and authenticated Home use the same public official-alert request');
+$ok(!str_contains($apiSource,'require_authenticated_device_session')&&str_contains($apiSource,'meteonexa_verify_device_proof')&&str_contains($apiSource,'meteonexa_official_public_snapshot'),'public official-alert API degrades invalid device proof instead of failing weather data');
+$colorStates=true;foreach(['green','yellow','orange','red'] as $colorState){$colorStates=$colorStates&&str_contains($styleSource,'.home-official-alert[data-severity="'.$colorState.'"]');}
+$ok($colorStates,'Home official-alert card defines explicit green yellow orange red states');
 
 if (in_array('sqlite', PDO::getAvailableDrivers(), true)) {
     $pdo=new PDO('sqlite::memory:');$pdo->setAttribute(PDO::ATTR_ERRMODE,PDO::ERRMODE_EXCEPTION);$pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE,PDO::FETCH_ASSOC);

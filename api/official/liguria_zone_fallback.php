@@ -51,6 +51,61 @@ function meteonexa_liguria_parse_zone_statuses(string $html): array {
     return $zones;
 }
 
+function meteonexa_liguria_parse_arpal_rss(string $xml, ?int $now = null): array {
+    $now = $now ?? time();
+    $zones = [];
+    $rank = ['green'=>0,'yellow'=>1,'orange'=>2,'red'=>3];
+    $items = [];
+    if (preg_match_all('/<item\b[^>]*>(.*?)<\/item>/isu', $xml, $matches)) $items = $matches[1];
+    foreach ($items as $item) {
+        $value = static function(string $tag) use ($item): string {
+            if (!preg_match('/<' . preg_quote($tag, '/') . '\b[^>]*>(.*?)<\/' . preg_quote($tag, '/') . '>/isu', $item, $match)) return '';
+            $text = preg_replace('/<!\[CDATA\[(.*?)\]\]>/isu', '$1', (string)$match[1]) ?? (string)$match[1];
+            return trim(html_entity_decode(strip_tags($text), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        };
+        $title = $value('title');
+        $description = $value('description');
+        $published = $value('pubDate');
+        $publishedAt = $published !== '' ? strtotime($published) : false;
+        if ($publishedAt !== false && ($publishedAt > $now + 3600 || $publishedAt < $now - 72 * 3600)) continue;
+        $text = preg_replace('/\s+/u', ' ', trim($title . ' ' . $description)) ?? trim($title . ' ' . $description);
+        if ($text === '' || stripos($text, 'allerta') === false) continue;
+        $severity = '';
+        if (preg_match('/\ballerta\s+(gialla|arancione|rossa)\b/iu', $text, $severityMatch)) {
+            $severity = ['gialla'=>'yellow','arancione'=>'orange','rossa'=>'red'][strtolower((string)$severityMatch[1])] ?? '';
+        }
+        if ($severity === '') continue;
+        $itemZones = [];
+        if (preg_match_all('/\bZone?\s+([A-E](?:\s*[-,\/ ]?\s*[A-E]){0,4})\b/iu', $text, $zoneMatches)) {
+            foreach ($zoneMatches[1] as $zoneGroup) {
+                if (preg_match_all('/[A-E]/i', (string)$zoneGroup, $letters)) {
+                    foreach ($letters[0] as $letter) $itemZones[] = strtoupper((string)$letter);
+                }
+            }
+        }
+        $normalized = meteonexa_liguria_normalize_place($text);
+        if ($itemZones === [] && str_contains($normalized, 'CENTRO LEVANTE')) $itemZones = ['B','C','E'];
+        if (str_contains($normalized, 'PONENTE') && !in_array('A', $itemZones, true)) $itemZones[] = 'A';
+        foreach (array_values(array_unique($itemZones)) as $zone) {
+            if (!isset($zones[$zone]) || ($rank[$severity] ?? 0) > ($rank[$zones[$zone]] ?? 0)) $zones[$zone] = $severity;
+        }
+    }
+    ksort($zones, SORT_STRING);
+    return $zones;
+}
+
+function meteonexa_liguria_fetch_snapshot_source(string $url, string $accept, int $maxBytes): array {
+    return meteonexa_http_request($url, [
+        'timeout'=>7,
+        'max_bytes'=>$maxBytes,
+        'headers'=>[
+            'Accept: ' . $accept,
+            'Accept-Language: it-IT,it;q=0.9,en;q=0.7',
+            'Cache-Control: no-cache',
+        ],
+    ]);
+}
+
 function meteonexa_liguria_zone_status_snapshot(): array {
     $cacheDir = meteonexa_storage_path() . '/provider-cache';
     if (!is_dir($cacheDir)) @mkdir($cacheDir, 0770, true);
@@ -61,24 +116,43 @@ function meteonexa_liguria_zone_status_snapshot(): array {
         $cacheAge = max(0, time() - (int)filemtime($cacheFile));
         $decoded = json_decode((string)@file_get_contents($cacheFile), true);
         if (is_array($decoded) && is_array($decoded['zones'] ?? null)) $cached = $decoded;
-        if ($cached !== null && $cacheAge < 300) {
+        if ($cached !== null && $cacheAge < 180) {
             $cached['providerFresh'] = true;
             $cached['staleProviderCache'] = false;
             $cached['cacheAgeSeconds'] = $cacheAge;
             return $cached;
         }
     }
-    try {
-        $response = meteonexa_http_request('https://allertaliguria.regione.liguria.it/', ['timeout'=>6, 'max_bytes'=>2500000]);
-        if (($response['status'] ?? 0) >= 200 && ($response['status'] ?? 0) < 300) {
-            $zones = meteonexa_liguria_parse_zone_statuses((string)($response['body'] ?? ''));
-            if ($zones !== []) {
-                $snapshot = ['zones'=>$zones, 'fetchedAt'=>gmdate('c'), 'source'=>'AllertaLiguria / ARPAL'];
-                @file_put_contents($cacheFile, json_encode($snapshot, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX);
-                return $snapshot + ['providerFresh'=>true, 'staleProviderCache'=>false, 'cacheAgeSeconds'=>0];
-            }
+    $sources = [
+        [
+            'url'=>'https://allertaliguria.regione.liguria.it/',
+            'accept'=>'text/html,application/xhtml+xml;q=0.9,*/*;q=0.5',
+            'maxBytes'=>2500000,
+            'parser'=>'homepage',
+            'source'=>'AllertaLiguria / ARPAL',
+        ],
+        [
+            'url'=>'https://www.arpal.liguria.it/index.php?option=com_flexicontent&view=category&cid=58&Itemid=2071&format=feed&type=rss',
+            'accept'=>'application/rss+xml,application/xml,text/xml;q=0.9,*/*;q=0.5',
+            'maxBytes'=>1800000,
+            'parser'=>'rss',
+            'source'=>'ARPAL RSS',
+        ],
+    ];
+    foreach ($sources as $source) {
+        try {
+            $response = meteonexa_liguria_fetch_snapshot_source($source['url'], $source['accept'], $source['maxBytes']);
+            if (($response['status'] ?? 0) < 200 || ($response['status'] ?? 0) >= 300) continue;
+            $body = (string)($response['body'] ?? '');
+            $zones = $source['parser'] === 'homepage'
+                ? meteonexa_liguria_parse_zone_statuses($body)
+                : meteonexa_liguria_parse_arpal_rss($body);
+            if ($zones === []) continue;
+            $snapshot = ['zones'=>$zones, 'fetchedAt'=>gmdate('c'), 'source'=>$source['source']];
+            @file_put_contents($cacheFile, json_encode($snapshot, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), LOCK_EX);
+            return $snapshot + ['providerFresh'=>true, 'staleProviderCache'=>false, 'cacheAgeSeconds'=>0];
+        } catch (Throwable $ignored) {
         }
-    } catch (Throwable $ignored) {
     }
     if ($cached !== null && $cacheAge !== null && $cacheAge < 3600) {
         $cached['providerFresh'] = false;

@@ -1053,7 +1053,7 @@ async function loadHomeOfficialAlerts({force=false}={}) {
     if(PREVIEW_MODE){state.officialAlerts={available:true,source:'MeteoAlarm',relevant:[]};state.officialAlertsFetchedAt=Date.now();state.officialAlertsLocationKey=key;renderHomeOfficialAlert();return state.officialAlerts;}
     if (isGuestSession()) renderHomeOfficialAlert({ loading: true });
     const task=(async()=>{
-        const params=new URLSearchParams({lat:String(state.location.latitude),lon:String(state.location.longitude),location:String(state.location.name||''),admin1:String(state.location.admin1||''),lang:String(state.settings.language||'it').slice(0,2)});if(state.session?.type==='email'&&state.authServerVerified===true&&SERVICES.get('security')?.deviceId)params.set('deviceId',SERVICES.get('security').deviceId);
+        const params=new URLSearchParams({lat:String(state.location.latitude),lon:String(state.location.longitude),location:String(state.location.name||''),admin1:String(state.location.admin1||''),lang:String(state.settings.language||'it').slice(0,2)});
         try{
             let result;
             try{result=await fetchJSON(`api/official/alerts.php?${params}`,{timeout:12000,credentials:'same-origin'});}
