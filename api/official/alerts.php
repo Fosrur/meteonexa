@@ -5,7 +5,6 @@ require_once dirname(__DIR__) . '/public_helpers.php';
 require_once dirname(__DIR__) . '/intelligence/engine_helpers.php';
 require_once dirname(__DIR__) . '/intelligence/quality_helpers.php';
 require_once dirname(__DIR__) . '/official/lifecycle_helpers.php';
-require_once __DIR__ . '/liguria_zone_fallback.php';
 
 require_method('GET');
 assert_same_origin();
@@ -31,7 +30,6 @@ if (!in_array($locale, ['it', 'en', 'fr', 'es', 'de'], true)) {
 
 $alerts = meteonexa_intelq_meteoalarm_edr($config, $lat, $lon, $locale)
     ?? meteonexa_official_alerts($lat, $lon, $location, $admin1);
-$alerts = meteonexa_official_liguria_zone_fallback($alerts, $location, $admin1);
 if (!isset($alerts['mode'])) {
     $alerts['mode'] = 'atom-text-fallback';
     $alerts['geospatial'] = false;
@@ -43,11 +41,6 @@ foreach ((array)($alerts['relevant'] ?? []) as $i => $row) {
 }
 $alerts = meteonexa_official_normalize($alerts);
 
-// deviceId is optional only for this public weather surface. clean_device_id()
-// deliberately rejects an empty value because private endpoints require_once a real
-// device proof. Therefore it must be called only when the client actually sent
-// a non-empty deviceId; otherwise the guest branch below would be unreachable
-// and every guest request would incorrectly return INVALID_DEVICE (422).
 $rawDeviceId = trim((string)($_GET['deviceId'] ?? ''));
 $deviceId = '';
 $authenticatedDevice = false;

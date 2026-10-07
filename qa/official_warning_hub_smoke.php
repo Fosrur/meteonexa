@@ -2,7 +2,6 @@
 declare(strict_types=1);
 require dirname(__DIR__) . '/api/database.php';
 require dirname(__DIR__) . '/api/official/lifecycle_helpers.php';
-require dirname(__DIR__) . '/api/official/liguria_zone_fallback.php';
 
 $fail=[];
 $ok=static function(bool $condition,string $label)use(&$fail):void{echo ($condition?'[ OK ] ':'[FAIL] ').$label."\n";if(!$condition)$fail[]=$label;};
@@ -43,56 +42,11 @@ $normalized=meteonexa_official_normalize(['available'=>true,'providerFresh'=>tru
 $ok(count((array)($normalized['relevant']??[]))===0&&count((array)($normalized['terminalRevisions']??[]))===1,'CAP cancellation is terminal and not rendered active');
 $ok(($normalized['hub']['lifecycle']??[])===['issued','updated','cancelled','expired'],'hub contract publishes canonical lifecycle');
 
-$ok(meteonexa_liguria_municipality_zones('Lavagna')===['C'],'Lavagna resolves to official Liguria alert zone C');
-$ok(meteonexa_liguria_municipality_zones('Uscio')===['B','C'],'cross-zone municipality keeps both official alert zones');
-$zoneStatuses=meteonexa_liguria_parse_zone_statuses('<h3>zona </h3><h4>C</h4><h6>Emessa allerta gialla</h6><h3>zona D</h3><h6>Nessuna allerta</h6>');
-$ok(($zoneStatuses['C']??'')==='yellow'&&($zoneStatuses['D']??'')==='green','AllertaLiguria zone status parser distinguishes warning from no-warning');
-$legendFixture='<div>zona A Nessuna allerta</div><aside>LEGENDA GIALLA ARANCIONE ROSSA</aside><div>zona B Emessa allerta gialla</div><aside>LEGENDA GIALLA ARANCIONE ROSSA</aside><div>zona C Emessa allerta gialla</div><aside>LEGENDA GIALLA ARANCIONE ROSSA</aside><div>zona D Nessuna allerta</div><aside>LEGENDA GIALLA ARANCIONE ROSSA</aside><div>zona E Emessa allerta gialla</div><aside>LEGENDA GIALLA ARANCIONE ROSSA</aside>';
-$legendZones=meteonexa_liguria_parse_zone_statuses($legendFixture);
-$ok($legendZones===['A'=>'green','B'=>'yellow','C'=>'yellow','D'=>'green','E'=>'yellow'],'AllertaLiguria parser ignores legend colors and reads only explicit zone status');
-$redFixture='<div>zona A Nessuna allerta</div><div>zona B Emessa allerta arancione</div><div>zona C Emessa allerta rossa</div><div>zona D Nessuna allerta</div><div>zona E Emessa allerta gialla</div>';
-$redZones=meteonexa_liguria_parse_zone_statuses($redFixture);
-$ok(($redZones['B']??'')==='orange'&&($redZones['C']??'')==='red'&&($redZones['E']??'')==='yellow','AllertaLiguria parser preserves real orange and red zone severity');
-$rssNow=time();
-$rssFixture='<rss><channel><item><title>Prolungamento allerta gialla sul centro levante</title><description><![CDATA[Arpal prolunga l’allerta gialla per temporali sul centro-levante della regione (Zone BCE) fino alle 15:00 di domani. Sul ponente (Zona A) l’allerta termina alle 15:00 di oggi.]]></description><pubDate>'.date(DATE_RSS,$rssNow-600).'</pubDate></item></channel></rss>';
-$rssZones=meteonexa_liguria_parse_arpal_rss($rssFixture,$rssNow);
-$ok(($rssZones['B']??'')==='yellow'&&($rssZones['C']??'')==='yellow'&&($rssZones['E']??'')==='yellow','ARPAL RSS fallback resolves compact BCE zone group');
-$staleRss=str_replace(date(DATE_RSS,$rssNow-600),date(DATE_RSS,$rssNow-96*3600),$rssFixture);
-$ok(meteonexa_liguria_parse_arpal_rss($staleRss,$rssNow)===[],'ARPAL RSS fallback rejects stale alert news');
-$mergedSources=meteonexa_liguria_merge_zone_snapshots([['source'=>'AllertaLiguria / ARPAL','zones'=>['A'=>'green','B'=>'green','C'=>'green','D'=>'green','E'=>'green']],['source'=>'ARPAL RSS','zones'=>['B'=>'yellow','C'=>'yellow','E'=>'yellow']]]);
-$ok(($mergedSources['zones']['C']??'')==='yellow'&&($mergedSources['zones']['D']??'')==='green','fresh ARPAL RSS warning overrides stale green homepage for affected zones');
-$ok(($mergedSources['verificationSources']??[])===['AllertaLiguria / ARPAL','ARPAL RSS'],'zone snapshot records both verification sources');
-$ok(($mergedSources['strategyVersion']??0)===5,'Liguria zone parser cache strategy is v5');
-$diagnosticFixture=meteonexa_official_liguria_zone_fallback(['available'=>true,'source'=>'MeteoAlarm','relevant'=>[],'regionalAdvisories'=>[]],'Lavagna','Liguria');
-$ok(isset($diagnosticFixture['liguriaZoneFallback']['strategyVersion']),'Liguria fallback exposes safe runtime diagnostics when no warning is promoted');
-$regionalFixture=[
-    'available'=>true,'source'=>'MeteoAlarm','relevant'=>[],
-    'regionalAdvisories'=>[array_replace($base,[
-        'id'=>'regional-liguria','identifier'=>'regional-liguria','source'=>'MeteoAlarm Atom','authority'=>'MeteoAlarm / national warning authority',
-        'title'=>'Thunderstorm warning issued for Italy - Liguria','summary'=>'Liguria','area'=>'Liguria','geometry'=>null,'geospatialMatch'=>false,
-    ])],
-];
-$zonePromoted=meteonexa_liguria_apply_zone_status($regionalFixture,'Lavagna',['C'],['zones'=>['C'=>'yellow'],'fetchedAt'=>$updatedAt,'providerFresh'=>true]);
-$promoted=$zonePromoted['relevant'][0]??[];
-$ok(count((array)($zonePromoted['relevant']??[]))===1&&($promoted['severity']??'')==='yellow','official zone warning promotes the regional text fallback to relevant');
-$ok(($promoted['officialZone']??'')==='C'&&($promoted['matchScope']??'')==='official-municipality-zone'&&($promoted['municipalityZoneVerified']??false)===true,'promotion records authoritative municipality-zone verification');
-$ok(($promoted['startsAt']??'')===$issuedAt&&($promoted['endsAt']??'')===$endsAt,'promotion preserves MeteoAlarm validity window when available');
-$multiRegional=$regionalFixture;
-$multiRegional['regionalAdvisories']=[
-    array_replace($regionalFixture['regionalAdvisories'][0],['id'=>'wind-upcoming','title'=>'Yellow Wind Warning issued for Italy - Liguria','event'=>'Yellow Wind Warning','severity'=>'yellow','windowState'=>'upcoming','startsAt'=>gmdate('c',$fixtureNow+3600),'endsAt'=>gmdate('c',$fixtureNow+7200)]),
-    array_replace($regionalFixture['regionalAdvisories'][0],['id'=>'storm-active','title'=>'Orange Thunderstorm Warning issued for Italy - Liguria','event'=>'Orange Thunderstorm Warning','severity'=>'orange','windowState'=>'active','startsAt'=>gmdate('c',$fixtureNow-3600),'endsAt'=>gmdate('c',$fixtureNow+7200)]),
-    array_replace($regionalFixture['regionalAdvisories'][0],['id'=>'rain-active','title'=>'Orange Rain Warning issued for Italy - Liguria','event'=>'Orange Rain Warning','severity'=>'orange','windowState'=>'active','startsAt'=>gmdate('c',$fixtureNow-3600),'endsAt'=>gmdate('c',$fixtureNow+7200)]),
-];
-$multiPromoted=meteonexa_liguria_apply_zone_status($multiRegional,'Lavagna',['C'],['zones'=>['C'=>'yellow'],'source'=>'AllertaLiguria / ARPAL + ARPAL RSS','verificationSources'=>['AllertaLiguria / ARPAL','ARPAL RSS'],'providerFresh'=>true]);
-$multiWarning=$multiPromoted['relevant'][0]??[];
-$ok(($multiWarning['id']??'')==='storm-active'&&($multiWarning['severity']??'')==='yellow','promotion prefers active thunderstorm over upcoming wind while keeping official zone severity');
-$ok(($multiWarning['verificationSources']??[])===['AllertaLiguria / ARPAL','ARPAL RSS'],'promoted warning exposes authoritative verification sources');
-$zoneClear=meteonexa_liguria_apply_zone_status($regionalFixture,'Lavagna',['C'],['zones'=>['C'=>'green'],'providerFresh'=>true]);
-$ok(count((array)($zoneClear['relevant']??[]))===0,'official green zone never promotes a regional advisory');
-
 $appSource=(string)file_get_contents(dirname(__DIR__).'/js/app.js');
 $apiSource=(string)file_get_contents(dirname(__DIR__).'/api/official/alerts.php');
 $styleSource=(string)file_get_contents(dirname(__DIR__).'/styles/main/99-reliability-patches.css');
+$ok(str_contains($apiSource,'meteonexa_intelq_meteoalarm_edr')&&str_contains($apiSource,'meteonexa_official_alerts'),'official alerts are sourced from generic external MeteoAlarm providers');
+$ok(!str_contains(strtolower($apiSource),'liguria')&&!str_contains($apiSource,'municipalityZoneVerified')&&!str_contains($apiSource,'officialZone'),'official alerts API has no regional hardcoded override');
 $ok(!str_contains($appSource,"params.set('deviceId'")&&str_contains($appSource,'api/official/alerts.php?${params}'),'guest and authenticated Home use the same public official-alert request');
 $ok(!str_contains($apiSource,'require_authenticated_device_session')&&str_contains($apiSource,'meteonexa_verify_device_proof')&&str_contains($apiSource,'meteonexa_official_public_snapshot'),'public official-alert API degrades invalid device proof instead of failing weather data');
 $colorStates=true;foreach(['green','yellow','orange','red'] as $colorState){$colorStates=$colorStates&&str_contains($styleSource,'.home-official-alert[data-severity="'.$colorState.'"]');}
@@ -108,10 +62,10 @@ if (in_array('sqlite', PDO::getAvailableDrivers(), true)) {
     $ok($version===32,'schema 32 Official Warning Hub migration completes');
     foreach(['event_id','version_id','area_key','lifecycle_status','authority_name','sender','message_type','source_name','geometry_json'] as $column)$ok(meteonexa_db_column_exists($pdo,'official_alert_state',$column),"state column $column exists");
 
-    $issued=meteonexa_official_track($pdo,44.5,9.2,'Test location',['available'=>true,'providerFresh'=>true,'geospatial'=>true,'relevant'=>[$base]]);
+    meteonexa_official_track($pdo,44.5,9.2,'Test location',['available'=>true,'providerFresh'=>true,'geospatial'=>true,'relevant'=>[$base]]);
     $state=$pdo->query('SELECT * FROM official_alert_state')->fetch();
     $ok(is_array($state)&&$state['event_id']==='root-alert'&&$state['lifecycle_status']==='issued','initial warning persists as issued canonical event');
-    $updated=meteonexa_official_track($pdo,44.5,9.2,'Test location',['available'=>true,'providerFresh'=>true,'geospatial'=>true,'relevant'=>[$update]]);
+    meteonexa_official_track($pdo,44.5,9.2,'Test location',['available'=>true,'providerFresh'=>true,'geospatial'=>true,'relevant'=>[$update]]);
     $state=$pdo->query('SELECT * FROM official_alert_state')->fetch();
     $ok(is_array($state)&&$state['event_id']==='root-alert'&&$state['lifecycle_status']==='updated'&&$state['severity']==='orange','update reuses event+area state and changes lifecycle to updated');
     $ok((int)$pdo->query('SELECT COUNT(*) FROM official_alert_state')->fetchColumn()===1,'updated version does not duplicate the event state row');
