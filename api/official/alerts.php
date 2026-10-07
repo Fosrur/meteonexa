@@ -5,6 +5,7 @@ require_once dirname(__DIR__) . '/public_helpers.php';
 require_once dirname(__DIR__) . '/intelligence/engine_helpers.php';
 require_once dirname(__DIR__) . '/intelligence/quality_helpers.php';
 require_once dirname(__DIR__) . '/official/lifecycle_helpers.php';
+require_once __DIR__ . '/administrative_area_match.php';
 
 require_method('GET');
 assert_same_origin();
@@ -30,6 +31,7 @@ if (!in_array($locale, ['it', 'en', 'fr', 'es', 'de'], true)) {
 
 $alerts = meteonexa_intelq_meteoalarm_edr($config, $lat, $lon, $locale)
     ?? meteonexa_official_alerts($lat, $lon, $location, $admin1);
+$alerts = meteonexa_official_apply_position_area_match($alerts, $location, $admin1);
 if (!isset($alerts['mode'])) {
     $alerts['mode'] = 'atom-text-fallback';
     $alerts['geospatial'] = false;

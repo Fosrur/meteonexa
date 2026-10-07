@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require dirname(__DIR__) . '/api/database.php';
 require dirname(__DIR__) . '/api/official/lifecycle_helpers.php';
+require dirname(__DIR__) . '/api/official/administrative_area_match.php';
 
 $fail=[];
 $ok=static function(bool $condition,string $label)use(&$fail):void{echo ($condition?'[ OK ] ':'[FAIL] ').$label."\n";if(!$condition)$fail[]=$label;};
@@ -42,11 +43,35 @@ $normalized=meteonexa_official_normalize(['available'=>true,'providerFresh'=>tru
 $ok(count((array)($normalized['relevant']??[]))===0&&count((array)($normalized['terminalRevisions']??[]))===1,'CAP cancellation is terminal and not rendered active');
 $ok(($normalized['hub']['lifecycle']??[])===['issued','updated','cancelled','expired'],'hub contract publishes canonical lifecycle');
 
+$genericRegional=[
+    'available'=>true,
+    'source'=>'MeteoAlarm',
+    'relevant'=>[],
+    'regionalAdvisories'=>[
+        array_replace($base,['id'=>'same-area','identifier'=>'same-area','area'=>'Example Region','geometry'=>null,'geospatialMatch'=>false,'severity'=>'orange','source'=>'MeteoAlarm Atom']),
+        array_replace($base,['id'=>'other-area','identifier'=>'other-area','area'=>'Other Region','geometry'=>null,'geospatialMatch'=>false,'source'=>'MeteoAlarm Atom']),
+    ],
+];
+$matched=meteonexa_official_apply_position_area_match($genericRegional,'Example City','Example Region');
+$matchedRows=(array)($matched['relevant']??[]);
+$remainingRows=(array)($matched['regionalAdvisories']??[]);
+$ok(count($matchedRows)===1&&($matchedRows[0]['id']??'')==='same-area','current position administrative area promotes matching external warning');
+$ok(($matchedRows[0]['matchScope']??'')==='administrative-area'&&($matchedRows[0]['positionMatched']??false)===true,'position-based administrative match is explicit');
+$ok(count($remainingRows)===1&&($remainingRows[0]['id']??'')==='other-area','non-matching regional warning remains regional');
+$unmatched=meteonexa_official_apply_position_area_match($genericRegional,'Example City','Different Region');
+$ok(count((array)($unmatched['relevant']??[]))===0,'different administrative area is never promoted');
+$geospatialFirst=$genericRegional;
+$geospatialFirst['relevant']=[$base];
+$kept=meteonexa_official_apply_position_area_match($geospatialFirst,'Example City','Example Region');
+$ok(count((array)($kept['relevant']??[]))===1&&($kept['relevant'][0]['id']??'')==='root-alert','geospatial MeteoAlarm result remains authoritative when available');
+
 $appSource=(string)file_get_contents(dirname(__DIR__).'/js/app.js');
 $apiSource=(string)file_get_contents(dirname(__DIR__).'/api/official/alerts.php');
+$matchSource=(string)file_get_contents(dirname(__DIR__).'/api/official/administrative_area_match.php');
 $styleSource=(string)file_get_contents(dirname(__DIR__).'/styles/main/99-reliability-patches.css');
 $ok(str_contains($apiSource,'meteonexa_intelq_meteoalarm_edr')&&str_contains($apiSource,'meteonexa_official_alerts'),'official alerts are sourced from generic external MeteoAlarm providers');
-$ok(!str_contains(strtolower($apiSource),'liguria')&&!str_contains($apiSource,'municipalityZoneVerified')&&!str_contains($apiSource,'officialZone'),'official alerts API has no regional hardcoded override');
+$ok(str_contains($apiSource,'meteonexa_official_apply_position_area_match'),'official alerts apply current-position administrative matching after provider retrieval');
+$ok(!str_contains(strtolower($apiSource),'liguria')&&!str_contains(strtolower($matchSource),'liguria'),'position matching contains no region-specific hardcode');
 $ok(!str_contains($appSource,"params.set('deviceId'")&&str_contains($appSource,'api/official/alerts.php?${params}'),'guest and authenticated Home use the same public official-alert request');
 $ok(!str_contains($apiSource,'require_authenticated_device_session')&&str_contains($apiSource,'meteonexa_verify_device_proof')&&str_contains($apiSource,'meteonexa_official_public_snapshot'),'public official-alert API degrades invalid device proof instead of failing weather data');
 $colorStates=true;foreach(['green','yellow','orange','red'] as $colorState){$colorStates=$colorStates&&str_contains($styleSource,'.home-official-alert[data-severity="'.$colorState.'"]');}
