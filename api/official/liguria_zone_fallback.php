@@ -34,51 +34,24 @@ function meteonexa_liguria_municipality_zones(string $locationName): array {
     return $zones;
 }
 
-function meteonexa_liguria_fragment_severity(string $fragment): string {
-    $value = strtolower($fragment);
-    if (preg_match('/al-background-allerta-(?:red|rossa)|emessa\s+allerta\s+rossa/iu', $value)) return 'red';
-    if (preg_match('/al-background-allerta-(?:orange|arancione)|emessa\s+allerta\s+arancione/iu', $value)) return 'orange';
-    if (preg_match('/al-background-allerta-(?:yellow|gialla)|emessa\s+allerta\s+gialla/iu', $value)) return 'yellow';
-    if (preg_match('/al-background-allerta-(?:green|verde|lightgray)|nessuna\s+allerta/iu', $value)) return 'green';
-    return '';
-}
-
 function meteonexa_liguria_parse_zone_statuses(string $html): array {
-    $rank = ['green'=>0,'yellow'=>1,'orange'=>2,'red'=>3];
     $zones = [];
-    $assign = static function(string $zone, string $severity) use (&$zones, $rank): void {
-        $zone = strtoupper(trim($zone));
-        $severity = strtolower(trim($severity));
-        if (!in_array($zone, ['A','B','C','D','E'], true) || !isset($rank[$severity])) return;
-        if (!isset($zones[$zone]) || $rank[$severity] > $rank[$zones[$zone]]) $zones[$zone] = $severity;
-    };
-
     $text = html_entity_decode((string)preg_replace('/<[^>]+>/', ' ', $html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
     $text = preg_replace('/\s+/u', ' ', $text) ?? $text;
-    if (preg_match_all('/\bzona\s*([A-E])\b/iu', $text, $textMarkers, PREG_OFFSET_CAPTURE)) {
-        $count = count($textMarkers[0]);
-        for ($i = 0; $i < $count; $i++) {
-            $zone = strtoupper((string)$textMarkers[1][$i][0]);
-            $start = (int)$textMarkers[0][$i][1];
-            $end = $i + 1 < $count ? (int)$textMarkers[0][$i + 1][1] : min(strlen($text), $start + 1800);
-            $fragment = substr($text, $start, max(0, $end - $start));
-            $severity = meteonexa_liguria_fragment_severity($fragment);
-            if ($severity !== '') $assign($zone, $severity);
+    $pattern = '/\bzona\s*([A-E])\b(?:(?!\bzona\s*[A-E]\b).){0,420}?\b(Emessa\s+allerta\s+(gialla|arancione|rossa)|Nessuna\s+allerta)\b/isu';
+    if (!preg_match_all($pattern, $text, $matches, PREG_SET_ORDER)) return [];
+    foreach ($matches as $match) {
+        $zone = strtoupper((string)($match[1] ?? ''));
+        $status = strtolower(trim((string)($match[2] ?? '')));
+        if (!in_array($zone, ['A','B','C','D','E'], true)) continue;
+        if (str_starts_with($status, 'nessuna')) {
+            $zones[$zone] = 'green';
+            continue;
         }
+        $color = strtolower(trim((string)($match[3] ?? '')));
+        $severity = ['gialla'=>'yellow','arancione'=>'orange','rossa'=>'red'][$color] ?? '';
+        if ($severity !== '') $zones[$zone] = $severity;
     }
-
-    if (preg_match_all('/al-zona-([A-E])/i', $html, $htmlMarkers, PREG_OFFSET_CAPTURE)) {
-        $count = count($htmlMarkers[0]);
-        for ($i = 0; $i < $count; $i++) {
-            $zone = strtoupper((string)$htmlMarkers[1][$i][0]);
-            $start = (int)$htmlMarkers[0][$i][1];
-            $end = $i + 1 < $count ? (int)$htmlMarkers[0][$i + 1][1] : min(strlen($html), $start + 8000);
-            $fragment = substr($html, $start, max(0, $end - $start));
-            $severity = meteonexa_liguria_fragment_severity($fragment);
-            if ($severity !== '') $assign($zone, $severity);
-        }
-    }
-
     ksort($zones, SORT_STRING);
     return $zones;
 }
@@ -164,20 +137,20 @@ function meteonexa_liguria_merge_zone_snapshots(array $snapshots): array {
         'source'=>$sources === [] ? 'AllertaLiguria / ARPAL' : implode(' + ', $sources),
         'verificationSources'=>$sources,
         'sourceZones'=>$sourceZones,
-        'strategyVersion'=>4,
+        'strategyVersion'=>5,
     ];
 }
 
 function meteonexa_liguria_zone_status_snapshot(): array {
     $cacheDir = meteonexa_storage_path() . '/provider-cache';
     if (!is_dir($cacheDir)) @mkdir($cacheDir, 0770, true);
-    $cacheFile = $cacheDir . '/allertaliguria-zone-status-v4.json';
+    $cacheFile = $cacheDir . '/allertaliguria-zone-status-v5.json';
     $cached = null;
     $cacheAge = null;
     if (is_file($cacheFile)) {
         $cacheAge = max(0, time() - (int)filemtime($cacheFile));
         $decoded = json_decode((string)@file_get_contents($cacheFile), true);
-        if (is_array($decoded) && (int)($decoded['strategyVersion'] ?? 0) === 4 && is_array($decoded['zones'] ?? null)) $cached = $decoded;
+        if (is_array($decoded) && (int)($decoded['strategyVersion'] ?? 0) === 5 && is_array($decoded['zones'] ?? null)) $cached = $decoded;
         if ($cached !== null && $cacheAge < 120) {
             $cached['providerFresh'] = true;
             $cached['staleProviderCache'] = false;
@@ -236,7 +209,7 @@ function meteonexa_liguria_zone_status_snapshot(): array {
         'source'=>'AllertaLiguria / ARPAL',
         'verificationSources'=>[],
         'sourceZones'=>[],
-        'strategyVersion'=>4,
+        'strategyVersion'=>5,
     ];
 }
 function meteonexa_liguria_apply_zone_status(array $alerts, string $locationName, array $zones, array $snapshot): array {
@@ -344,7 +317,7 @@ function meteonexa_official_liguria_zone_fallback(array $alerts, string $locatio
         'verificationSources'=>array_values((array)($snapshot['verificationSources'] ?? [])),
         'providerFresh'=>!empty($snapshot['providerFresh']),
         'staleProviderCache'=>!empty($snapshot['staleProviderCache']),
-        'strategyVersion'=>(int)($snapshot['strategyVersion'] ?? 4),
+        'strategyVersion'=>(int)($snapshot['strategyVersion'] ?? 5),
     ];
     return $result;
 }

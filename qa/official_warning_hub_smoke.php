@@ -47,9 +47,12 @@ $ok(meteonexa_liguria_municipality_zones('Lavagna')===['C'],'Lavagna resolves to
 $ok(meteonexa_liguria_municipality_zones('Uscio')===['B','C'],'cross-zone municipality keeps both official alert zones');
 $zoneStatuses=meteonexa_liguria_parse_zone_statuses('<h3>zona </h3><h4>C</h4><h6>Emessa allerta gialla</h6><h3>zona D</h3><h6>Nessuna allerta</h6>');
 $ok(($zoneStatuses['C']??'')==='yellow'&&($zoneStatuses['D']??'')==='green','AllertaLiguria zone status parser distinguishes warning from no-warning');
-$classFixture='<nav><a href="#al-zona-B">B</a><a href="#al-zona-C">C</a><a href="#al-zona-D">D</a></nav><section id="al-zona-B"><div class="al-background-allerta-yellow">B</div></section><section id="al-zona-C"><div class="weather-summary">temporali</div><div class="al-background-allerta-yellow">C</div></section><section id="al-zona-D"><div class="al-background-allerta-lightgray">D</div></section>';
-$classZones=meteonexa_liguria_parse_zone_statuses($classFixture);
-$ok(($classZones['B']??'')==='yellow'&&($classZones['C']??'')==='yellow'&&($classZones['D']??'')==='green','AllertaLiguria parser reads live CSS severity classes by zone block');
+$legendFixture='<div>zona A Nessuna allerta</div><aside>LEGENDA GIALLA ARANCIONE ROSSA</aside><div>zona B Emessa allerta gialla</div><aside>LEGENDA GIALLA ARANCIONE ROSSA</aside><div>zona C Emessa allerta gialla</div><aside>LEGENDA GIALLA ARANCIONE ROSSA</aside><div>zona D Nessuna allerta</div><aside>LEGENDA GIALLA ARANCIONE ROSSA</aside><div>zona E Emessa allerta gialla</div><aside>LEGENDA GIALLA ARANCIONE ROSSA</aside>';
+$legendZones=meteonexa_liguria_parse_zone_statuses($legendFixture);
+$ok($legendZones===['A'=>'green','B'=>'yellow','C'=>'yellow','D'=>'green','E'=>'yellow'],'AllertaLiguria parser ignores legend colors and reads only explicit zone status');
+$redFixture='<div>zona A Nessuna allerta</div><div>zona B Emessa allerta arancione</div><div>zona C Emessa allerta rossa</div><div>zona D Nessuna allerta</div><div>zona E Emessa allerta gialla</div>';
+$redZones=meteonexa_liguria_parse_zone_statuses($redFixture);
+$ok(($redZones['B']??'')==='orange'&&($redZones['C']??'')==='red'&&($redZones['E']??'')==='yellow','AllertaLiguria parser preserves real orange and red zone severity');
 $rssNow=time();
 $rssFixture='<rss><channel><item><title>Prolungamento allerta gialla sul centro levante</title><description><![CDATA[Arpal prolunga l’allerta gialla per temporali sul centro-levante della regione (Zone BCE) fino alle 15:00 di domani. Sul ponente (Zona A) l’allerta termina alle 15:00 di oggi.]]></description><pubDate>'.date(DATE_RSS,$rssNow-600).'</pubDate></item></channel></rss>';
 $rssZones=meteonexa_liguria_parse_arpal_rss($rssFixture,$rssNow);
@@ -59,6 +62,7 @@ $ok(meteonexa_liguria_parse_arpal_rss($staleRss,$rssNow)===[],'ARPAL RSS fallbac
 $mergedSources=meteonexa_liguria_merge_zone_snapshots([['source'=>'AllertaLiguria / ARPAL','zones'=>['A'=>'green','B'=>'green','C'=>'green','D'=>'green','E'=>'green']],['source'=>'ARPAL RSS','zones'=>['B'=>'yellow','C'=>'yellow','E'=>'yellow']]]);
 $ok(($mergedSources['zones']['C']??'')==='yellow'&&($mergedSources['zones']['D']??'')==='green','fresh ARPAL RSS warning overrides stale green homepage for affected zones');
 $ok(($mergedSources['verificationSources']??[])===['AllertaLiguria / ARPAL','ARPAL RSS'],'zone snapshot records both verification sources');
+$ok(($mergedSources['strategyVersion']??0)===5,'Liguria zone parser cache strategy is v5');
 $diagnosticFixture=meteonexa_official_liguria_zone_fallback(['available'=>true,'source'=>'MeteoAlarm','relevant'=>[],'regionalAdvisories'=>[]],'Lavagna','Liguria');
 $ok(isset($diagnosticFixture['liguriaZoneFallback']['strategyVersion']),'Liguria fallback exposes safe runtime diagnostics when no warning is promoted');
 $regionalFixture=[
