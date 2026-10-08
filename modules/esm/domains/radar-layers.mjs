@@ -30,6 +30,7 @@ function installLayerService(window, runtime) {
     const apiFor = type => type === 'air' ? CONFIG.AIR_QUALITY_API : type === 'marine' ? CONFIG.MARINE_API : CONFIG.WEATHER_API;
     const toNumber = value => Number.isFinite(Number(value)) ? Number(value) : null;
     const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+    let activeRequest = 0;
 
     function clearMapLayers() {
         const map = state?.radar?.vectorMap;
@@ -192,21 +193,23 @@ function installLayerService(window, runtime) {
     }
 
     function render(type, data) {
-        const map = state?.radar?.vectorMap;
-        if (!map) throw new Error('RADAR_MAP_NOT_READY');
-        clearMapLayers();
         const features = featureRows(data);
         const values = features.map(feature => Number(feature.properties.value)).filter(Number.isFinite);
+        const max = Math.max(...values);
+        const min = Math.min(...values);
         if (!values.length) {
+            clearMapLayers();
             setLegend(type, 'empty');
             return { features: 0, empty: true };
         }
-        const max = Math.max(...values);
-        const min = Math.min(...values);
         if (type === 'snow' && max <= 0) {
+            clearMapLayers();
             setLegend(type, 'ready', '0 cm');
             return { features: values.length, empty: false, zero: true };
         }
+        const map = state?.radar?.vectorMap;
+        if (!map || !state?.radar?.vectorMapReady) throw new Error('RADAR_MAP_NOT_READY');
+        clearMapLayers();
         addSource(map, features);
         if (type === 'cloud' || type === 'temperature' || type === 'air') addHeat(map, data.config, type);
         if (type === 'pressure' || type === 'marine' || type === 'snow') addPoints(map, data.config, type);
@@ -222,25 +225,41 @@ function installLayerService(window, runtime) {
         return { features: features.length, empty: false };
     }
 
+    async function waitForVectorMap() {
+        const deadline = Date.now() + 6500;
+        while (!state?.radar?.vectorMap || !state?.radar?.vectorMapReady) {
+            if (state?.radar?.vectorMapFailed || Date.now() >= deadline) throw new Error('RADAR_MAP_NOT_READY');
+            await new Promise(resolve => window.setTimeout(resolve, 100));
+        }
+    }
+
     async function show(type) {
         const config = LAYERS[type];
         if (!config) throw new Error('RADAR_LAYER_UNKNOWN');
+        const request = ++activeRequest;
         qa('[data-suite-map-layer]').forEach(button => button.classList.toggle('active', button.dataset.suiteMapLayer === type));
         qa('[data-advanced-radar-layer]').forEach(button => button.classList.remove('active'));
         setLegend(type, 'loading');
         try {
-            await runtime.ensureRadar?.();
-            const map = state?.radar?.vectorMap;
-            if (!map || !state?.radar?.vectorMapReady) throw new Error('RADAR_MAP_NOT_READY');
-            runtime.removeRadarVectorLayer?.();
-            state.radar.mode = 'live';
-            state.radar.presentationLayer = `forecast-${type}`;
+            const initialization = runtime.ensureRadar?.(false, { silent: true });
+            Promise.resolve(initialization).catch(() => {});
             const data = await loadLayerData(type);
+            if (request !== activeRequest) return { cancelled: true };
+            const features = featureRows(data);
+            if (features.length && !(type === 'snow' && features.every(feature => feature.properties.value <= 0))) {
+                await waitForVectorMap();
+                if (request !== activeRequest) return { cancelled: true };
+                runtime.removeRadarVectorLayer?.();
+                state.radar.mode = 'live';
+                state.radar.presentationLayer = `forecast-${type}`;
+            }
             const result = render(type, data);
+            if (request !== activeRequest) return { cancelled: true };
             const source = q('#radar-source');
             if (source) source.textContent = `${labelFor(type)} · ${text('radar.updateradarmodeui.open_meteo_forecast')}`;
             return result;
         } catch (error) {
+            if (request !== activeRequest) return { cancelled: true };
             clearMapLayers();
             setLegend(type, 'error', error?.message || '');
             runtime.showToast?.(text('advanced.setadvancedradarlayer.unavailable'), error?.message || text('suite.showsuitemaplayer.no_data_available'), 'warning');
@@ -249,6 +268,7 @@ function installLayerService(window, runtime) {
     }
 
     function remove() {
+        activeRequest += 1;
         clearMapLayers();
         clearLegend();
         qa('[data-suite-map-layer]').forEach(button => button.classList.remove('active'));
