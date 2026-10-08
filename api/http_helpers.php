@@ -116,9 +116,9 @@ function meteonexa_http_request(string $url, array $options = []): array
         if ($body !== null) curl_setopt($handle, CURLOPT_POSTFIELDS, $body);
         $raw = curl_exec($handle);
         if (!is_string($raw)) {
-            // Do not propagate cURL diagnostics: they can contain provider hostnames,
-            // proxy details or other deployment information. Callers expose only a
-            // stable application error code/message.
+            
+            
+            
             curl_close($handle);
             throw new RuntimeException('HTTP_REQUEST_FAILED');
         }

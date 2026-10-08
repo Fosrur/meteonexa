@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-/** Radar4 P3.3 empirical calibration / multi-area verification helpers. */
+
 function meteonexa_radar4_p33_location_coordinates(string $locationKey): ?array {
     $parts = explode(':', $locationKey, 2);
     if (count($parts) !== 2 || !is_numeric($parts[0]) || !is_numeric($parts[1])) return null;
@@ -14,8 +14,8 @@ function meteonexa_radar4_p33_location_coordinates(string $locationKey): ?array 
 function meteonexa_radar4_p33_area_key(string $locationKey): string {
     $coords = meteonexa_radar4_p33_location_coordinates($locationKey);
     if (!$coords) return 'unknown';
-    // Coarse ~25 km cell: enough for multi-area calibration without duplicating
-    // the exact location key into the report dimension.
+    
+    
     $lat = round($coords['lat'] * 4) / 4;
     $lon = round($coords['lon'] * 4) / 4;
     return number_format($lat, 2, '.', '') . ':' . number_format($lon, 2, '.', '');
@@ -112,7 +112,7 @@ function meteonexa_radar4_p33_terrain_profile(float $lat, float $lon, ?float $fa
             $lats = implode(',', array_map(static fn($p)=>number_format($p[0], 5, '.', ''), $points));
             $lons = implode(',', array_map(static fn($p)=>number_format($p[1], 5, '.', ''), $points));
             $url = 'https://api.open-meteo.com/v1/elevation?' . http_build_query(['latitude'=>$lats, 'longitude'=>$lons], '', '&', PHP_QUERY_RFC3986);
-            // http_build_query escapes commas; Open-Meteo accepts arrays as comma-separated values after URL decoding.
+            
             $raw = meteonexa_http_json($url, ['timeout'=>10, 'max_bytes'=>120000]);
             return meteonexa_radar4_p33_terrain_profile_from_elevations((array)($raw['elevation'] ?? []), 5.0);
         }, 604800);

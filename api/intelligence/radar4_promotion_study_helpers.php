@@ -1,14 +1,14 @@
 <?php
 declare(strict_types=1);
 
-/**
- * Radar4 P3.4 promotion-study helpers.
- *
- * This layer is deliberately evaluation-only. It may determine that a frozen
- * live dataset satisfies the promotion-study guardrails, but it never changes
- * runtime authority: Radar3 remains authoritative until a separate release
- * explicitly implements and validates a canary/rollback path.
- */
+
+
+
+
+
+
+
+
 
 function meteonexa_radar4_p34_row_key(array $row, string $namespace): string {
     $parts = [

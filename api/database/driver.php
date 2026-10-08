@@ -20,9 +20,9 @@ function meteonexa_mysql_rewrite_sql(string $sql): string
         $offset = (int)$match[0][1];
         $prefix = substr($sql, 0, $offset);
         $update = trim((string)$match[2][0]);
-        // SQLite permits an UPDATE-WHERE clause after the UPSERT assignment
-        // list. MySQL performs the same write unconditionally; values are equal
-        // in the only MeteoNexa use of this clause (app_version).
+        
+        
+        
         $update = preg_replace('/\s+WHERE\s+[A-Za-z0-9_.]+\s*<>\s*excluded\.[A-Za-z0-9_]+\s*$/i', '', $update) ?? $update;
         $update = preg_replace('/\bexcluded\.([A-Za-z0-9_]+)\b/i', 'VALUES($1)', $update) ?? $update;
         $sql = $prefix . ' ON DUPLICATE KEY UPDATE ' . $update;

@@ -1,20 +1,20 @@
 <?php
 declare(strict_types=1);
 
-/**
- * Versioned database migration registry.
- *
- * Revisions 16..35 live in one file per schema revision under
- * api/database/migrations/. SQLite installations older than revision 16 still
- * pass through the quarantined legacy compatibility upgrader; all new schema
- * revisions must be added as standalone migration descriptors.
- */
+
+
+
+
+
+
+
+
 function meteonexa_current_schema_version(): int
 {
     return 35;
 }
 
-/** @return list<array{version:int,name:string,drivers:list<string>,up:Closure}> */
+
 function meteonexa_database_migrations(): array
 {
     static $migrations = null;
@@ -64,7 +64,7 @@ function meteonexa_database_migrations(): array
     return $migrations;
 }
 
-/** @return array<int,string> */
+
 function meteonexa_migration_manifest(): array
 {
     $manifest = [];
@@ -123,9 +123,9 @@ require_once __DIR__ . '/migrations/legacy_sqlite_upgrade.php';
 
 function meteonexa_run_sqlite_migrations(PDO $pdo, int $schemaVersion, int $currentSchema): int
 {
-    // Revisions before the explicit registry predate per-revision SQLite files.
-    // Keep their battle-tested upgrade path isolated; future revisions run only
-    // through meteonexa_run_explicit_migrations().
+    
+    
+    
     $legacyCeiling = min($currentSchema, 26);
     if ($schemaVersion < $legacyCeiling) {
         $schemaVersion = meteonexa_run_sqlite_legacy_upgrade($pdo, $schemaVersion, $legacyCeiling);

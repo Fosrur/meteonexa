@@ -20,13 +20,13 @@ $st=$pdo->prepare('SELECT * FROM oauth_states WHERE state_hash=:hash AND expires
 $st->execute([':hash'=>$hash,':now'=>time()]);
 $row=$st->fetch();
 if(!$row){http_response_code(400);header('Content-Type: text/plain; charset=utf-8');echo meteonexa_backend_text('api.backend.netatmo_oauth_invalid');exit;}
-// State is strictly single use even if the provider token exchange fails.
+
 $pdo->prepare('DELETE FROM oauth_states WHERE state_hash=:hash')->execute([':hash'=>$hash]);
 try{
     $tokens=netatmo_token_request($config,['grant_type'=>'authorization_code','client_id'=>$config['netatmo']['client_id'],'client_secret'=>$config['netatmo']['client_secret'],'code'=>$code,'redirect_uri'=>netatmo_redirect_uri($config),'scope'=>$config['netatmo']['scope']??'read_station']);
     netatmo_store_tokens($pdo,$config,(string)$row['device_id'],$tokens);
     $return=netatmo_safe_return_path((string)$row['return_url'],$config);
-    // Put the status before the fragment so it survives browser navigation.
+    
     $fragment='';
     if(str_contains($return,'#')){[$return,$fragment]=explode('#',$return,2);$fragment='#'.$fragment;}
     $separator=str_contains($return,'?')?'&':'?';

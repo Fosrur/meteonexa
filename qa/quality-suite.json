@@ -111,6 +111,76 @@
           "qa/metric_driven_weather_improvements_smoke.php"
         ],
         "timeout": 45
+      },
+      {
+        "id": "radar-layer-v2",
+        "category": "weather-ui",
+        "command": [
+          "python3",
+          "qa/radar_layer_v2_smoke.py",
+          "."
+        ],
+        "timeout": 45
+      },
+      {
+        "id": "architecture-10-10",
+        "category": "architecture",
+        "command": [
+          "python3",
+          "qa/architecture_10_10_smoke.py",
+          "."
+        ],
+        "timeout": 45
+      },
+      {
+        "id": "app-shell-components",
+        "category": "architecture",
+        "command": [
+          "python3",
+          "qa/app_shell_components_smoke.py",
+          "."
+        ],
+        "timeout": 45
+      },
+      {
+        "id": "zero-comments",
+        "category": "architecture",
+        "command": [
+          "python3",
+          "qa/zero_comments_smoke.py",
+          "."
+        ],
+        "timeout": 45
+      },
+      {
+        "id": "i18n-db-source",
+        "category": "i18n",
+        "command": [
+          "python3",
+          "qa/i18n_db_source_smoke.py",
+          "."
+        ],
+        "timeout": 45
+      },
+      {
+        "id": "php-component-size",
+        "category": "architecture",
+        "command": [
+          "python3",
+          "qa/php_helper_components_smoke.py",
+          "."
+        ],
+        "timeout": 60
+      },
+      {
+        "id": "roadmap-10-10-final",
+        "category": "architecture",
+        "command": [
+          "python3",
+          "qa/roadmap_10_10_final_smoke.py",
+          "."
+        ],
+        "timeout": 60
       }
     ],
     "release": [
@@ -177,9 +247,8 @@
         "id": "checksums",
         "category": "integrity",
         "command": [
-          "sha256sum",
-          "-c",
-          "SHA256SUMS.txt"
+          "python3",
+          "tools/verify-checksums.py"
         ],
         "timeout": 180
       },
@@ -191,6 +260,66 @@
           "tools/mutation-runner.py"
         ],
         "timeout": 90
+      },
+      {
+        "id": "architecture-10-10",
+        "category": "architecture",
+        "command": [
+          "python3",
+          "qa/architecture_10_10_smoke.py",
+          "."
+        ],
+        "timeout": 45
+      },
+      {
+        "id": "app-shell-components",
+        "category": "architecture",
+        "command": [
+          "python3",
+          "qa/app_shell_components_smoke.py",
+          "."
+        ],
+        "timeout": 45
+      },
+      {
+        "id": "zero-comments",
+        "category": "architecture",
+        "command": [
+          "python3",
+          "qa/zero_comments_smoke.py",
+          "."
+        ],
+        "timeout": 45
+      },
+      {
+        "id": "i18n-db-source",
+        "category": "i18n",
+        "command": [
+          "python3",
+          "qa/i18n_db_source_smoke.py",
+          "."
+        ],
+        "timeout": 45
+      },
+      {
+        "id": "php-component-size",
+        "category": "architecture",
+        "command": [
+          "python3",
+          "qa/php_helper_components_smoke.py",
+          "."
+        ],
+        "timeout": 60
+      },
+      {
+        "id": "roadmap-10-10-final",
+        "category": "architecture",
+        "command": [
+          "python3",
+          "qa/roadmap_10_10_final_smoke.py",
+          "."
+        ],
+        "timeout": 60
       }
     ],
     "full": [
@@ -981,6 +1110,76 @@
           "qa/sql_rewrite_smoke.php"
         ],
         "timeout": 180
+      },
+      {
+        "id": "radar-layer-v2",
+        "category": "weather-ui",
+        "command": [
+          "python3",
+          "qa/radar_layer_v2_smoke.py",
+          "."
+        ],
+        "timeout": 45
+      },
+      {
+        "id": "architecture-10-10",
+        "category": "architecture",
+        "command": [
+          "python3",
+          "qa/architecture_10_10_smoke.py",
+          "."
+        ],
+        "timeout": 45
+      },
+      {
+        "id": "app-shell-components",
+        "category": "architecture",
+        "command": [
+          "python3",
+          "qa/app_shell_components_smoke.py",
+          "."
+        ],
+        "timeout": 45
+      },
+      {
+        "id": "zero-comments",
+        "category": "architecture",
+        "command": [
+          "python3",
+          "qa/zero_comments_smoke.py",
+          "."
+        ],
+        "timeout": 45
+      },
+      {
+        "id": "i18n-db-source",
+        "category": "i18n",
+        "command": [
+          "python3",
+          "qa/i18n_db_source_smoke.py",
+          "."
+        ],
+        "timeout": 45
+      },
+      {
+        "id": "php-component-size",
+        "category": "architecture",
+        "command": [
+          "python3",
+          "qa/php_helper_components_smoke.py",
+          "."
+        ],
+        "timeout": 60
+      },
+      {
+        "id": "roadmap-10-10-final",
+        "category": "architecture",
+        "command": [
+          "python3",
+          "qa/roadmap_10_10_final_smoke.py",
+          "."
+        ],
+        "timeout": 60
       }
     ]
   }

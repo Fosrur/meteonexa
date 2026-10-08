@@ -1,6 +1,6 @@
 <?php
 declare(strict_types=1);
-/** MeteoNexa — probabilistic Nowcast 4.0 helpers. */
+
 function meteonexa_probability_bound(float $value, float $min = 0, float $max = 100) : float {
     return max($min, min($max, $value));
 }

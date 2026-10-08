@@ -2,7 +2,7 @@
 from pathlib import Path
 import re,sys
 root=Path(__file__).resolve().parents[1]; errors=[]
-app=(root/'js/app.js').read_text(encoding='utf-8');suite=(root/'js/suite.js').read_text(encoding='utf-8');fusion=(root/'api/weather/fusion.php').read_text(encoding='utf-8');quality=(root/'api/intelligence/quality_helpers.php').read_text(encoding='utf-8');summary=(root/'api/intelligence/summary.php').read_text(encoding='utf-8')
+app=(root/'js/app.js').read_text(encoding='utf-8')+''.join(path.read_text(encoding='utf-8') for path in sorted((root/'js/app-components').glob('*.js')));suite=(root/'modules/esm/domains/suite-weather-intelligence.mjs').read_text(encoding='utf-8');fusion=(root/'api/weather/fusion.php').read_text(encoding='utf-8');quality=(root/'api/intelligence/quality_helpers.php').read_text(encoding='utf-8')+''.join(path.read_text(encoding='utf-8') for path in sorted((root/'api/intelligence/quality').glob('*.php')));summary=(root/'api/intelligence/summary.php').read_text(encoding='utf-8')
 if re.search(r'modelsExpected\s*:\s*5\b|modelsExpected\s*\|\|\s*5\b',app): errors.append('legacy five-model denominator in app')
 if '(5 - rows.length)' in suite: errors.append('legacy five-model confidence arithmetic')
 if "suite.canonicalConsensus?.modelsExpected || rows.length" not in suite: errors.append('client confidence expected count is not server-consensus-driven')

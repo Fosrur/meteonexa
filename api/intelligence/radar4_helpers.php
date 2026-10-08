@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-/**
- * Radar4 phase 1: non-authoritative optical-flow + object-track shadow layer.
- *
- * Radar3 remains the production authority. Radar4 consumes the same archived
- * frames, estimates a multi-frame Lucas-Kanade flow vector and blends that
- * evidence with Radar3 object tracks only for shadow trajectories/backtests.
- */
+
+
+
+
+
+
+
 function meteonexa_radar4_pair_optical_flow(array $old, array $new) : array {
     $oldGrid = (array)($old['grid'] ?? []);
     $newGrid = (array)($new['grid'] ?? []);

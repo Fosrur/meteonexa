@@ -47,8 +47,8 @@ foreach ($rows as $row) {
         $device = (string)$row['device_id'];
         $location = (string)$row['location_name'];
         $timezone = (string)($row['timezone']??'auto');
-        // Record the attempt before provider I/O. Together with the deployment lock
-        // this prevents overlapping cron invocations and provider retry storms.
+        
+        
         $pdo->prepare('UPDATE push_subscriptions SET last_check_at=:at,updated_at=:now WHERE id=:id')->execute([':at'=>time(), ':now'=>gmdate('c'), ':id'=>$id]);
         $weather = meteonexa_intelligence_weather($lat, $lon, false, 72);
         $air = meteonexa_intelligence_air($lat, $lon, false);
@@ -64,12 +64,12 @@ foreach ($rows as $row) {
         } else {
             $official = ['relevant'=>[]];
         }
-        // Hyperlocal observations are fused only for authenticated devices that
-        // actually connected a Netatmo account. Provider failure never blocks alerts.
+        
+        
         $hyperlocal = meteonexa_intelligence_hyperlocal($pdo, $config, $device, $lat, $lon);
         $analysis = meteonexa_intelligence_analyze($weather, $air, $profile,['accuracy'=>$accuracy, 'radarMotion'=>$motion, 'lightning'=>$lightning, 'satellite'=>$satellite, 'official'=>$official, 'hyperlocal'=>$hyperlocal, 'forecastWindowHours'=>72]);
-        // Forecast storm/strong-wind push alerts must use the same deterministic
-        // six-model Severe Outlook as Panoramica. The LLM is never consulted.
+        
+        
         if ((!array_key_exists('storm', $eventsCfg)||$eventsCfg['storm'])||(!array_key_exists('wind', $eventsCfg)||$eventsCfg['wind'])) {
             $models = meteonexa_intelq_fetch_models($lat, $lon, false, 72);
             $consensus = meteonexa_intelq_consensus($models);
@@ -104,9 +104,9 @@ foreach ($rows as $row) {
             $suppressed++;
             continue;
         }
-        // Quiet hours suppress routine alerts, but a red-severity event is a
-        // deliberate safety override. This keeps DND useful without hiding
-        // the highest severity official or predictive warning.
+        
+        
+        
         if ($quietNow && (string)($notice['severity']??'yellow') !== 'red') {
             $suppressed++;
             continue;
@@ -116,9 +116,9 @@ foreach ($rows as $row) {
         $cooldown = max(1800, min(21600, (int)($profile['cooldownSeconds']??10800)));
         $type = (string)($notice['type']??'weather');
         $severity = (string)($notice['severity']??'yellow');
-        // Anti-spam is episode-aware rather than tied only to the 15-minute
-        // fingerprint bucket. Suppress a repeated event during cooldown, but
-        // allow an immediate escalation (yellow -> orange -> red).
+        
+        
+        
         $recent = $pdo->prepare('SELECT severity,created_at FROM weather_alert_events WHERE device_id=:device AND event_type=:type AND location_name=:location AND created_at>=:cutoff ORDER BY created_at DESC LIMIT 1');
         $recent->execute([':device'=>$device, ':type'=>$type, ':location'=>$location, ':cutoff'=>gmdate('c', $now - $cooldown)]);
         $previous = $recent->fetch();

@@ -1,4 +1,3 @@
-/* responsive route page rebuild */
 #page-route{
   --route-gap:clamp(14px,1.25vw,22px);
   width:100%!important;
@@ -20,7 +19,6 @@
   line-height:1.55!important;
 }
 
-/* Search form: full-width, predictable grid and dropdowns above every article. */
 #page-route>.route-form-panel{
   position:relative!important;
   z-index:40!important;
@@ -126,7 +124,6 @@
   z-index:1!important;
 }
 
-/* Empty state follows the same card rhythm used by the rest of the app. */
 #page-route>.route-empty-state{
   width:100%!important;
   min-height:300px!important;
@@ -151,7 +148,6 @@
   line-height:1.6!important;
 }
 
-/* Results use a stable grid: summary/navigation full width, map and directions side by side. */
 #page-route .route-results{
   width:100%!important;
   min-width:0!important;
@@ -246,7 +242,6 @@
   text-align:center!important;
 }
 
-/* Map and directions are equal-height articles and never overflow the page. */
 #page-route .suite-route-map-panel,
 #page-route .route-directions-panel{
   min-width:0!important;
@@ -322,7 +317,6 @@
   line-height:1.35!important;
 }
 
-/* Timeline and live navigation retain the card language of the other pages. */
 #page-route .route-navigation-panel{
   padding:clamp(20px,2vw,28px)!important;
 }
@@ -450,7 +444,6 @@
   #page-route .route-stop-head .weather-svg{display:none!important}
 }
 
-/* Route select menus are always floating layers, never part of the form flow. */
 #page-route .route-datetime .meteonexa-choices:not(.is-flipped) .choices__list--dropdown,
 #page-route .route-datetime .meteonexa-choices:not(.is-flipped) .choices__list[aria-expanded]{
   position:absolute!important;
@@ -473,7 +466,6 @@
 }
 
 
-/* route layers, empty state and map proportions */
 #page-route>.route-empty-state[hidden],
 #page-route>.route-results[hidden]{
   display:none!important;
@@ -534,7 +526,6 @@
 }
 
 
-/* route actions, equal-height directions and floating AI chat */
 @media (min-width:1321px){
   #page-route .route-summary{
     grid-template-columns:minmax(260px,1fr) minmax(500px,1.5fr) minmax(380px,.8fr)!important;
@@ -671,7 +662,6 @@
 }
 
 
-/* assistant toast belongs to the native dialog top layer */
 .assistant-dialog>.dialog-toast-region{
   z-index:2147483647!important;
   pointer-events:none!important;
@@ -679,7 +669,6 @@
 .assistant-dialog>.dialog-toast-region .toast{pointer-events:auto!important}
 
 
-/* route country badges centered like login */
 #page-route .route-search-results .floating-result{
   width:100%!important;
   min-width:0!important;

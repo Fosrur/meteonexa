@@ -43,7 +43,7 @@ foreach ($locations as $loc) {
     $locationKey = meteonexa_intelligence_location_key($loc['latitude'], $loc['longitude']);
     $locationRef = substr(hash('sha256', (string)$loc['deviceId'] . '|' . $locationKey), 0, 12);
     $result =['locationRef'=>$locationRef, 'official'=>'skipped', 'lightning'=>'skipped', 'observations'=>'skipped', 'calibration'=>'skipped'];
-    // Official source lifecycle: tracks escalation, downgrade, extension, shortening and closure.
+    
     if ($officialDue) {
         $started = meteonexa_pipeline_ms();
         try {
@@ -64,7 +64,7 @@ foreach ($locations as $loc) {
             $failure++;
         }
     }
-    // Independent lightning is persisted as compact aggregate evidence, never raw account data.
+    
     if ($lightningDue) {
         $started = meteonexa_pipeline_ms();
         try {
@@ -97,7 +97,7 @@ foreach ($locations as $loc) {
             $failure++;
         }
     }
-    // Independent station truth is collected without waiting for PWA usage.
+    
     if ($observationsDue) {
         $started = meteonexa_pipeline_ms();
         try {
@@ -113,7 +113,7 @@ foreach ($locations as $loc) {
             $failure++;
         }
     }
-    // Forecast verification/calibration is server-side and scheduled, independent of app opening.
+    
     if ($calibrationDue) {
         $started = meteonexa_pipeline_ms();
         try {
@@ -151,7 +151,7 @@ foreach ($locations as $loc) {
     }
     $details['locations'][] = $result;
 }
-// Radar is location-registration based to preserve existing privacy semantics.
+
 if (meteonexa_db_table_exists($pdo, 'radar_archive_locations')&&meteonexa_pipeline_provider_due($pdo, 'radar', max(300, (int)($config['radar_archive']['interval_minutes']??5) * 60))) {
     $started = meteonexa_pipeline_ms();
     $radarOk = 0;
@@ -180,7 +180,7 @@ if (meteonexa_db_table_exists($pdo, 'radar_archive_locations')&&meteonexa_pipeli
         $failure++;
     }
 }
-// Watch My Plan reuses the server-owned forecast orchestrator and existing account-sync/locality records.
+
 try {
     $watchPlans = meteonexa_watch_plans_process($pdo, $config, max(20, $max * 2));
     $details['watchPlans'] = $watchPlans;
@@ -190,7 +190,7 @@ try {
     $details['watchPlans'] =['checked'=>0, 'updated'=>0, 'notified'=>0, 'errors'=>[['code'=>'WATCH_PLAN_PIPELINE_FAILED']]];
     $failure++;
 }
-// Retention keeps high-frequency evidence bounded on shared hosting.
+
 if (meteonexa_db_table_exists($pdo, 'weather_pipeline_runs'))$pdo->prepare('DELETE FROM weather_pipeline_runs WHERE started_at<:cutoff')->execute([':cutoff'=>gmdate('c', time() - 30 * 86400)]);
 if (meteonexa_db_table_exists($pdo, 'official_alert_revisions'))$pdo->prepare('DELETE FROM official_alert_revisions WHERE observed_at<:cutoff')->execute([':cutoff'=>gmdate('c', time() - 180 * 86400)]);
 if (meteonexa_db_table_exists($pdo, 'official_alert_state'))$pdo->prepare('DELETE FROM official_alert_state WHERE last_seen_at<:cutoff')->execute([':cutoff'=>gmdate('c', time() - 30 * 86400)]);

@@ -32,14 +32,14 @@ function meteonexa_official_enrich_window(array $row) : array {
     }
     return $row;
 }
-/**
- * Reliability gate for official warnings.
- *
- * MeteoAlarm EDR can return currently active as well as upcoming warnings and
- * legacy Atom rows may omit an explicit validity window.  Keep those states
- * separate so the UI never labels a future/ambiguous row as "active now" and
- * expired rows can never survive through provider/server cache reuse.
- */
+
+
+
+
+
+
+
+
 function meteonexa_official_window_state(array $row, ? int $now = null) : array {
     $row = meteonexa_official_enrich_window($row);
     $now = $now??time();
@@ -59,11 +59,11 @@ function meteonexa_official_window_state(array $row, ? int $now = null) : array 
     $row['validityKnown'] = $startTs > 0||$endTs > 0;
     return $row;
 }
-/**
- * Normalize/dedupe the provider collection before persistence or display.
- * Regional text-only Atom matches are kept outside `relevant` because they do
- * not prove that the warning polygon contains the requested point.
- */
+
+
+
+
+
 function meteonexa_official_normalize(array $alerts, ? int $now = null) : array {
     $now = $now??time();
     $rows =[];
@@ -138,18 +138,18 @@ function meteonexa_official_db_text(mixed $value, int $max) : string {
 }
 function meteonexa_official_public_snapshot(PDO $pdo, float $lat, float $lon, array $alerts, string $locationName = '', string $admin1 = '') : array {
     $alerts = meteonexa_official_normalize($alerts);
-    // Guest/public reads must never require_once an account and never write lifecycle.
-    // Reuse location-scoped evidence already produced by the server-side pipeline.
+    
+    
     if (!meteonexa_db_table_exists($pdo, 'official_alert_state'))return $alerts;
     $locationKey = number_format($lat, 3, '.', '') . ':' . number_format($lon, 3, '.', '');
     $statement = $pdo->prepare('SELECT * FROM official_alert_state WHERE location_key=:location ORDER BY last_change_at DESC');
     $statement->execute([':location'=>$locationKey]);
     $stateRows = $statement->fetchAll();
     if (!is_array($stateRows))$stateRows =[];
-    // Search a nearby server snapshot only when the exact rounded geocode has no
-    // lifecycle evidence. Geocoders may return slightly different centroids for
-    // the same city. Nearby evidence is accepted only if its payload also matches
-    // the requested administrative area/name, reducing cross-boundary leakage.
+    
+    
+    
+    
     if (!$stateRows) {
         $near = $pdo->query('SELECT * FROM official_alert_state ORDER BY last_seen_at DESC LIMIT 250');
         $candidates = $near ? $near->fetchAll() :[];
@@ -194,10 +194,10 @@ function meteonexa_official_public_snapshot(PDO $pdo, float $lat, float $lon, ar
         $alerts['lifecycleTracked'] = true;
         return $alerts;
     }
-    // A fresh provider response with zero point-matched warnings is authoritative.
-    // Never resurrect a previous server snapshot in this case: doing so can show
-    // an alert that MeteoAlarm has already cleared or that belongs to a nearby
-    // region. Snapshot fallback is reserved strictly for provider failure/stale I/O.
+    
+    
+    
+    
     $freshProvider =($alerts['available']??false)===true&&empty($alerts['staleProviderCache'])&&($alerts['providerFresh']??false)===true;
     if ($freshProvider) {
         $alerts['relevant'] =[];
@@ -205,9 +205,9 @@ function meteonexa_official_public_snapshot(PDO $pdo, float $lat, float $lon, ar
         $alerts['lifecycleTracked'] = false;
         return $alerts;
     }
-    // Provider failure/timeout: serve a recent active server-side public snapshot.
-    // Six hours covers a short provider outage while validity/expiry checks below
-    // prevent stale warnings from surviving their published window.
+    
+    
+    
     $now = time();
     $fallback =[];
     $latest = null;
@@ -312,8 +312,8 @@ function meteonexa_official_track(PDO $pdo, float $lat, float $lon, string $loca
         if ($latest===null||strtotime($lastAt) > strtotime((string)($latest['changedAt']??'')))$latest = $row['lifecycle'] +['severity'=>$severity, 'endsAt'=>$ends ? : null, 'eventKind'=>meteonexa_official_event_kind($row)];
     }
 
-    // Explicit CAP cancellation/expiry messages are terminal lifecycle revisions
-    // and are never rendered as an active MeteoNexa forecast/warning card.
+    
+    
     foreach ((array)($alerts['terminalRevisions']??[]) as $row) {
         if (!is_array($row))continue;
         $row = meteonexa_official_hub_normalize_row($row, $lat, $lon);
@@ -335,8 +335,8 @@ function meteonexa_official_track(PDO $pdo, float $lat, float $lon, string $loca
         $writeRevision($row,$alertKey,$revisionType,$status,(string)$previous['severity'],'green',(string)$previous['ends_at'],'',$payload);
     }
 
-    // Disappearance from a fresh authoritative provider response means expiry.
-    // Never infer expiry while serving stale/provider-fallback data.
+    
+    
     $freshAuthoritative = ($alerts['providerFresh']??false)===true && empty($alerts['staleProviderCache']) && empty($alerts['pipelineFallback']);
     if ($freshAuthoritative) {
         $active = $pdo->prepare('SELECT * FROM official_alert_state WHERE location_key=:location');

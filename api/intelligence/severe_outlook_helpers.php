@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-/**
- * MeteoNexa Severe Outlook 2.0.
- *
- * Deterministic predictive risk layer. It is deliberately separate from
- * official warnings: a consensus signal can suggest thunderstorms/strong wind
- * but can never be labelled as a MeteoAlarm warning.
- */
+
+
+
+
+
+
+
 require_once __DIR__.'/engine_helpers.php';
 require_once __DIR__.'/quality_helpers.php';
 
@@ -103,8 +103,8 @@ function meteonexa_apply_severe_outlook(array $analysis,array $outlook): array
     $kept=[];
     foreach((array)($analysis['events']??[]) as $event){
         if(!is_array($event))continue;$type=(string)($event['type']??'');
-        // Preserve immediate storm evidence when lightning/nowcast says it is
-        // already nearby. Forecast-only storm/wind must pass model consensus.
+        
+        
         if($type==='storm'&&(string)($event['horizon']??'')==='nowcast'){$kept[]=$event;continue;}
         if(in_array($type,['storm','wind'],true))continue;$kept[]=$event;
     }

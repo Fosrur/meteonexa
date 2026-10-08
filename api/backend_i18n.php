@@ -29,14 +29,14 @@ function meteonexa_backend_language(mixed $explicit = null): string
     return 'it';
 }
 
-/**
- * Resolve a single backend translation lazily.
- *
- * Backend/API calls usually need only a handful of strings. Older builds loaded
- * two or three complete ~2.8k-row catalogs on the first translation lookup of
- * every PHP request. This keyed cache keeps direct DB editability while reducing
- * SQLite reads and memory pressure on shared hosting.
- */
+
+
+
+
+
+
+
+
 function meteonexa_backend_text(
     string $key,
     array $params = [],
@@ -99,9 +99,9 @@ function meteonexa_backend_text(
                     }
                 }
             } catch (Throwable $error) {
-                // If the translation DB itself is unavailable there is no DB-backed
-                // message we can safely resolve. Keep the stable key as last-resort
-                // diagnostic fallback and avoid repeated failing connection attempts.
+                
+                
+                
                 $databaseUnavailable = true;
                 $pdo = null;
             }

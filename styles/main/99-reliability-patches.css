@@ -1,4 +1,3 @@
-/* stable first paint and desktop login viewport */
 html.i18n-pending [data-i18n-key],
 html.i18n-pending [data-i18n-placeholder],
 html.i18n-pending [data-i18n-aria-label],
@@ -41,7 +40,6 @@ html.i18n-ready [data-i18n-content]{
   }
 }
 
-/* compact hourly panel footer spacing */
 .hourly-panel{
   block-size:fit-content!important;
   padding-bottom:9px!important;
@@ -55,7 +53,6 @@ html.i18n-ready [data-i18n-content]{
 }
 
 
-/* larger hourly cards and tighter panel */
 .hourly-panel{
   padding-bottom:6px!important;
 }
@@ -89,7 +86,6 @@ html.i18n-ready [data-i18n-content]{
 }
 
 
-/* short desktop login: outer stage padding only */
 @media (max-height:760px) and (min-width:901px){
   .welcome-stage{
     padding:12px 22px!important;
@@ -97,7 +93,6 @@ html.i18n-ready [data-i18n-content]{
 }
 
 
-/* privacy center aligned right in login and app */
 .privacy-center-button{
   left:auto!important;
   right:18px!important;
@@ -112,7 +107,6 @@ html.i18n-ready [data-i18n-content]{
 
 
 
-/* hourly panel follows the grid flow, without overlap */
 @media (min-width:1025px){
   .home-grid{
     align-items:stretch!important;
@@ -146,7 +140,6 @@ html.i18n-ready [data-i18n-content]{
 }
 
 
-/* floating privacy and assistant controls aligned */
 .privacy-center-button{
   left:18px!important;
   right:auto!important;
@@ -170,7 +163,6 @@ html.i18n-ready [data-i18n-content]{
   }
 }
 
-/* OTP spacing, compact header and profile actions */
 .otp-sent-note .otp-sent-copy{display:flex;min-width:0;flex-direction:column;align-items:flex-start;gap:4px}
 .otp-sent-note .otp-sent-copy strong{display:block;max-width:100%;overflow-wrap:anywhere;color:var(--text);font-weight:800}
 .profile-head>div{min-width:0}.profile-head .profile-email{margin:3px 0 0!important;color:var(--text)!important;font-size:.78rem!important;font-weight:700;overflow-wrap:anywhere}.profile-head .profile-method{display:block;margin-top:4px;color:var(--muted);font-size:.7rem}
@@ -178,18 +170,15 @@ html.i18n-ready [data-i18n-content]{
 #weather-app .topbar-actions{display:flex!important;grid-template-columns:none!important;gap:7px!important}
 .mobile-nav{grid-template-columns:repeat(var(--mobile-nav-columns,4),minmax(0,1fr))!important}
 
-/* Forecast alerts are consolidated in the Settings notification center. */
 .notification-current-alerts{display:grid;gap:14px;padding:16px;border:1px solid var(--border);border-radius:20px;background:color-mix(in srgb,var(--panel) 78%,transparent)}
 .notification-current-alerts .alerts-summary-card{margin:0}
 .notification-current-alerts .alert-monitor-panel,.notification-current-alerts .alert-events-panel{padding:14px;border:1px solid var(--border);border-radius:16px;background:color-mix(in srgb,var(--panel) 78%,transparent)}
 .notification-current-alerts .alert-days-grid{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
 @media (max-width:720px){.notification-current-alerts{padding:12px}.notification-current-alerts .alert-days-grid{grid-template-columns:1fr 1fr}}
 
-/* Settings lives only inside Profile; topbar keeps the profile control only. */
 #weather-app .topbar-actions{display:flex!important;grid-template-columns:none!important;justify-content:flex-end!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important}
 
 
-/* Layout consistency, profile notification access and expandable history */
 .pages-wrap{padding-top:30px!important;padding-bottom:30px!important}
 .profile-button .profile-notification-badge{
   position:absolute;z-index:4;right:-7px;top:-7px;min-width:20px;height:20px;padding:0 5px;
@@ -252,7 +241,6 @@ html.i18n-ready [data-i18n-content]{
 .profile-button .profile-notification-badge svg{width:11px;height:11px;fill:none;stroke:currentColor;stroke-width:2}
 .profile-button .profile-notification-badge:not(.has-notifications){background:linear-gradient(145deg,#1b9de8,#6b67ed);box-shadow:0 5px 14px rgba(56,129,235,.28)}
 
-/* Verified Trust — charts: keep point interaction available after layout/overlay changes */
 .chart-wrap canvas,
 .mini-chart-wrap canvas,
 .detail-chart-wrap canvas,
@@ -263,7 +251,6 @@ html.i18n-ready [data-i18n-content]{
   pointer-events:auto!important;
 }
 
-/* Verified Trust — interactive charts: hover/click/tap must always reach the canvas/proxy. */
 .chart-wrap,.mini-chart-wrap,.detail-chart-wrap,.detail-motion-chart,.history-chart-wrap{
   position:relative!important;isolation:isolate;
 }
@@ -280,7 +267,6 @@ html.i18n-ready [data-i18n-content]{
 .chart-selection-marker{z-index:14!important;pointer-events:none!important}
 .chart-tooltip{z-index:10000!important}
 
-/* Verified Trust — optical-flow radar prediction. */
 .radar-predictive-panel{margin-top:16px;padding:24px;overflow:hidden}
 .radar-predictive-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:20px}
 .radar-predictive-grid>div{min-width:0;padding:15px 16px;border:1px solid rgba(255,255,255,.06);border-radius:16px;background:rgba(255,255,255,.025)}
@@ -293,7 +279,6 @@ html.i18n-ready [data-i18n-content]{
 .radar-motion-point i::after{content:"";width:70%;height:calc(3px + var(--rain-level,0) * 34px);border-radius:7px;background:linear-gradient(180deg,#74edff,#3c8dff 62%,#7a65ff);box-shadow:0 0 14px rgba(76,169,255,calc(.08 + var(--rain-level,0) * .28))}
 .radar-predictive-copy{margin:14px 0 0;color:#829bb6;font-size:.8rem;line-height:1.65}
 
-/* Verified Trust — adaptive ensemble + proactive AI use the same card language as the suite. */
 .ensemble-model-card{grid-column:1/-1;border-color:rgba(91,222,202,.2);background:radial-gradient(circle at 85% 0,rgba(53,222,190,.11),transparent 34%),rgba(255,255,255,.027)}
 .ensemble-model-card .model-mark{color:#79f2d9}
 .ensemble-weight-copy{margin-top:14px;padding:10px 12px;border:1px solid rgba(90,219,204,.11);border-radius:12px;background:rgba(40,202,180,.045);color:#8eabbf;font-size:.72rem;line-height:1.5;overflow-wrap:anywhere}
@@ -318,9 +303,6 @@ html.i18n-ready [data-i18n-content]{
 }
 
 
-/* Verified Trust — Firefox-safe chart interaction proxy.
-   Canvas drawing stays purely visual; this transparent layer receives
-   mouse/pointer/touch/keyboard events consistently on Firefox and Chromium. */
 .chart-interaction-layer{
   position:absolute!important;
   z-index:18!important;
@@ -339,7 +321,6 @@ html.i18n-ready [data-i18n-content]{
   pointer-events:none!important;
 }
 
-/* Verified Trust — mobile navigation geometry: audience-aware destinations, always centered. */
 @media(max-width:900px){
   .mobile-nav{
     --mobile-nav-columns:3;
@@ -353,7 +334,6 @@ html.i18n-ready [data-i18n-content]{
   .mobile-icon-wrap b{right:-9px!important;top:-7px!important}
 }
 
-/* Verified Trust — mobile navigation is audience-aware: guest 3 items, authenticated 4. */
 .mobile-nav-link[hidden]{display:none!important}
 @media (max-width:980px){
   .mobile-nav{grid-template-columns:repeat(var(--mobile-nav-columns,3),minmax(0,1fr))!important}
@@ -362,10 +342,8 @@ html.i18n-ready [data-i18n-content]{
 
 @media(max-width:980px){.mobile-nav-link{font-size:clamp(9px,2.4vw,11px)!important;font-weight:750!important}}
 
-/* Verified Trust Safari touch focus guard: prevents a guest-login tap from falling through to the city search during view transition. */
 html.mobile-focus-guard #location-view input,html.mobile-focus-guard #location-view textarea,html.mobile-focus-guard #location-view [contenteditable="true"]{pointer-events:none!important;}
 
-/* Verified Trust — privacy receipt before a full MeteoNexa local-data reset. */
 .cache-privacy-dialog{width:min(580px,calc(100vw - 30px))!important}
 .cache-privacy-dialog>form{padding:36px!important}
 .cache-privacy-icon{color:var(--accent,#2ad1b9)}
@@ -379,14 +357,11 @@ html.mobile-focus-guard #location-view input,html.mobile-focus-guard #location-v
   .cache-privacy-actions .button{width:100%!important}
 }
 
-/* Verified Trust product wordmark: the product name is MeteoNexa in every locale. */
 .brand-wordmark{white-space:nowrap}.brand-wordmark b{color:#1c98ff;font-weight:800}.auth-logo-wrap .brand-wordmark b{color:#1595ff}
-/* Verified Trust guest privacy receipt: mailbox verification */
 #cache-privacy-code-step[hidden],#cache-privacy-email-step[hidden]{display:none!important}
 #cache-receipt-code{letter-spacing:.28em;text-align:center;font-weight:850;font-variant-numeric:tabular-nums}
 .cache-privacy-verification-copy{margin:0 0 16px;color:var(--text-soft,#7891a8);line-height:1.55}
 
-/* Verified Trust — atomic i18n first paint: never expose raw translation keys */
 .i18n-boot-splash{
   position:fixed; inset:0; z-index:9000; display:grid; place-items:center;
   background:var(--bg,#06152f); opacity:0; visibility:hidden; pointer-events:none;
@@ -420,7 +395,6 @@ html.app-boot-pending .global-loader{opacity:0!important;visibility:hidden!impor
 html.i18n-ready:not(.app-boot-pending) .i18n-boot-splash{opacity:0;visibility:hidden}
 @media (prefers-reduced-motion:reduce){.i18n-boot-pulse i{animation:none!important;opacity:.55}}
 
-/* Verified Trust — authenticated device/access history */
 .devices-access-dialog{width:min(820px,calc(100vw - 30px))!important}
 .devices-access-summary{display:flex;flex-wrap:wrap;gap:10px;margin:4px 0 16px}
 .devices-access-summary .soft-badge{min-height:34px;display:inline-flex;align-items:center;padding:0 12px}
@@ -466,7 +440,6 @@ html.i18n-ready:not(.app-boot-pending) .i18n-boot-splash{opacity:0;visibility:hi
 }
 
 
-/* MeteoNexa — notification center mobile/tablet containment and device-history actions. */
 .profile-notification-badge{display:none!important}
 html.mobile-focus-guard #onboarding-city{pointer-events:none!important;user-select:none!important;-webkit-user-select:none!important}
 
@@ -530,10 +503,6 @@ html.mobile-focus-guard #onboarding-city{pointer-events:none!important;user-sele
   .notification-dialog-actions .button{width:100%!important}
 }
 
-/* MeteoNexa — privacy-safe dynamic login weather.
-   The scene is derived only from the last successful weather snapshot already
-   stored in this browser. Login itself never requests geolocation or a weather
-   provider, so opening the app cannot disclose a location before access. */
 #welcome .stage-weather::after{
   content:"";position:absolute;inset:-18%;pointer-events:none;opacity:0;
   transition:opacity .45s ease;background-size:28px 28px;will-change:transform,opacity
@@ -587,8 +556,6 @@ html.mobile-focus-guard #onboarding-city{pointer-events:none!important;user-sele
 @media (prefers-reduced-motion:reduce){#welcome .stage-weather::after,#welcome[data-login-weather="storm"] .stage-weather{animation:none!important}}
 
 
-/* login first-paint guard. The dynamic weather background remains,
-   but no default sun/cloud is allowed to flash before the cached scene resolves. */
 #welcome[data-login-weather-ready="false"] .stage-sun,
 #welcome[data-login-weather-ready="false"] .stage-cloud,
 #welcome[data-login-weather-ready="false"] .stage-star,
@@ -597,8 +564,6 @@ html.mobile-focus-guard #onboarding-city{pointer-events:none!important;user-sele
 .login-version-badge{position:absolute;right:max(14px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));z-index:6;padding:5px 8px;border:1px solid rgba(140,194,255,.13);border-radius:9px;background:rgba(3,13,31,.38);backdrop-filter:blur(10px);color:rgba(199,220,242,.6);font:700 9px/1 Manrope,sans-serif;letter-spacing:.045em;pointer-events:none;user-select:none}
 @media(max-width:720px){.login-version-badge{right:10px;bottom:9px;font-size:8px}}
 
-/* independent severe-weather monitor. Official alerts remain a
-   separate authoritative channel; this card is a forecast/nowcast signal. */
 .home-severe-alert{position:relative;z-index:4;width:100%;box-sizing:border-box;margin:0 0 14px;padding:15px 18px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:14px;border:1px solid rgba(255,127,82,.42);border-radius:20px;background:linear-gradient(135deg,rgba(83,31,13,.80),rgba(8,24,48,.94));box-shadow:0 18px 45px rgba(0,0,0,.18);overflow:hidden}
 .home-severe-alert[hidden]{display:none!important}.home-severe-alert:after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 8% 0,rgba(255,161,92,.14),transparent 34%)}
 .home-severe-alert[data-severity="red"]{border-color:rgba(255,91,108,.64);background:linear-gradient(135deg,rgba(82,17,30,.88),rgba(8,24,48,.96))}.home-severe-alert[data-severity="yellow"]{border-color:rgba(255,199,90,.38);background:linear-gradient(135deg,rgba(71,50,10,.72),rgba(8,24,48,.93))}
@@ -608,7 +573,6 @@ html.mobile-focus-guard #onboarding-city{pointer-events:none!important;user-sele
 @media(max-width:720px){.home-severe-alert{grid-template-columns:auto minmax(0,1fr);padding:14px;margin-bottom:12px}.home-severe-alert-action{grid-column:1/-1;width:100%}}
 @media(max-width:430px){.home-severe-alert{gap:11px}.home-severe-alert-icon{width:40px;height:40px;border-radius:13px}.home-severe-alert-copy p{font-size:.76rem}}
 
-/* official warning evidence directly in Panoramica. */
 .home-official-alert{position:relative;z-index:4;width:100%;box-sizing:border-box;margin:0 0 18px;padding:15px 18px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:14px;border:1px solid rgba(255,190,75,.34);border-radius:20px;background:linear-gradient(135deg,rgba(72,47,8,.76),rgba(8,24,48,.92));box-shadow:0 18px 45px rgba(0,0,0,.18);overflow:hidden}
 .home-official-alert[hidden]{display:none!important}.home-official-alert:after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 8% 0,rgba(255,202,87,.12),transparent 34%)}
 .home-official-alert[data-severity="green"]{border-color:rgba(79,216,200,.34);background:linear-gradient(135deg,rgba(8,68,64,.72),rgba(8,24,48,.92))}.home-official-alert[data-severity="yellow"]{border-color:rgba(242,194,72,.48);background:linear-gradient(135deg,rgba(72,47,8,.80),rgba(8,24,48,.93))}.home-official-alert[data-severity="orange"]{border-color:rgba(255,145,64,.52);background:linear-gradient(135deg,rgba(78,35,9,.8),rgba(8,24,48,.94))}.home-official-alert[data-severity="red"]{border-color:rgba(255,91,108,.58);background:linear-gradient(135deg,rgba(75,18,28,.82),rgba(8,24,48,.94))}
@@ -618,7 +582,6 @@ html.mobile-focus-guard #onboarding-city{pointer-events:none!important;user-sele
 @media(max-width:720px){.home-official-alert{grid-template-columns:auto minmax(0,1fr);padding:14px;margin-bottom:13px}.home-official-alert-action{grid-column:1/-1;width:100%}}
 @media(max-width:430px){.home-official-alert{gap:11px}.home-official-alert-icon{width:40px;height:40px;border-radius:13px}.home-official-alert-copy p{font-size:.76rem}}
 
-/* MeteoNexa — guest public alerts + mobile onboarding hardening. */
 .notification-dialog[data-guest-public="true"] .notification-status-grid,
 .notification-dialog[data-guest-public="true"] #notification-platform-guide,
 .notification-dialog[data-guest-public="true"] .notification-preferences,
@@ -656,7 +619,6 @@ html.mobile-focus-guard #onboarding-city{pointer-events:none!important;user-sele
   .public-official-alert-card .public-official-icon{width:42px;height:42px;border-radius:13px}
 }
 
-/* MeteoNexa — guest Home official-warning parity. */
 .home-official-alert[data-state="loading"],
 .home-official-alert[data-state="clear"],
 .home-official-alert[data-state="unavailable"]{border-color:rgba(82,194,181,.28);background:linear-gradient(135deg,rgba(11,58,67,.58),rgba(8,24,48,.92))}
@@ -666,7 +628,6 @@ html.mobile-focus-guard #onboarding-city{pointer-events:none!important;user-sele
 .home-official-alert[data-state="loading"] .home-official-alert-icon svg{animation:homeOfficialPulse 1.15s ease-in-out infinite alternate}
 @keyframes homeOfficialPulse{from{opacity:.48;transform:scale(.94)}to{opacity:1;transform:scale(1.04)}}
 @media(prefers-reduced-motion:reduce){.home-official-alert[data-state="loading"] .home-official-alert-icon svg{animation:none!important}}
-/* guest Panoramica official-alert continuity. */
 .home-official-alert[data-severity="info"]{border-color:rgba(87,185,235,.30);background:linear-gradient(135deg,rgba(13,61,91,.72),rgba(8,24,48,.92))}
 .home-official-alert[data-severity="info"] .home-official-alert-icon{background:rgba(75,190,230,.11);color:#76d8f5}
 .home-official-alert[data-state="loading"] .home-official-alert-icon svg{animation:homeOfficialPulse 1.2s ease-in-out infinite}
@@ -674,7 +635,6 @@ html.mobile-focus-guard #onboarding-city{pointer-events:none!important;user-sele
 @media (prefers-reduced-motion:reduce){.home-official-alert[data-state="loading"] .home-official-alert-icon svg{animation:none}}
 
 
-/* feedback page and desktop alert-badge parity */
 .nav-link>b[hidden],.mobile-icon-wrap b[hidden]{display:none!important}
 .bug-report-grid{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,.7fr);gap:18px;align-items:start}
 .bug-report-panel,.bug-report-info{padding:24px}
@@ -685,7 +645,6 @@ html.mobile-focus-guard #onboarding-city{pointer-events:none!important;user-sele
 @media(max-width:900px){.bug-report-grid{grid-template-columns:1fr}.bug-report-info{position:static}.bug-report-fields{grid-template-columns:1fr}.bug-field-full{grid-column:auto}}
 @media(max-width:520px){.bug-report-panel,.bug-report-info{padding:18px}.bug-report-form-head{align-items:flex-start}.bug-report-actions .button{width:100%}}
 
-/* MeteoNexa — Bug report workspace, media dropzone and readable notifications */
 #page-bug-report{overflow:visible}
 #page-bug-report .bug-report-heading{margin-bottom:18px;align-items:end}
 #page-bug-report .bug-report-heading h1{font-size:clamp(2.15rem,4.8vw,4.7rem);line-height:.98;letter-spacing:-.045em;margin:.12em 0 .22em}
@@ -717,12 +676,10 @@ html.mobile-focus-guard #onboarding-city{pointer-events:none!important;user-sele
 @media(max-width:420px){.bug-report-form-head{grid-template-columns:1fr}.bug-report-icon{width:42px;height:42px}.bug-form-availability{grid-column:auto}.bug-form-section{padding:16px}.bug-section-head{margin-bottom:14px}.bug-attachment-item{grid-template-columns:54px minmax(0,1fr) auto}.bug-attachment-thumb{width:54px;height:46px}}
 @media(prefers-reduced-motion:reduce){.bug-recording-live i{animation:none}}
 
-/* Reliability: a cached forecast must never look live. */
 #last-update[data-freshness="cache"],
 .hero-status .is-stale{color:#ffd08a}
 .online-dot.stale{background:#ffb54d;box-shadow:0 0 10px #ffb54d}
 
-/* MeteoNexa — Segnala bug: full-width information above the form. */
 .bug-report-stack{display:grid;grid-template-columns:minmax(0,1fr);gap:20px;align-items:start;overflow:visible}
 #page-bug-report .bug-report-info{position:static!important;inset:auto!important;width:100%;max-width:none;max-height:none!important;overflow:visible!important;padding:22px 24px!important}
 #page-bug-report .bug-info-layout{display:grid;grid-template-columns:minmax(220px,.62fr) minmax(0,1.55fr);gap:22px;align-items:start}
@@ -740,7 +697,6 @@ html.mobile-focus-guard #onboarding-city{pointer-events:none!important;user-sele
 @media(max-width:1000px){#page-bug-report .bug-info-layout{grid-template-columns:1fr}#page-bug-report .bug-info-list{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:760px){#page-bug-report .bug-info-list{grid-template-columns:1fr}#page-bug-report .bug-info-footer{align-items:stretch;flex-direction:column}#page-bug-report .bug-privacy-link{width:100%}}
 
-/* reliability-first home brief */
 .trust-brief-panel{grid-column:1/-1;padding:24px;overflow:hidden}
 .trust-brief-title{align-items:flex-start}
 .trust-brief-title p{max-width:760px;margin:7px 0 0;color:var(--muted);font-size:11px;line-height:1.55}
@@ -760,7 +716,6 @@ body[data-theme="light"] .trust-brief-lead,body[data-theme="light"] .trust-brief
 @media(max-width:1180px){.trust-brief-grid{grid-template-columns:1fr 1fr}.trust-brief-lead{grid-column:1/-1}}
 @media(max-width:760px){.trust-brief-panel{padding:18px}.trust-brief-grid{grid-template-columns:1fr;gap:9px}.trust-brief-lead{grid-column:auto}.trust-brief-actions{display:grid;grid-template-columns:1fr}.trust-brief-actions .button{width:100%}}
 
-/* Approved MeteoNexa weather-brand lockup */
 .brand-lockup{display:block;object-fit:contain;max-width:100%;height:auto;filter:drop-shadow(0 12px 24px rgba(0,94,255,.18))}
 .welcome-lockup{width:min(310px,72%)}
 .auth-logo-lockup-wrap{justify-content:center;text-align:center}
@@ -769,7 +724,6 @@ body[data-theme="light"] .trust-brief-lead,body[data-theme="light"] .trust-brief
 @media(max-width:760px){.welcome-lockup{width:min(250px,82%)}.auth-brand-lockup{width:min(245px,88%)}}
 
 
-/* MeteoNexa — radar clarity, alert-card containment, guest first-paint privacy. */
 body.guest-mode [data-auth-only]{display:none!important}
 body:not(.guest-mode) [data-guest-only]{display:none!important}
 
@@ -872,9 +826,6 @@ body:not(.guest-mode) [data-guest-only]{display:none!important}
   .notification-current-alerts .alert-day-head em{justify-self:start;max-width:100%}
 }
 
-/* 20.1 RC1 stabilization: the complete guest CTA is the hit target on mouse/touch.
-   Child glyph/text nodes never steal the pointer target and the CTA stays above
-   onboarding decoration/language layers without changing the visual layout. */
 #guest-login{
   position:relative!important;
   z-index:20!important;
@@ -890,8 +841,6 @@ body:not(.guest-mode) [data-guest-only]{display:none!important}
 }
 #guest-login>*{pointer-events:none!important}
 
-/* Bug report owns the lower-right interaction area.
-   Hide the floating assistant only on this page so media controls remain clickable. */
 body[data-page="bug-report"] .assistant-center-button{
   display:none!important;
   pointer-events:none!important;

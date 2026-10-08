@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-/** AI Meteorologist 2.0: deterministic contract, grounding guard and privacy-safe cache. */
+
 function meteonexa_ai_v2_tool_contracts(): array
 {
     return [
@@ -99,8 +99,8 @@ function meteonexa_ai_v2_context_hash(array $contract, string $message): string
 {
     $intent=function_exists('mb_strtolower')?mb_strtolower(trim($message),'UTF-8'):strtolower(trim($message));
     $intent=preg_replace('/\s+/u',' ',$intent)??$intent;
-    // Cache equivalence is deliberately conservative: same normalized question,
-    // same deterministic decision and same typed weather evidence only.
+    
+    
     $stable=[
         'intent'=>$intent,
         'language'=>$contract['language']??'it',

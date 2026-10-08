@@ -1,15 +1,15 @@
 <?php
 declare(strict_types=1);
 
-// Same-origin, allowlisted vendor/static asset gateway.
-//
-// Executable MapLibre assets are sourced from a cryptographically pinned npm
-// package. The browser never chooses the upstream URL and no executable asset
-// is accepted unless the complete package matches the hardcoded SHA-512 npm
-// integrity value for maplibre-gl@5.24.0.
-//
-// Non-executable geographic datasets remain fetched from fixed HTTPS URLs,
-// validated as GeoJSON and cached in protected runtime storage.
+
+
+
+
+
+
+
+
+
 
 require_once __DIR__ . '/storage_helpers.php';
 require_once __DIR__ . '/http_helpers.php';
@@ -32,8 +32,8 @@ if (strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'GET') {
 $maplibrePackage = [
     'url' => 'https://registry.npmjs.org/maplibre-gl/-/maplibre-gl-5.24.0.tgz',
     'file' => 'maplibre-gl-5.24.0.tgz',
-    // npm package integrity for maplibre-gl@5.24.0. This pins the complete
-    // package, not only a filename/version string.
+    
+    
     'integrity' => 'sha512-ALyFxgtd5R+65UqZ/++lOqwWcC0SNho9c27fYSyLmG7AfnAul2o46F05aDJGPbFU57wos9dgcIySHs0Xe6ia3A==',
     'max_bytes' => 16777216,
 ];
@@ -42,8 +42,8 @@ $assets = [
     'maplibre-js' => [
         'source' => 'pinned_npm',
         'package_path' => 'package/dist/maplibre-gl.js',
-        // New cache name prevents a pre-hardening CDN cache entry from being
-        // reused after upgrading to this package.
+        
+        
         'file' => 'maplibre-gl-5.24.0-npm-pinned.js',
         'type' => 'application/javascript; charset=utf-8',
         'kind' => 'js',
@@ -142,8 +142,8 @@ try {
     $cachePath = $cacheDir . DIRECTORY_SEPARATOR . $asset['file'];
     $source = (string)($asset['source'] ?? '');
 
-    // Pinned executable assets are immutable for this application release.
-    // A valid cache file therefore has no time-based expiry.
+    
+    
     if ($source === 'pinned_npm' && is_file($cachePath)) {
         $cachedBody = (string)@file_get_contents($cachePath);
         if ($validate($cachedBody, (string)$asset['kind'])) $serve($cachePath, 'pinned');
@@ -236,8 +236,8 @@ try {
                 }
                 $writeAtomic($cachePath, $body);
             } catch (Throwable $upstreamError) {
-                // Stale-if-error is safe for data assets because cached content
-                // is still validated as GeoJSON before serving.
+                
+                
                 if (!is_file($cachePath)) throw $upstreamError;
                 $cachedBody = (string)@file_get_contents($cachePath);
                 if (!$validate($cachedBody, (string)$asset['kind'])) throw $upstreamError;

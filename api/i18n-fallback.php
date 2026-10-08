@@ -1,9 +1,9 @@
 <?php
 declare(strict_types=1);
 
-// Database-independent translation fallback for first boot / migration windows.
-// It serves only the requested locale from the packaged release seed and never
-// reads user/account data or deployment secrets.
+
+
+
 @ini_set('display_errors', '0');
 @ini_set('html_errors', '0');
 error_reporting(E_ALL);

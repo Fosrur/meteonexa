@@ -13,7 +13,7 @@ for token in ["'shortcuts'", "../#radar", "../#intelligence", "../#alerts", "../
 
 summary=(root/'api/intelligence/summary.php').read_text(encoding='utf-8')
 require("sun_cloud_helpers.php" in summary and "'sunCloudWindow'=>$sunCloudWindow" in summary,'sun cloud response not wired')
-engine=(root/'api/intelligence/engine_helpers.php').read_text(encoding='utf-8')
+engine='\n'.join(path.read_text(encoding='utf-8') for path in [root/'api/intelligence/engine_helpers.php', *sorted((root/'api/intelligence/engine').glob('*.php'))])
 for field in ['is_day','sunshine_duration','shortwave_radiation']:
     require(field in engine, f'weather evidence missing {field}')
 

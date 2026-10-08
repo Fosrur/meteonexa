@@ -11,11 +11,11 @@ function meteonexa_smtp_row_is_complete(PDO $pdo): bool
         && trim((string)($row['password_encrypted'] ?? '')) !== '';
 }
 
-/**
- * A row can look complete while still being encrypted with a superseded
- * deployment secret. Treat that state as recoverable instead of reporting a
- * false SMTP_NOT_CONFIGURED forever.
- */
+
+
+
+
+
 function meteonexa_smtp_row_is_usable(PDO $pdo, array $config): bool
 {
     if (!meteonexa_smtp_row_is_complete($pdo)) return false;
@@ -66,14 +66,14 @@ function meteonexa_provision_smtp_if_missing(array $config): bool
     $pdo = meteonexa_db($config);
     if (meteonexa_smtp_row_is_usable($pdo, $config)) return false;
 
-    // Deployment environment configuration is authoritative. If a password is
-    // supplied there, persist it only after encryption with this installation's
-    // secret. Otherwise shared hosting can use the local PHP mail transport.
+    
+    
+    
     $runtimeSmtp = (array)($config['smtp'] ?? []);
-    // A partial DB row intentionally contains the deployment's non-secret SMTP
-    // profile so Aruba's local mail() fallback has a valid From address. When
-    // only METEONEXA_SMTP_PASSWORD is supplied, combine it with that profile and
-    // persist the resulting full SMTP credential encrypted in the DB.
+    
+    
+    
+    
     $profile = $pdo->query("SELECT host,port,encryption,username,from_email,from_name,timeout_seconds FROM smtp_settings WHERE id=1")->fetch();
     if (is_array($profile)) {
         foreach (['host','port','encryption','username','from_email','from_name','timeout_seconds'] as $field) {
@@ -124,9 +124,9 @@ function meteonexa_load_smtp(array $config): array
     $row = $pdo->query('SELECT * FROM smtp_settings WHERE id = 1')->fetch();
     if (!is_array($row)) return [];
 
-    // A stale encrypted SMTP password must never hide the non-secret delivery
-    // profile. In that condition authenticated SMTP is disabled, but Aruba's
-    // local PHP mail() fallback can still use the DB-backed From identity.
+    
+    
+    
     $password = '';
     $encrypted = trim((string)($row['password_encrypted'] ?? ''));
     if ($encrypted !== '') {

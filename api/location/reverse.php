@@ -1,14 +1,14 @@
 <?php
 declare(strict_types=1);
 
-/**
- * MeteoNexa — privacy-preserving reverse geocoding gateway.
- *
- * The browser grants geolocation permission locally, then calls this same-origin
- * endpoint without account/device credentials. Coordinates are rounded to three
- * decimals before the upstream request, so BigDataCloud does not receive the
- * browser IP nor unnecessary GPS precision.
- */
+
+
+
+
+
+
+
+
 require_once dirname(__DIR__) . '/bootstrap.php';
 require_once dirname(__DIR__) . '/database.php';
 require_once dirname(__DIR__) . '/public_helpers.php';

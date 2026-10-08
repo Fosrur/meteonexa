@@ -11,7 +11,7 @@ $data = input_json();
 $language = meteonexa_auth_language($data['language'] ?? 'it');
 $pdo = meteonexa_db($config);
 $deviceId = clean_device_id($_SERVER['HTTP_X_METEONEXA_DEVICE_ID'] ?? '');
-$deviceKey = meteonexa_device_key(); // validate proof format; enrollment occurs only after OTP success
+$deviceKey = meteonexa_device_key(); 
 $tr = static fn(string $source, array $params = []): string => meteonexa_auth_translate($pdo, $language, $source, $params);
 $email = normalize_email($data['email'] ?? '');
 $code = preg_replace('/\D+/', '', (string)($data['code'] ?? '')) ?? '';
@@ -67,11 +67,11 @@ try {
     $pdo->prepare('DELETE FROM auth_otp WHERE email_hash=:email')->execute([':email'=>$emailHash]);
     $pdo->exec('COMMIT');
 } catch (Throwable $error) {
-    try { $pdo->exec('ROLLBACK'); } catch (Throwable $rollbackError) { /* transaction may already be closed */ }
+    try { $pdo->exec('ROLLBACK'); } catch (Throwable $rollbackError) {  }
     throw $error;
 }
 
-require_device_access($pdo, $deviceId); // successful OTP now binds this browser key to the session device
+require_device_access($pdo, $deviceId); 
 $localPart = explode('@', $email, 2)[0] ?? $tr('auth.user.default_name');
 $displayName = ucfirst(preg_replace('/[^a-z0-9._-]/i', '', $localPart) ?: $tr('auth.user.default_name'));
 $session = meteonexa_issue_auth_session($pdo, $config, $email, $displayName, $deviceId);
@@ -80,8 +80,8 @@ try {
     $trusted = meteonexa_issue_trusted_device($pdo, $config, $email, $displayName, $deviceId);
     $trustedExpiresAt = (int)$trusted['expiresAt'];
 } catch (Throwable $trustedDeviceError) {
-    // Remembering the browser is a convenience layer, never a prerequisite for
-    // a successful OTP-authenticated session.
+    
+    
     meteonexa_log_event('trusted_device_issue_failed', $trustedDeviceError);
 }
 respond(['ok'=>true,'displayName'=>$displayName,'email'=>$email,'verified'=>true,'language'=>$language,'sessionExpiresAt'=>(int)$session['expiresAt'],'trustedDeviceExpiresAt'=>$trustedExpiresAt]);

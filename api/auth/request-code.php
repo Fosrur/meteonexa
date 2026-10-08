@@ -21,11 +21,11 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 254) {
     respond(['ok' => false, 'code' => 'INVALID_EMAIL', 'message' => $tr('auth.error.invalid_email')], 422);
 }
 
-// A remembered device may re-enter the same identity without another OTP.
-// The decision is not based on the email alone: the HttpOnly trusted-device
-// cookie, the encrypted email binding and the browser-held device proof must
-// all match. A normal logout preserves this credential; a full cache/device
-// reset revokes it explicitly.
+
+
+
+
+
 try {
     $trustedDevice = meteonexa_current_trusted_device($pdo, $config, $email);
     if (is_array($trustedDevice)) {
@@ -49,9 +49,9 @@ try {
 } catch (Throwable $trustedDeviceError) {
     meteonexa_log_event('trusted_device_reentry_failed', $trustedDeviceError);
 }
-// SMTP provisioning is opportunistic. On shared hosting the application also
-// supports PHP's local mail transport, so a missing/stale SMTP credential must
-// not block OTP delivery before the fallback has been attempted.
+
+
+
 if (!smtp_is_configured($config)) {
     try {
         meteonexa_provision_smtp_if_missing($config);

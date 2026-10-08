@@ -1,15 +1,15 @@
 <?php
 declare(strict_types=1);
 
-/**
- * Device-bound OTP challenge helpers used by email login.
- *
- * Primary storage is auth_login_challenges. Verified Trust also has a protected
- * filesystem fallback so a partially migrated shared-hosting database cannot
- * take the login endpoint down. The fallback stores only hashes/encrypted-like
- * one-way material: email HMAC, device id, password_hash(code), IP HMAC and
- * expiry metadata. It never stores the email address or OTP in plaintext.
- */
+
+
+
+
+
+
+
+
+
 function meteonexa_login_challenge_hash(string $token, array $config): string
 {
     return hash_hmac('sha256', 'auth-login-challenge|' . $token, auth_secret($config));
@@ -32,7 +32,7 @@ function meteonexa_challenge_fallback_path(string $token, array $config): string
     return meteonexa_auth_fallback_directory('auth-login-challenges') . DIRECTORY_SEPARATOR . $hash . '.json';
 }
 
-/** @param array<string,mixed> $record */
+
 function meteonexa_write_challenge_fallback(string $token, array $config, array $record): void
 {
     $payload = json_encode($record, JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE);
@@ -62,11 +62,11 @@ function meteonexa_prune_challenge_fallback(string $emailHash, int $now): void
     foreach (array_slice($matching, 8) as $old) @unlink((string)$old['path']);
 }
 
-/**
- * File-based fixed-window limiter used only if the DB limiter is temporarily
- * unavailable. This preserves abuse protection instead of silently failing open.
- * @return array{allowed:bool,retryAfter:int,remaining:int}
- */
+
+
+
+
+
 function meteonexa_auth_file_rate_limit(string $scope, string $identifier, string $secret, int $limit, int $windowSeconds): array
 {
     $limit = max(1, $limit);
@@ -99,7 +99,7 @@ function meteonexa_auth_file_rate_limit(string $scope, string $identifier, strin
     }
 }
 
-/** @return array{allowed:bool,retryAfter:int,remaining:int} */
+
 function meteonexa_auth_rate_limit(PDO $pdo, string $scope, string $identifier, string $secret, int $limit, int $windowSeconds): array
 {
     try {
@@ -110,10 +110,10 @@ function meteonexa_auth_rate_limit(PDO $pdo, string $scope, string $identifier, 
     }
 }
 
-/**
- * Portable best-effort bridge for a stale pre-challenge client. New clients do
- * not authenticate from this row. Avoid dialect-specific UPSERT syntax here.
- */
+
+
+
+
 function meteonexa_legacy_otp_upsert(PDO $pdo, array $values): void
 {
     $check = $pdo->prepare('SELECT email_hash FROM auth_otp WHERE email_hash=:email LIMIT 1');
@@ -133,7 +133,7 @@ function meteonexa_legacy_otp_upsert(PDO $pdo, array $values): void
             ':sent'=>$values['sent'], ':expires'=>$values['expires'], ':ip'=>$values['ip'], ':updated'=>$values['updated'],
         ]);
     } catch (Throwable $race) {
-        // A concurrent insert for the same legacy identity may win; update it.
+        
         $update = $pdo->prepare('UPDATE auth_otp SET language=:language,code_hash=:code,sent_at=:sent,expires_at=:expires,attempts=0,ip_hash=:ip,updated_at=:updated WHERE email_hash=:email');
         $update->execute([
             ':email'=>$values['email'], ':language'=>$values['language'], ':code'=>$values['code'],
@@ -142,7 +142,7 @@ function meteonexa_legacy_otp_upsert(PDO $pdo, array $values): void
     }
 }
 
-/** @return array{challengeId:string,expiresAt:int,storage:string} */
+
 function meteonexa_issue_login_challenge(
     PDO $pdo,
     array $config,
@@ -183,9 +183,9 @@ function meteonexa_issue_login_challenge(
     }
 }
 
-/**
- * @return array{ok:bool,code:string,remaining?:int}
- */
+
+
+
 function meteonexa_consume_login_challenge(
     PDO $pdo,
     array $config,
@@ -233,7 +233,7 @@ function meteonexa_consume_login_challenge(
         meteonexa_log_event('auth_challenge_db_consume_failed', $error);
     }
 
-    // Protected filesystem fallback for partial DB migrations.
+    
     $path = meteonexa_challenge_fallback_path($token, $config);
     $handle = @fopen($path, 'r+');
     if (!is_resource($handle)) return ['ok'=>false,'code'=>'CODE_NOT_FOUND'];
@@ -258,7 +258,7 @@ function meteonexa_consume_login_challenge(
             }
             return ['ok'=>false,'code'=>'INVALID_CODE','remaining'=>max(0,$maxAttempts-$attempts)];
         }
-        // Mark consumed before releasing the lock.
+        
         $used = $path . '.used-' . bin2hex(random_bytes(4));
         @rename($path, $used);
         @unlink($used);

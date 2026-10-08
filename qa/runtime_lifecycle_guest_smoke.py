@@ -5,7 +5,7 @@ ROOT = Path(__file__).resolve().parents[1]
 advanced = (ROOT/'js/advanced.js').read_text(encoding='utf-8')
 suite = (ROOT/'js/suite.js').read_text(encoding='utf-8')
 integrations = (ROOT/'modules/esm/domains/suite-integrations.mjs').read_text(encoding='utf-8')
-app = (ROOT/'js/app.js').read_text(encoding='utf-8')
+app = (ROOT/'js/app.js').read_text(encoding='utf-8') + '\n' + '\n'.join(path.read_text(encoding='utf-8') for path in sorted((ROOT/'js/app-components').glob('*.js')))
 styles = (ROOT/'css/styles.css').read_text(encoding='utf-8')
 html = (ROOT/'index.html').read_text(encoding='utf-8')
 checks = {

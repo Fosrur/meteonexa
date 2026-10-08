@@ -1,20 +1,20 @@
 <?php
 declare(strict_types=1);
 
-/**
- * Authorization helper for deployment diagnostics / QA consoles.
- *
- * Email OTP authentication alone is not an administrative role. The web QA
- * and diagnostics consoles are available only to an authenticated session
- * whose email is explicitly authorized by the deployment.
- *
- * Authorization sources:
- * - qa.admin_emails, populated only from METEONEXA_QA_ADMIN_EMAILS;
- * - qa_admin_email_hashes in app_metadata for previously provisioned,
- *   deployment-bound HMAC-SHA256 identifiers.
- *
- * SMTP identities are deliberately not authorization sources.
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function meteonexa_diagnostics_admin_emails(array $config): array
 {
     $emails = [];

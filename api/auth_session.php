@@ -1,14 +1,14 @@
 <?php
 declare(strict_types=1);
 
-/**
- * Server-side email session helpers.
- *
- * The browser receives only a random HttpOnly cookie. The database stores an
- * HMAC of that token plus the email HMAC and an AES-GCM encrypted address so
- * the authenticated user can see their full profile email after a reload. Existing guest/device
- * flows remain independent from this session.
- */
+
+
+
+
+
+
+
+
 function meteonexa_auth_cookie_name(): string
 {
     return 'meteonexa_auth_session';
@@ -34,12 +34,12 @@ function meteonexa_trusted_device_hash(string $token, array $config): string
     return hash_hmac('sha256', 'trusted-device|' . $token, auth_secret($config));
 }
 
-/**
- * Device-bound OTP scope. This keeps the proven auth_otp storage/query path
- * while allowing the same email address to request independent OTPs from
- * different browsers at the same time. No email, device key or raw OTP is
- * stored in this identifier: only an HMAC of email + device id + key digest.
- */
+
+
+
+
+
+
 function meteonexa_otp_device_scope_hash(array $config, string $email, string $deviceId, string $deviceKey): string
 {
     $normalizedEmail = strtolower(trim($email));
@@ -60,10 +60,10 @@ function meteonexa_clear_trusted_device_cookie(array $config): void
 
 
 
-/**
- * Portable pruning helper used by MySQL/MariaDB and SQLite alike.
- * The previous LIMIT -1/OFFSET form was SQLite-only and could break login on MySQL.
- */
+
+
+
+
 function meteonexa_prune_identity_rows(PDO $pdo, string $table, string $keyColumn, string $emailColumn, string $emailHash, int $keep = 8): void
 {
     $allowed = [
@@ -97,10 +97,10 @@ function meteonexa_auth_access_location_label(): string
     if ($country !== '' && strlen($country) <= 3) $parts[] = $country;
     if ($parts) return implode(', ', array_unique($parts));
 
-    // When the hosting layer does not expose GeoIP headers, the
-    // authenticated Devices dialog may send browser coordinates already rounded
-    // to one decimal (~8–11 km in Italy). Precise coordinates are never stored in
-    // access history and no third-party IP geolocation service is queried.
+    
+    
+    
+    
     $approx = trim((string)($_SERVER['HTTP_X_METEONEXA_APPROX_LOCATION'] ?? ''));
     if ($approx !== '' && preg_match('/^(-?\d{1,2}(?:\.\d)?),(-?\d{1,3}(?:\.\d)?)$/', $approx, $m) === 1) {
         $lat=(float)$m[1];$lon=(float)$m[2];
@@ -109,7 +109,7 @@ function meteonexa_auth_access_location_label(): string
     return '';
 }
 
-/** @return array{device_type:string,platform:string,browser:string,client_mode:string,timezone:string,ip:string,location:string} */
+
 function meteonexa_auth_access_metadata(): array
 {
     $ua = trim((string)($_SERVER['HTTP_USER_AGENT'] ?? ''));
@@ -154,7 +154,7 @@ function meteonexa_auth_access_mark_ended(PDO $pdo, string $sessionHash, string 
         $pdo->prepare("UPDATE auth_access_history SET ended_at=:ended,end_reason=:reason,last_seen_at=CASE WHEN last_seen_at<:ended THEN :ended ELSE last_seen_at END WHERE session_hash=:session AND ended_at=0")
             ->execute([':ended'=>time(),':reason'=>$reason,':session'=>$sessionHash]);
     } catch (Throwable $error) {
-        // Audit/history is auxiliary and must never prevent authentication.
+        
         meteonexa_log_event('auth_access_mark_ended_failed', $error);
     }
 }
@@ -171,7 +171,7 @@ function meteonexa_auth_access_record(PDO $pdo, array $config, string $sessionHa
             ':ip'=>meteonexa_encrypt_value((string)$m['ip'], $config, 'auth-access-ip'), ':location'=>$m['location'], ':created'=>$now, ':seen'=>$now,
         ]);
 
-        // Keep a bounded audit trail per identity in addition to the 30-day global retention.
+        
         $history = $pdo->prepare('SELECT id FROM auth_access_history WHERE email_hash=:email ORDER BY last_seen_at DESC,id DESC');
         $history->execute([':email'=>$emailHash]);
         $ids = array_map('intval', $history->fetchAll(PDO::FETCH_COLUMN));
@@ -179,7 +179,7 @@ function meteonexa_auth_access_record(PDO $pdo, array $config, string $sessionHa
             $pdo->prepare('DELETE FROM auth_access_history WHERE id=:id')->execute([':id'=>$id]);
         }
     } catch (Throwable $error) {
-        // Device/access history is an audit convenience, not an auth prerequisite.
+        
         meteonexa_log_event('auth_access_record_failed', $error);
     }
 }
@@ -199,8 +199,8 @@ function meteonexa_issue_trusted_device(PDO $pdo, array $config, string $email, 
     $pdo->exec('BEGIN IMMEDIATE');
     try {
         $pdo->prepare('DELETE FROM trusted_devices WHERE expires_at < :now')->execute([':now'=>$now]);
-        // One trusted identity per browser device keeps the re-entry flow
-        // deterministic and prevents stale identities from accumulating locally.
+        
+        
         $pdo->prepare('DELETE FROM trusted_devices WHERE device_id=:device')->execute([':device'=>$deviceId]);
         $insert = $pdo->prepare('INSERT INTO trusted_devices(trust_hash,email_hash,email_encrypted,device_id,display_name,created_at,expires_at,last_seen_at) VALUES(:trust,:email_hash,:email_encrypted,:device,:name,:created,:expires,:seen)');
         $insert->execute([
@@ -213,7 +213,7 @@ function meteonexa_issue_trusted_device(PDO $pdo, array $config, string $email, 
             ':expires'=>$expiresAt,
             ':seen'=>$now,
         ]);
-        // Limit the number of remembered browsers for one identity using portable SQL.
+        
         meteonexa_prune_identity_rows($pdo, 'trusted_devices', 'trust_hash', 'email_hash', $emailHash, 8);
         $pdo->exec('COMMIT');
     } catch (Throwable $error) {
@@ -303,12 +303,12 @@ function meteonexa_revoke_current_trusted_device(PDO $pdo, array $config): void
     meteonexa_clear_trusted_device_cookie($config);
 }
 
-/**
- * A trusted-device cookie can physically remain in a remote browser after that
- * device is revoked elsewhere. It is already useless once the DB row is gone;
- * this helper also expires the stale HttpOnly cookie on the browser's next
- * server contact without touching any unrelated cookie or local cache.
- */
+
+
+
+
+
+
 function meteonexa_clear_stale_trusted_device_cookie(PDO $pdo, array $config): void
 {
     $token = trim((string)($_COOKIE[meteonexa_trusted_device_cookie_name()] ?? ''));
@@ -323,8 +323,8 @@ function meteonexa_clear_stale_trusted_device_cookie(PDO $pdo, array $config): v
         $statement->execute([':trust'=>$hash]);
         if ((int)$statement->fetchColumn() < 1) meteonexa_clear_trusted_device_cookie($config);
     } catch (Throwable $error) {
-        // Cookie cleanup is hygiene only; an unavailable audit/auth lookup must
-        // never turn status.php into a new authentication failure.
+        
+        
         meteonexa_log_event('trusted_device_cookie_cleanup_failed', $error);
     }
 }
@@ -354,8 +354,8 @@ function meteonexa_issue_auth_session(PDO $pdo, array $config, string $email, st
     $pdo->exec('BEGIN IMMEDIATE');
     try {
         $pdo->prepare('DELETE FROM auth_sessions WHERE expires_at < :now')->execute([':now'=>$now]);
-        // A browser/device has a single current email session. Preserve a compact
-        // access-history record before replacing an older session on this device.
+        
+        
         $oldSessions = $pdo->prepare('SELECT session_hash FROM auth_sessions WHERE device_id=:device');
         $oldSessions->execute([':device'=>$deviceId]);
         foreach ($oldSessions->fetchAll() as $oldRow) {
@@ -374,7 +374,7 @@ function meteonexa_issue_auth_session(PDO $pdo, array $config, string $email, st
             ':seen'=>$now,
         ]);
         meteonexa_auth_access_record($pdo, $config, $sessionHash, $emailHash, $deviceId, $now);
-        // Keep at most eight active browser sessions for the same email identity using portable SQL.
+        
         try { meteonexa_prune_identity_rows($pdo, 'auth_sessions', 'session_hash', 'email_hash', $emailHash, 8); } catch (Throwable $pruneError) { meteonexa_log_event('auth_session_prune_failed', $pruneError); }
         $pdo->exec('COMMIT');
     } catch (Throwable $error) {
@@ -411,8 +411,8 @@ function meteonexa_current_auth_session(PDO $pdo, array $config, bool $touch = t
     $storedDisplayName = (string)($row['display_name'] ?? '');
     $storedEmail = (string)($row['email_encrypted'] ?? '');
     if (!str_starts_with($storedDisplayName, 'enc:v1:') || !str_starts_with($storedEmail, 'enc:v1:')) {
-        // Sessions created before encrypted session metadata are deliberately
-        // invalidated once; this avoids retaining legacy plaintext identifiers.
+        
+        
         meteonexa_auth_access_mark_ended($pdo, $hash, 'invalid');
         $pdo->prepare('DELETE FROM auth_sessions WHERE session_hash=:session')->execute([':session'=>$hash]);
         meteonexa_clear_auth_cookie($config);

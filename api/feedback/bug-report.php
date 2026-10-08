@@ -20,8 +20,8 @@ $ipLimit = max(2, min(30, (int)($feedback['max_per_ip_hour']??6)));
 $globalLimit = max(20, min(2000, (int)($feedback['max_global_hour']??180)));
 require_ip_rate_limit($pdo, 'bug_report_ip', $ipLimit, 3600);
 require_global_rate_limit($pdo, 'bug_report_global', $globalLimit, 3600);
-// Silent honeypot. The payload is intentionally discarded without revealing
-// to automated clients that a trap was hit.
+
+
 if (trim((string)($data['website']??''))!=='')respond(['ok'=>true, 'reportId'=>'']);
 $categoryKeys =['overview'=>'bug.category.overview', 'alerts'=>'bug.category.alerts', 'radar'=>'bug.category.radar', 'intelligence'=>'bug.category.intelligence', 'account'=>'bug.category.account', 'performance'=>'bug.category.performance', 'privacy'=>'bug.category.privacy', 'other'=>'bug.category.other',];
 $category = strtolower(clean_text($data['category']??'', 32, ''));
@@ -48,9 +48,9 @@ if (is_array($diagnosticsInput)) {
     $raw = $diagnosticsInput;
     $diagnostics =['build'=>clean_text($raw['build']??'', 32), 'page'=>clean_text($raw['page']??'', 40), 'session'=>in_array((string)($raw['session']??''),['guest', 'authenticated'], true) ? (string)$raw['session'] : 'unknown', 'language'=>clean_text($raw['language']??'', 12), 'theme'=>clean_text($raw['theme']??'', 16), 'online'=>(bool)($raw['online']??false), 'standalone'=>(bool)($raw['standalone']??false), 'viewport'=>preg_match('/^\d{1,5}x\d{1,5}$/', (string)($raw['viewport']??''))===1 ? (string)$raw['viewport'] : '', 'platform'=>clean_text($raw['platform']??'', 80), 'touch'=>(bool)($raw['touch']??false),];
 }
-// Attachments remain PHP temporary upload files and are never copied into the
-// application storage/database. Content is accepted only after server-side MIME
-// inspection, not from the browser-provided filename/type.
+
+
+
 $attachments =[];
 $allowedMimes =['image/jpeg'=>['jpg', 'jpeg'], 'image/png'=>['png'], 'image/webp'=>['webp'], 'video/mp4'=>['mp4'], 'video/webm'=>['webm'], 'video/quicktime'=>['mov'],];
 $maxFiles = 6;
@@ -89,9 +89,9 @@ if (is_array($uploads)&&isset($uploads['name'])) {
         $attachments[] =['path'=>$tmp, 'name'=>$base, 'mime'=>$mime, 'size'=>$size];
     }
 }
-// SMTP remains DB-authoritative for transport. The destination is resolved only
-// server-side: a dedicated support inbox wins, then the public privacy contact,
-// then the SMTP sender mailbox as a backward-compatible fallback.
+
+
+
 try {
     if (!smtp_is_configured($config))meteonexa_provision_smtp_if_missing($config);
 } catch (Throwable $provisionError) {
@@ -116,9 +116,9 @@ $reportId = 'BUG-' . gmdate('Ymd') . '-' . strtoupper(bin2hex(random_bytes(4)));
 $createdAt = gmdate('c');
 $subjectTitle = meteonexa_text_substr(trim((string)preg_replace('/[\r\n]+/', ' ', $title)), 0, 80);
 $appName = trim((string)($config['app']['name']??'MeteoNexa')) ? : 'MeteoNexa';
-// Operators may optionally define bug_report_<category> rows in the DB. If
-// absent, the generic bug_report template remains the safe fallback. This keeps
-// email copy editable without a deploy while allowing section-specific wording.
+
+
+
 $template = meteonexa_email_template($pdo, 'bug_report_' . $category, $language,['report_id'=>$reportId, 'title'=>$subjectTitle, 'section'=>$categoryLabel, 'app_name'=>$appName,], 'bug_report');
 $e = static fn(string $value) : string=>htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 $block = static fn(string $label, string $value) : string=>'<div style="margin:0 0 16px"><div style="margin:0 0 6px;color:#58718a;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase">' . htmlspecialchars($label, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') . '</div><div style="padding:13px 15px;border:1px solid #dce8f1;border-radius:13px;background:#f7fafc;color:#17324a;font-size:14px;line-height:1.6">' . nl2br(htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'), false) . '</div></div>';

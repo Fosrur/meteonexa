@@ -10,8 +10,8 @@ return [
             return $schemaVersion;
         }
 
-        // Preserve all existing SMTP/AI/runtime rows and
-        // create only the server-side Smart Alert event ledger.
+        
+        
         $pdo->exec("CREATE TABLE IF NOT EXISTS weather_alert_events (
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
             device_id VARCHAR(191) NOT NULL,

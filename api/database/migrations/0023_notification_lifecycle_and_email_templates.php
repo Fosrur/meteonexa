@@ -10,7 +10,7 @@ return [
             return $schemaVersion;
         }
 
-        // Persistent notification read/dismiss lifecycle and database-editable branded email templates.
+        
         if (!meteonexa_db_column_exists($pdo, 'push_notifications', 'read_at')) $pdo->exec("ALTER TABLE push_notifications ADD COLUMN read_at VARCHAR(40) NOT NULL DEFAULT ''");
         if (!meteonexa_db_column_exists($pdo, 'push_notifications', 'dismissed_at')) $pdo->exec("ALTER TABLE push_notifications ADD COLUMN dismissed_at VARCHAR(40) NOT NULL DEFAULT ''");
         if (!meteonexa_db_column_exists($pdo, 'push_notifications', 'expires_at')) $pdo->exec("ALTER TABLE push_notifications ADD COLUMN expires_at VARCHAR(40) NOT NULL DEFAULT ''");

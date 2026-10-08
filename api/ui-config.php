@@ -8,8 +8,8 @@ if (strtoupper((string)($_SERVER['REQUEST_METHOD'] ?? 'GET')) !== 'GET') {
     respond(['ok'=>false,'code'=>'METHOD_NOT_ALLOWED','message'=>'api.backend.method_not_allowed'],405);
 }
 
-// Public read-only UI configuration. These flags only control presentation;
-// authorization remains enforced independently by protected API endpoints.
+
+
 try {
     $config = load_config();
     $pdo = meteonexa_db($config);
@@ -26,8 +26,8 @@ try {
         $rowUpdated = (string)($row['updated_at'] ?? '');
         if ($rowUpdated > $updatedAt) $updatedAt = $rowUpdated;
     }
-    // Runtime credentials are DB-backed. UI capability flags must reflect the
-    // effective DB state, not only optional one-time environment provisioning.
+    
+    
     $smtp = (array)($config['smtp'] ?? []);
     try {
         $dbSmtp = meteonexa_load_smtp($config);
@@ -46,7 +46,7 @@ try {
     $smtpReady = trim((string)($smtp['host'] ?? '')) !== ''
         && filter_var(trim((string)($smtp['from_email'] ?? '')), FILTER_VALIDATE_EMAIL) !== false;
     $services = [
-        // Public booleans only: never expose provider credentials or secret values.
+        
         'email' => $smtpReady || $nativeMail,
         'ai.external' => $aiKey !== '',
         'lightning' => trim((string)($config['lightning']['client_id'] ?? '')) !== ''
@@ -97,7 +97,7 @@ try {
         'version'=>(string)($config['app']['version'] ?? 'unknown'),
     ]);
 } catch (Throwable $error) {
-    // The client ships conservative defaults. A configuration read failure must
-    // not expose internals or make protected guest features visible.
+    
+    
     respond(['ok'=>false,'code'=>'UI_CONFIG_UNAVAILABLE','message'=>'api.error.preferences'],503);
 }

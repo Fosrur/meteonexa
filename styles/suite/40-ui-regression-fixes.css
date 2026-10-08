@@ -1,4 +1,3 @@
-/* UI regression fixes */
 #guest-login{display:flex!important;align-items:center!important;justify-content:center!important;gap:12px!important;padding-inline:18px!important}
 #guest-login>span{flex:1;text-align:center}
 #guest-login>svg{order:2!important;margin-left:0!important;width:17px!important;height:17px!important;flex:0 0 17px!important}
@@ -23,7 +22,6 @@
   #page-route>.route-form-panel{margin-bottom:14px!important}
 }
 
-/* hero facts leggibili e uniformi */
 .hero-facts{
   grid-template-columns:repeat(4,minmax(138px,1fr))!important;
   max-width:920px!important;
@@ -101,7 +99,6 @@
   .hero-facts>span>b{font-size:.8rem!important}
 }
 
-/* Reset della label interna: non deve ereditare lo stile della card esterna. */
 .hero-facts .hero-fact-label{
   display:block!important;
   width:auto!important;
@@ -133,7 +130,6 @@
   font-size:.94rem!important;
 }
 
-/* sidebar typography and header control alignment */
 #sidebar .main-nav .nav-link{
   font-family:inherit!important;
   font-size:13px!important;

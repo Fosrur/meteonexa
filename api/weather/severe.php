@@ -1,14 +1,14 @@
 <?php
 declare(strict_types=1);
 
-/**
- * MeteoNexa — reliability-first severe weather monitor.
- *
- * Public/read-only for both guest and email sessions. It deliberately accepts no
- * account/device identifier, rounds coordinates to 3 decimals, and stores no
- * user/location profile. Upstream data may use bounded technical provider cache.
- * Stale weather is never allowed to create a new severe-event signal.
- */
+
+
+
+
+
+
+
+
 require_once dirname(__DIR__) . '/bootstrap.php';
 require_once dirname(__DIR__) . '/database.php';
 require_once dirname(__DIR__) . '/public_helpers.php';
@@ -52,8 +52,8 @@ try {
     $analysis=meteonexa_apply_severe_outlook($analysis,$outlook);
     $allowed=['hail','storm','snow','wind','ice','fog','heat'];
     $events=array_values(array_filter((array)($analysis['events']??[]),static fn($event):bool=>is_array($event)&&in_array((string)($event['type']??''),$allowed,true)));
-    // Stale provider evidence may be shown as degraded diagnostics only; it must
-    // never initiate a severe alert in Panoramica or a local notification.
+    
+    
     if($weatherStale)$events=[];
     respond([
         'ok'=>true,

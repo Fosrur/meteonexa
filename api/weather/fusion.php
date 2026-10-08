@@ -1,25 +1,25 @@
 <?php
 declare(strict_types=1);
 
-/**
- * MeteoNexa — lightweight forecast reliability fusion.
- *
- * This endpoint is intentionally account-independent and read-only. It exists
- * so that Panoramica can use the same deterministic multi-model evidence for
- * guests and authenticated users without exposing five upstream model calls to
- * the browser or coupling the home page to the heavier Intelligence workflow.
- *
- * Reliability rules:
- * - provider responses are reused through the existing bounded server cache;
- * - fresh model responses are preferred;
- * - stale provider-cache fallbacks are used only when fewer than three fresh
- *   models are available and the response is explicitly marked degraded;
- * - the client is forbidden from using a degraded fusion to suppress/raise a
- *   base Open-Meteo condition (15-minute local nowcast may still refine it).
- *
- * Privacy: no account/session/device identifier is requested and no selected
- * location or forecast is persisted as user/account state by this endpoint.
- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 require_once dirname(__DIR__) . '/bootstrap.php';
 require_once dirname(__DIR__) . '/database.php';
@@ -40,9 +40,9 @@ if (!is_finite($lat) || !is_finite($lon) || $lat < -90 || $lat > 90 || $lon < -1
     respond(['ok'=>false,'code'=>'INVALID_COORDINATES','message'=>'api.backend.invalid_coordinates'], 422);
 }
 
-// Three decimals (~110 m latitude) are more than enough for a home forecast,
-// reduce needless cache fragmentation and avoid forwarding browser precision
-// that does not improve the model grid result.
+
+
+
 $lat = round($lat, 3);
 $lon = round($lon, 3);
 
@@ -56,8 +56,8 @@ try {
     );
     $availableModels = array_filter($models, static fn(array $model): bool => !empty($model['available']));
 
-    // Canonical consensus is shared with Intelligence/Advanced. It prefers at
-    // least three fresh models and otherwise exposes a marked degraded fallback.
+    
+    
     $consensus = meteonexa_intelq_canonical_consensus($models);
     $useFreshConsensus = ($consensus['sourceMode'] ?? '') === 'fresh_consensus';
 
@@ -140,8 +140,8 @@ try {
         'engine'=>'20.1',
     ]);
 } catch (Throwable $error) {
-    // Panoramica is fail-soft: the browser will keep the base live forecast and
-    // local 15-minute evidence. Do not leak upstream/server internals.
+    
+    
     meteonexa_log_event('weather_fusion_failed', $error);
     respond(['ok'=>false,'code'=>'FUSION_UNAVAILABLE','message'=>'api.backend.service_unavailable'], 503);
 }

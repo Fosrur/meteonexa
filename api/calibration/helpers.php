@@ -96,11 +96,11 @@ function meteonexa_calibration_process_location(PDO $pdo, array $config, array $
     }
     return['verified'=>$verified, 'queued'=>$queued, 'observations'=>$obs, 'models'=>$models, 'consensus'=>$consensus];
 }
-/**
- * opportunistic calibration touch.
- * Reuses models/consensus/observations already loaded by the authenticated
- * Intelligence request: no provider call is performed here.
- */
+
+
+
+
+
 function meteonexa_calibration_touch_current(PDO $pdo, array $loc, array $observations, array $models, array $consensus) : array {
     if (!meteonexa_db_table_exists($pdo, 'model_skill_samples'))return['available'=>false, 'verified'=>0, 'queued'=>0, 'independentObservationAvailable'=>false, 'reason'=>'skill_table_unavailable'];
     $independent = !empty($observations['available'])&&!empty($observations['independentFromNwp']);

@@ -20,10 +20,10 @@ if (is_array($session)&&!meteonexa_verify_device_proof($pdo, (string)($session['
     meteonexa_revoke_current_auth_session($pdo, $config);
     $session = null;
 }
-// Guest receipts require_once a short-lived proof issued only after the guest has
-// entered the six-digit code delivered to the requested mailbox. The endpoint
-// deliberately ignores arbitrary guest email fields, so it cannot be abused to
-// send a false "your data were deleted" receipt to an unverified address.
+
+
+
+
 $guestRequested =($data['guest']??false)===true;
 if ($guestRequested&&is_array($session)) {
     try {
@@ -58,9 +58,9 @@ if (!$authenticated) {
     $guestProofNonce = trim((string)($proof['nonce']??''));
     if ($guestProofNonce==='')respond(['ok'=>false, 'code'=>'GUEST_PROOF_INVALID', 'message'=>$tr('settings.cache.verify.expired'), 'sessionRevoked'=>false], 403);
 }
-// For an authenticated reset the privacy boundary is closed before validation
-// and before any email I/O. Even damaged legacy session metadata must never keep
-// a session or trusted-device cookie alive after a privacy-reset request.
+
+
+
 if ($authenticated) {
     try {
         meteonexa_revoke_current_auth_session($pdo, $config);
@@ -92,8 +92,8 @@ if (!$ipLimit['allowed']||!$recipientLimit['allowed']||!$globalLimit['allowed'])
     header('Retry-After: ' . $retryAfter);
     respond(['ok'=>false, 'code'=>'RATE_LIMITED', 'message'=>$tr('settings.cache.receipt.rate_limited'), 'retryAfter'=>$retryAfter, 'sessionRevoked'=>$authenticated], 429);
 }
-// Keep the same SMTP provisioning/fallback behaviour as the OTP path without
-// modifying the hardened OTP implementation itself.
+
+
 if (!smtp_is_configured($config)) {
     try {
         meteonexa_provision_smtp_if_missing($config);
@@ -121,8 +121,8 @@ $retention = htmlspecialchars($tr('privacy.cache.email.retention'), ENT_QUOTES |
 $addressUse = htmlspecialchars($tr($authenticated ? 'privacy.cache.email.address_use.auth' : 'privacy.cache.email.address_use.guest'), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 $footer = htmlspecialchars($tr('privacy.cache.email.footer'), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 $subject = $tr('privacy.cache.email.subject');
-// Same visual template as the OTP email: branded navy header, embedded logo,
-// white rounded card and cyan evidence panel. Only the message content changes.
+
+
 $html = '<!doctype html><html lang="' . htmlspecialchars($language, ENT_QUOTES, 'UTF-8') . '"><body style="margin:0;padding:0;background:#f3f7fb;font-family:Arial,Helvetica,sans-serif;color:#15314a">' . '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;margin:0;background:#f3f7fb;border-collapse:collapse"><tr><td align="center" style="padding:32px 14px">' . '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:560px;margin:0 auto;border-collapse:separate;border-spacing:0;background:#ffffff;border:1px solid #d9e6f1;border-radius:22px;overflow:hidden">' . '<tr><td align="center" style="padding:30px 34px 25px;background:#0d3557"><img src="cid:meteonexa-logo" width="68" height="68" alt="' . $escapedAppName . '" style="display:block;width:68px;height:68px;margin:0 auto 12px;border:0"><div style="margin:0;color:#ffffff;font-size:25px;line-height:1.2;font-weight:800">' . $escapedAppName . '</div><div style="margin-top:7px;color:#c7e4f4;font-size:13px;line-height:1.45">' . $tagline . '</div></td></tr>' . '<tr><td style="padding:30px 34px 12px;background:#ffffff"><h1 style="margin:0 0 12px;color:#102d47;font-size:24px;line-height:1.25;font-weight:800">' . $heading . '</h1><p style="margin:0;color:#58718a;font-size:15px;line-height:1.65">' . $intro . '</p></td></tr>' . '<tr><td style="padding:14px 34px 18px;background:#ffffff"><div style="padding:20px 18px;text-align:left;border:1px solid #b9dceb;border-radius:16px;background:#edf8fc;color:#087f92"><div style="font-size:18px;line-height:1.25;font-weight:900">✓ ' . $statusTitle . '</div><div style="margin-top:8px;color:#34677b;font-size:13px;line-height:1.6">' . $statusCopy . '</div></div></td></tr>' . '<tr><td style="padding:0 34px 31px;background:#ffffff"><p style="margin:0 0 10px;color:#58718a;font-size:12px;line-height:1.6">' . $addressUse . '</p><div style="padding-top:16px;border-top:1px solid #e5edf4;color:#72879a;font-size:12px;line-height:1.6">' . $retention . '<br><br>' . $footer . '</div></td></tr>' . '</table>' . '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:560px;margin:0 auto;border-collapse:collapse"><tr><td align="center" style="padding:15px 12px 0;color:#8295a7;font-size:11px;line-height:1.5">© ' . date('Y') . ' ' . $escapedAppName . '</td></tr></table>' . '</td></tr></table></body></html>';
 $plain = $tr('privacy.cache.email.heading') . "\n\n" . $tr($authenticated ? 'privacy.cache.email.intro.auth' : 'privacy.cache.email.intro.guest') . "\n\n" . $tr('privacy.cache.email.card.title') . ': ' . $tr($authenticated ? 'privacy.cache.email.card.copy.auth' : 'privacy.cache.email.card.copy.guest') . "\n\n" . $tr($authenticated ? 'privacy.cache.email.address_use.auth' : 'privacy.cache.email.address_use.guest') . "\n\n" . $tr('privacy.cache.email.retention') . "\n\n" . $tr('privacy.cache.email.footer');
 $sendReceipt = static function(array $smtpConfig)use($appName, $email, $subject, $html, $plain, $nativeMailEnabled) : string {

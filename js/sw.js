@@ -231,15 +231,10 @@ async function pullServerNotification(config) {
 async function backgroundWeatherCheck() {
     const config = await loadBackgroundConfig();
     if (!config?.location || !self.registration?.showNotification) return;
-    // authenticated background alerts have one authority: the
-    // server-side Smart Alert engine. The worker only transports a queued
-    // decision and never re-computes the weather from Open-Meteo.
     if (config.serverAuthoritative === true || config.remotePush === true) {
         await pullServerNotification(config);
         return;
     }
-    // Compatibility-only fallback for old/local configurations. Current
-    // authenticated clients always set serverAuthoritative=true.
     if (!config.weatherApi) return;
     const language = normalizeLanguage(config.language), params = new URLSearchParams({ latitude: String(config.location.latitude), longitude: String(config.location.longitude), minutely_15: 'precipitation', hourly: 'temperature_2m,precipitation_probability,wind_gusts_10m,weather_code', forecast_hours: '24', timezone: 'auto', wind_speed_unit: 'kmh' });
     let weather;

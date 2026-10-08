@@ -109,7 +109,7 @@ if ($action==='quality') {
         }
         $models[$id] =['id'=>$id, 'label'=>$definition['label'], 'available'=>true, 'rows'=>$rows, 'retrievedAt'=>gmdate('c'), 'ageMinutes'=>0, 'cadenceMinutes'=>$definition['cadenceMinutes']];
     }
-    // Make one deterministic outlier so consensus voting can be checked against the current provider set.
+    
     $outlierId = array_key_last($models);
     if ($outlierId!==null) {
         foreach ($models[$outlierId]['rows'] as &$row) {

@@ -108,13 +108,13 @@ function meteonexa_capture_radar_location(PDO $pdo, array $config, array $locati
     if ($host===''||!is_array($frame))throw new RuntimeException('RADAR_FRAME_UNAVAILABLE');
     return meteonexa_capture_radar_frame($pdo, $config, $location, $host, $frame);
 }
-/**
- * Seed a newly registered archive with the provider's recent observed frames.
- * This makes the player useful immediately instead of waiting hours for cron.
- * Paths come only from the validated LibreWXR metadata feed; the caller cannot
- * choose an upstream URL. The limit is intentionally small to bound disk and
- * upstream usage on shared hosting.
- */
+
+
+
+
+
+
+
 function meteonexa_backfill_radar_location(PDO $pdo, array $config, array $location, int $limit = 4) : array {
     $limit = max(2, min(6, $limit));
     $metadata = meteonexa_radar_metadata($config, 60);

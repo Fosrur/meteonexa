@@ -98,8 +98,8 @@ function netatmo_access_token(PDO $pdo, array $config, string $device) : string 
     if (!$row)throw new RuntimeException(meteonexa_backend_text('api.backend.netatmo_not_connected'));
     $access = meteonexa_decrypt_value((string)$row['access_token_enc'], $config, 'netatmo');
     if ((int)$row['expires_at'] > time() + 120&&$access!=='')return $access;
-    // OAuth refresh tokens can rotate. Serialize refreshes per device so two
-    // simultaneous station/status calls cannot race with the same old token.
+    
+    
     $lock = function_exists('meteonexa_acquire_lock') ? meteonexa_acquire_lock('netatmo-refresh-' . hash('sha256', $device), true) : null;
     if (!is_resource($lock))throw new RuntimeException('NETATMO_REFRESH_LOCK_UNAVAILABLE');
     try {

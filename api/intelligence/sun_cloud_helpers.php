@@ -1,12 +1,12 @@
 <?php
 declare(strict_types=1);
 
-/**
- * Build deterministic daylight windows from the same forecast evidence already
- * used by Intelligence. This is intentionally non-AI: cloud cover, rain risk,
- * solar radiation, sunshine duration and current satellite attenuation are
- * combined into a bounded score that can be explained to the user.
- */
+
+
+
+
+
+
 function meteonexa_sun_cloud_window(array $weather, array $confidenceV2 = [], array $satellite = []) : array {
     $h = (array)($weather['hourly'] ?? []);
     $times = array_values((array)($h['time'] ?? []));
@@ -49,8 +49,8 @@ function meteonexa_sun_cloud_window(array $weather, array $confidenceV2 = [], ar
         $sunPct = ($sunSec / 3600) * 100;
         $score = $isDay ? round(($open * .45) + ($solar * .30) + ($sunPct * .15) + ((100 - $r) * .10)) : 0;
         $confidence = $confidenceFor((string)$time);
-        // Current independent satellite evidence is used only as a conservative
-        // confidence modifier; it never overwrites the forecast window itself.
+        
+        
         if (!empty($satellite['available']) && isset($satellite['cloudAttenuationPct'])) {
             $attenuation = max(0, min(100, (float)$satellite['cloudAttenuationPct']));
             $satelliteConfidence = 100 - $attenuation;

@@ -29,7 +29,7 @@ function meteonexa_radar_metadata(array $config, int $maxAgeSeconds = 60): array
         $cached = json_decode((string)@file_get_contents($cachePath), true);
         if (is_array($cached)) {
             try { return meteonexa_validate_radar_metadata($cached, $config); }
-            catch (Throwable $error) { /* discard unsafe/stale cache */ }
+            catch (Throwable $error) {  }
         }
     }
     $primary = trim((string)($config['radar']['metadata_url'] ?? 'https://api.librewxr.net/public/weather-maps.json'));

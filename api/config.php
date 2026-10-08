@@ -1,14 +1,14 @@
 <?php
 if (realpath((string)($_SERVER['SCRIPT_FILENAME'] ?? '')) === __FILE__) { http_response_code(404); exit; }
-/**
- * MeteoNexa runtime configuration.
- *
- * Runtime SMTP and AI credentials are DB-backed and encrypted with the
- * deployment secret. Environment values are optional one-time provisioning
- * inputs for deployments that cannot use the installer. Bootstrap credentials
- * and provider secrets that are not DB-managed remain deployment environment
- * values. Never commit production credentials into this file.
- */
+
+
+
+
+
+
+
+
+
 $parseEmailList = static function (string $value): array {
     $emails = [];
     foreach (preg_split('/[;,\s]+/', trim($value)) ?: [] as $candidate) {
@@ -25,9 +25,9 @@ return [
         'version' => '20.1',
     ],
     'smtp' => [
-        // The encrypted DB row is authoritative at runtime. METEONEXA_SMTP_*
-        // values are only a safe one-time provisioning fallback and are never
-        // shipped in the application/database baseline.
+        
+        
+        
         'host' => getenv('METEONEXA_SMTP_HOST') ?: '',
         'port' => max(1, min(65535, (int)(getenv('METEONEXA_SMTP_PORT') ?: 587))),
         'encryption' => getenv('METEONEXA_SMTP_ENCRYPTION') ?: 'tls',
@@ -36,21 +36,21 @@ return [
         'from_email' => getenv('METEONEXA_SMTP_FROM_EMAIL') ?: 'alerts@meteonexa.com',
         'from_name' => getenv('METEONEXA_SMTP_FROM_NAME') ?: 'MeteoNexa',
         'timeout_seconds' => max(5, min(60, (int)(getenv('METEONEXA_SMTP_TIMEOUT_SECONDS') ?: 12))),
-        // Aruba shared hosting normally exposes the local PHP mail transport.
-        // SMTP remains the first choice when the encrypted runtime credential is usable;
-        // native mail is a deployment-local fallback and never accepts arbitrary headers.
+        
+        
+        
         'native_mail_fallback' => filter_var(getenv('METEONEXA_NATIVE_MAIL_FALLBACK') === false ? '1' : getenv('METEONEXA_NATIVE_MAIL_FALLBACK'), FILTER_VALIDATE_BOOLEAN),
     ],
     'feedback' => [
-        // Optional monitored support inbox. The browser can never choose or
-        // override the recipient; bug-report.php resolves server-side fallbacks.
+        
+        
         'recipient_email' => trim((string)(getenv('METEONEXA_BUG_REPORT_EMAIL') ?: '')),
         'max_per_ip_hour' => max(2, min(30, (int)(getenv('METEONEXA_BUG_REPORT_MAX_IP_HOUR') ?: 6))),
         'max_global_hour' => max(20, min(2000, (int)(getenv('METEONEXA_BUG_REPORT_MAX_GLOBAL_HOUR') ?: 180))),
     ],
     'legal' => [
-        // Public privacy contact. Prefer a dedicated mailbox; ui-config.php falls back to
-        // the DB-authoritative SMTP From address if this is omitted.
+        
+        
         'controller_name' => trim((string)(getenv('METEONEXA_LEGAL_CONTROLLER_NAME') ?: '')),
         'controller_address' => trim((string)(getenv('METEONEXA_LEGAL_CONTROLLER_ADDRESS') ?: '')),
         'privacy_contact_email' => trim((string)(getenv('METEONEXA_PRIVACY_CONTACT_EMAIL') ?: '')),
@@ -58,9 +58,9 @@ return [
         'site_url' => trim((string)(getenv('METEONEXA_LEGAL_SITE_URL') ?: 'https://www.meteonexa.com/')),
     ],
     'qa' => [
-        // Administrative access is deployment-owned. Never commit privileged
-        // identities in the package and never infer them from SMTP settings.
-        // database.php may persist only deployment-bound HMAC identifiers.
+        
+        
+        
         'admin_emails' => $parseEmailList((string)(getenv('METEONEXA_QA_ADMIN_EMAILS') ?: '')),
     ],
     'auth' => [
@@ -73,13 +73,13 @@ return [
         'max_verify_requests_per_ip_hour' => 60,
         'max_verify_requests_global_hour' => 2000,
         'session_ttl_seconds' => 2592000,
-        // Absolute lifetime above plus an inactivity timeout. A stolen old cookie
-        // cannot remain useful indefinitely on an abandoned browser.
+        
+        
         'session_idle_seconds' => max(900, min(2592000, (int)(getenv('METEONEXA_SESSION_IDLE_SECONDS') ?: 604800))),
-        // A remembered browser/device may silently re-authenticate the same email
-        // after a normal logout. Full cache/device reset revokes this credential.
+        
+        
         'trusted_device_ttl_seconds' => 2592000,
-        // Resolved by bootstrap.php from METEONEXA_APP_SECRET or the external runtime .app-secret.
+        
         'app_secret' => '',
     ],
     'device' => [
@@ -102,7 +102,7 @@ return [
         'zoom' => 7,
         'max_locations_per_device' => 8,
         'max_total_locations' => 250,
-        // Hard disk guard for shared hosting. Override with METEONEXA_RADAR_MAX_STORAGE_MB.
+        
         'max_storage_mb' => max(64, min(5120, (int)(getenv('METEONEXA_RADAR_MAX_STORAGE_MB') ?: 512))),
     ],
     'lightning' => [
@@ -115,33 +115,33 @@ return [
         'retention_days' => max(1, min(90, (int)(getenv('METEONEXA_PERSONAL_STATION_RETENTION_DAYS') ?: 30))),
     ],
     'ai' => [
-        // Optional online LLM. The standard OpenRouter profile is pinned to
-        // NVIDIA Nemotron 3 Super's explicit :free endpoint; Groq remains an
-        // alternative. Provider URLs are fixed
-        // server-side and can never be supplied by the browser.
+        
+        
+        
+        
         'provider' => strtolower(trim((string)(getenv('METEONEXA_AI_PROVIDER') ?: 'openrouter'))),
-        // Backward-compatible alias retained for existing deployments.
+        
         'api_key' => getenv('METEONEXA_OPENROUTER_API_KEY') ?: '',
         'openrouter_api_key' => getenv('METEONEXA_OPENROUTER_API_KEY') ?: '',
         'openrouter_model' => getenv('METEONEXA_OPENROUTER_MODEL') ?: 'nvidia/nemotron-3-super-120b-a12b:free',
-        // Cost guard: when enabled, runtime and DB-backed OpenRouter settings
-        // are forced to the explicit zero-cost NVIDIA endpoint above. Set to 0
-        // only when the operator intentionally wants to allow another model.
+        
+        
+        
         'openrouter_free_only' => filter_var(getenv('METEONEXA_OPENROUTER_FREE_ONLY') === false ? '1' : getenv('METEONEXA_OPENROUTER_FREE_ONLY'), FILTER_VALIDATE_BOOLEAN),
         'groq_api_key' => getenv('METEONEXA_GROQ_API_KEY') ?: '',
         'groq_model' => getenv('METEONEXA_GROQ_MODEL') ?: 'openai/gpt-oss-20b',
         'site_url' => getenv('METEONEXA_AI_SITE_URL') ?: '',
         'site_name' => getenv('METEONEXA_AI_SITE_NAME') ?: 'MeteoNexa',
         'timeout_seconds' => max(5, min(60, (int)(getenv('METEONEXA_AI_TIMEOUT_SECONDS') ?: 45))),
-        // AI Meteorologist 2.0 must fail over to the deterministic template before
-        // an explanation can block the weather decision path.
+        
+        
         'max_latency_ms' => max(3000, min(60000, (int)(getenv('METEONEXA_AI_MAX_LATENCY_MS') ?: 35000))),
         'semantic_cache_ttl_seconds' => max(30, min(600, (int)(getenv('METEONEXA_AI_CACHE_TTL_SECONDS') ?: 180))),
         'max_requests_per_hour' => 40,
-        // Deployment-wide guard against distributed API-credit exhaustion.
+        
         'max_requests_global_hour' => 600,
-        // Keep a small safety margin below OpenRouter's published free-plan
-        // daily request allowance when using the zero-cost router.
+        
+        
         'max_requests_global_day_free' => 45,
     ],
     'calibration' => [
@@ -158,8 +158,8 @@ return [
         'arpa_max_distance_km' => max(10, min(200, (int)(getenv('METEONEXA_ARPA_MAX_DISTANCE_KM') ?: 80))),
     ],
     'official' => [
-        // Direct MeteoAlarm EDR access is optional and requires an authorised token.
-        // Without it MeteoNexa keeps the public Atom fallback and marks it as non-geospatial.
+        
+        
         'meteoalarm_edr_token' => getenv('METEONEXA_METEOALARM_EDR_TOKEN') ?: '',
         'meteoalarm_country' => strtoupper(getenv('METEONEXA_METEOALARM_COUNTRY') ?: 'IT'),
     ],
@@ -176,9 +176,9 @@ return [
         'cron_secret' => getenv('METEONEXA_PUSH_CRON_SECRET') ?: '',
         'check_interval_minutes' => 3,
         'max_subscriptions_per_device' => 8,
-        // Browser Web Push services accepted by the server. Exact hosts and
-        // leading-dot suffixes are supported. Override here if a supported
-        // browser uses a different standards-compliant push service.
+        
+        
+        
         'allowed_endpoint_hosts' => [
             'fcm.googleapis.com',
             '.push.services.mozilla.com',
@@ -186,7 +186,7 @@ return [
         ],
     ],
     'abuse_limits' => [
-        // Deployment-wide guards for public/provider-backed operations.
+        
         'route_global_hour' => 600,
         'synoptic_global_hour' => 600,
         'lightning_global_hour' => 1200,
@@ -198,7 +198,7 @@ return [
         'official_alerts_global_hour' => 3000,
     ],
     'storage_limits' => [
-        // Global row guards complement the per-device and time-based retention.
+        
         'forecast_snapshots' => 50000,
         'synoptic_snapshots' => 50000,
         'push_notifications' => 50000,
@@ -223,14 +223,14 @@ return [
         'per_provider_timeout_seconds' => max(3, min(18, (int)(getenv('METEONEXA_PROVIDER_TIMEOUT_SECONDS') ?: 8))),
     ],
     'radar3' => [
-        // Shadow is the safe default: object tracking runs and is scored against
-        // observed arrivals, while the proven v2 output remains authoritative.
+        
+        
         'mode' => in_array(strtolower((string)(getenv('METEONEXA_RADAR3_MODE') ?: 'active')), ['off','shadow','active'], true)
             ? strtolower((string)(getenv('METEONEXA_RADAR3_MODE') ?: 'active')) : 'active',
     ],
     'radar4' => [
-        // P3 phase 1 is deliberately shadow-only. No environment setting can
-        // promote Radar4 to production authority in this tranche.
+        
+        
         'mode' => strtolower((string)(getenv('METEONEXA_RADAR4_MODE') ?: 'shadow'))==='off' ? 'off' : 'shadow',
     ],
     'netatmo' => [

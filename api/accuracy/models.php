@@ -27,7 +27,7 @@ function meteonexa_accuracy_hour(mixed $value): string
     $text = trim((string)$value);
     $timestamp = strtotime($text);
     if ($timestamp === false) respond(['ok'=>false,'code'=>'ACCURACY_INVALID','message'=>'api.accuracy.invalid'],422);
-    // Match current observations to hourly model target slots. Round to nearest hour.
+    
     $timestamp = (int)(round($timestamp / 3600) * 3600);
     return gmdate('Y-m-d\TH:00:00\Z', $timestamp);
 }
@@ -54,9 +54,9 @@ function meteonexa_accuracy_shrunk_weights(array $quality, array $samples, int $
     $shrunk = [];
     foreach ($models as $model) {
         $target = (float)$quality[$model] / $qualitySum;
-        // Full trust is reached only after roughly twice the minimum sample
-        // count. Before then, move smoothly from equal weights toward the
-        // measured skill weight so a single lucky sample cannot dominate.
+        
+        
+        
         $evidence = min(1.0, max(0.0, (float)($samples[$model] ?? 0) / max(1, $minimumSamples * 2)));
         $shrunk[$model] = $uniform * (1.0 - $evidence) + $target * $evidence;
     }

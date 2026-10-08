@@ -18,7 +18,7 @@ $location = clean_text($_GET['location']??'', 80, '');
 $admin1 = clean_text($_GET['admin1']??'', 80, '');
 $locale = strtolower(clean_text($_GET['lang']??'en', 8, 'en'));
 if (!in_array($locale,['it', 'en', 'fr', 'es', 'de'], true))$locale = 'en';
-// Guest demo stays account-free: no LLM, no device data and no exact-coordinate persistence.
+
 $rLat = round($lat, 2);
 $rLon = round($lon, 2);
 $weather = meteonexa_intelligence_weather($rLat, $rLon, true, 72);

@@ -3,13 +3,13 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/backend_i18n.php';
 
-/**
- * HTTP error renderer for browser navigations.
- *
- * Translation values are never embedded in PHP/HTML. Runtime DB translations
- * are preferred; a release-packaged JSON catalog (generated from the same DB
- * seed) is used only when the runtime database itself is unavailable.
- */
+
+
+
+
+
+
+
 function meteonexa_error_language(): string
 {
     $cookie = strtolower(trim((string)($_COOKIE['meteonexa_language'] ?? '')));
@@ -54,15 +54,15 @@ function meteonexa_error_html(string $value): string
     return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
-/**
- * Browser-page security headers.
- *
- * api/bootstrap.php deliberately starts from `default-src 'none'` because
- * JSON endpoints do not need browser assets. Browser surfaces that include
- * bootstrap (QA / Diagnostics) MUST replace that API-only CSP before emitting
- * HTML, otherwise their self-hosted CSS, JS and i18n runtime are blocked and
- * the page appears completely blank.
- */
+
+
+
+
+
+
+
+
+
 function meteonexa_browser_page_security_headers(): void
 {
     if (headers_sent()) return;

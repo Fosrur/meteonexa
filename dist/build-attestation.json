@@ -1,10 +1,10 @@
 {
-  "assetCount": 66,
+  "assetCount": 95,
   "contractVersion": 1,
-  "distSha256": "becf5b0df230d4360716f75a0c348ff7751f0ff64d5a38f6679c76ca69b78655",
+  "distSha256": "e956791790bd66b51e2ec95a9d5aedbc53e4f3523a03504fa943cfba0e6198b7",
   "esbuildPinnedVersion": "0.28.2",
-  "manifestSha256": "6b86e7067daf20820fbee3b54a6ba538e24b481ea0d7729f59060c472ac0385b",
+  "manifestSha256": "27033b0f12378f4de44bc6c009d9d9587bd103c29beb93408731c4436df99e06",
   "mode": "source-preserving-offline",
   "offlineFallbackPolicy": "source-preserving-esm-no-static-imports",
-  "sourceSha256": "8973b37a87ed4dbfa6fb2fd1257c75b764c3a039b48e65fc620c68433925c15b"
+  "sourceSha256": "4846c35018988c1225012c1df23b08f66a017ffd013459e4fb6e686aee10267b"
 }

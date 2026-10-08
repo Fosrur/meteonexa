@@ -24,9 +24,9 @@ function meteonexa_db(array $config) : PDO {
             throw new RuntimeException('MYSQL_SCHEMA_OUTDATED');
         }
         $schemaVersion = meteonexa_run_mysql_migrations($pdo, $schemaVersion);
-        // Self-heal is best-effort. Failing optional auth DDL must not make the
-        // whole database connection unusable: device-bound OTP has a protected
-        // fallback store and Devices/Accesses reports the missing audit table.
+        
+        
+        
         try {
             if (!meteonexa_db_table_exists($pdo, 'auth_login_challenges')) {
                 $pdo->exec("CREATE TABLE IF NOT EXISTS auth_login_challenges (
@@ -117,11 +117,11 @@ function meteonexa_db(array $config) : PDO {
     try {
         $pdo->exec('PRAGMA trusted_schema = OFF');
     } catch (Throwable $ignored) {
-        /* older SQLite */
+        
     }
-    // app_metadata is the only table required to determine whether migrations
-    // must run. All other DDL is version-gated to avoid unnecessary schema
-    // locks on every API request on shared hosting.
+    
+    
+    
     $pdo->exec('CREATE TABLE IF NOT EXISTS app_metadata (
         meta_key TEXT PRIMARY KEY,
         meta_value TEXT NOT NULL,
@@ -152,9 +152,9 @@ function meteonexa_db(array $config) : PDO {
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_auth_access_device ON auth_access_history(device_id,last_seen_at)');
     }
     meteonexa_sync_ui_visibility_defaults($pdo);
-    // Existing installations keep their DB-edited translations. New package
-    // keys are merged only when missing, so UI additions never appear as raw
-    // keys after an upgrade and operator overrides are never overwritten.
+    
+    
+    
     try {
         meteonexa_sync_packaged_translations($pdo);
     } catch (Throwable $translationPackageError) {
@@ -190,12 +190,12 @@ function meteonexa_db(array $config) : PDO {
     } catch (Throwable $emailTemplateSeedError) {
         if (function_exists('meteonexa_log_event'))meteonexa_log_event('email_template_seed_failed', $emailTemplateSeedError);
     }
-    // Persist a non-reversible deployment-key verifier after a successful
-    // migration/probe. Subsequent requests fail closed immediately if a database
-    // and .app-secret from different deployments are accidentally combined.
+    
+    
+    
     $verifierStatement = $pdo->prepare("INSERT OR IGNORE INTO app_metadata(meta_key,meta_value,updated_at) VALUES('secret_verifier',:value,:updated)");
     $verifierStatement->execute([':value'=>$expectedSecretVerifier, ':updated'=>gmdate('c')]);
-    // Once the DB is successfully bound, remove the one-shot baseline marker.
+    
     $pdo->exec("DELETE FROM app_metadata WHERE meta_key='deployment_unbound'");
     $now = gmdate('c');
     $statement = $pdo->prepare('INSERT INTO app_metadata(meta_key, meta_value, updated_at)

@@ -10,7 +10,7 @@ if(empty($c['available'])||($c['score']??0)<70||($c['maturity']??'')!=='building
 $schemaFile='';foreach(array_merge(glob($root.'/api/database/*.php')?:[],glob($root.'/api/database/migrations/*.php')?:[]) as $file)$schemaFile.=file_get_contents($file)."\n";$mysqlFile=file_get_contents($root.'/api/install/mysql-schema.sql');
 foreach(['account_sync_state','account_activity_profiles','observation_evidence','nowcast_fusion_snapshots'] as $table){if(!str_contains($schemaFile,$table)||!str_contains($mysqlFile,$table))throw new RuntimeException("missing schema $table");}
 if(!str_contains($schemaFile,'function meteonexa_current_schema_version(): int')||!str_contains($schemaFile,'return 35;')||!str_contains($mysqlFile,"VALUES('schema_version','35'"))throw new RuntimeException('schema 35 markers');
-$suite=file_get_contents($root.'/js/suite.js');$app=file_get_contents($root.'/js/app.js')."\n".file_get_contents($root.'/modules/esm/domains/account.mjs');$intel=file_get_contents($root.'/js/weather-intelligence.js');
+$suite=file_get_contents($root.'/modules/esm/domains/suite-route.mjs');$app=file_get_contents($root.'/js/app.js')."\n".file_get_contents($root.'/modules/esm/domains/account.mjs');$intel=file_get_contents($root.'/js/weather-intelligence.js');
 foreach(['renderRouteDepartureComparison','applyRouteDepartureCandidate','[...candidates].sort'] as $x)if(!str_contains($suite,$x))throw new RuntimeException("route:$x");
 foreach(['api/account/sync.php','scheduleAccountFavoritesPush','provided.accountSync'] as $x)if(!str_contains($app,$x))throw new RuntimeException("sync:$x");
 foreach(['verifiedLevelId','renderPersonalConfidence','renderPersonalActivity'] as $x)if(!str_contains($intel,$x))throw new RuntimeException("intel:$x");

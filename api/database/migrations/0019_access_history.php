@@ -10,9 +10,9 @@ return [
             return $schemaVersion;
         }
 
-        // Access-history is an audit/convenience surface and must never make
-        // OTP unavailable. Challenge and history DDL are attempted separately
-        // and schema metadata is advanced only when both tables are present.
+        
+        
+        
         try {
             $pdo->exec("CREATE TABLE IF NOT EXISTS auth_login_challenges (
                 challenge_hash VARCHAR(128) PRIMARY KEY, email_hash VARCHAR(128) NOT NULL, device_id VARCHAR(191) NOT NULL,

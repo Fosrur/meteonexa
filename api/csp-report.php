@@ -1,10 +1,10 @@
 <?php
 declare(strict_types=1);
 
-// CSP telemetry endpoint. Reports are intentionally not persisted with request
-// query strings or client identifiers: only a compact, sanitized security signal
-// is emitted to the server error log. Infrastructure logs may still apply their
-// normal request metadata policy.
+
+
+
+
 header('Cache-Control: no-store, max-age=0');
 header('Content-Type: application/json; charset=utf-8');
 header('X-Content-Type-Options: nosniff');

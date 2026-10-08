@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
-/**
- * Database-backed email copy + a single branded renderer shared by OTP,
- * feedback and future application sections. Rows are seeded only when missing,
- * so an operator can safely edit the text in email_templates without a deploy
- * overwriting the customisation.
- */
+
+
+
+
+
+
 function meteonexa_email_template_defaults() : array {
     return['it'=>['auth_otp'=>['Codice di accesso MeteoNexa', 'ACCESSO SICURO', 'Il tuo codice di accesso', 'Inserisci questo codice per accedere. È valido per {minutes} minuti.', 'Se non hai richiesto tu questo codice, ignora questa email.'], 'bug_report'=>['[MeteoNexa bug] {report_id} · {title}', 'SUPPORTO METEONEXA', 'Nuova segnalazione bug', 'È arrivata una nuova segnalazione dalla sezione {section}.', 'La segnalazione e gli eventuali allegati sono stati inviati direttamente dal server MeteoNexa.'],], 'en'=>['auth_otp'=>['MeteoNexa sign-in code', 'SECURE SIGN-IN', 'Your sign-in code', 'Enter this code to sign in. It is valid for {minutes} minutes.', 'If you did not request this code, ignore this email.'], 'bug_report'=>['[MeteoNexa bug] {report_id} · {title}', 'METEONEXA SUPPORT', 'New bug report', 'A new report was sent from the {section} section.', 'The report and any attachments were sent directly by the MeteoNexa server.'],], 'fr'=>['auth_otp'=>["Code d’accès MeteoNexa", 'CONNEXION SÉCURISÉE', "Votre code d’accès", 'Saisissez ce code pour vous connecter. Il est valable {minutes} minutes.', "Si vous n’avez pas demandé ce code, ignorez cet e-mail."], 'bug_report'=>['[Bug MeteoNexa] {report_id} · {title}', 'ASSISTANCE METEONEXA', 'Nouveau signalement de bug', 'Un nouveau signalement a été envoyé depuis la section {section}.', 'Le signalement et les éventuelles pièces jointes ont été envoyés directement par le serveur MeteoNexa.'],], 'es'=>['auth_otp'=>['Código de acceso de MeteoNexa', 'ACCESO SEGURO', 'Tu código de acceso', 'Introduce este código para acceder. Es válido durante {minutes} minutos.', 'Si no solicitaste este código, ignora este correo.'], 'bug_report'=>['[Bug MeteoNexa] {report_id} · {title}', 'SOPORTE METEONEXA', 'Nuevo informe de error', 'Se ha enviado un nuevo informe desde la sección {section}.', 'El informe y los posibles archivos adjuntos fueron enviados directamente por el servidor MeteoNexa.'],], 'de'=>['auth_otp'=>['MeteoNexa-Anmeldecode', 'SICHERE ANMELDUNG', 'Dein Anmeldecode', 'Gib diesen Code zur Anmeldung ein. Er ist {minutes} Minuten gültig.', 'Wenn du diesen Code nicht angefordert hast, ignoriere diese E-Mail.'], 'bug_report'=>['[MeteoNexa Bug] {report_id} · {title}', 'METEONEXA SUPPORT', 'Neue Fehlermeldung', 'Eine neue Meldung wurde aus dem Bereich {section} gesendet.', 'Die Meldung und mögliche Anhänge wurden direkt vom MeteoNexa-Server versendet.'],],];
 }

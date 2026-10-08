@@ -1,14 +1,14 @@
 <?php
 declare(strict_types=1);
 
-/**
- * Radar4 P3 operational-evidence helpers.
- *
- * P3.1-P3.4 are code-complete. This layer closes the remaining software gap
- * between that code and the live-evidence gate: it can run Radar4 shadow
- * collection server-side, expose exact maturity deficits and persist immutable
- * promotion-study snapshots. It never enables Radar4 production authority.
- */
+
+
+
+
+
+
+
+
 require_once __DIR__ . '/nowcast_helpers.php';
 require_once __DIR__ . '/intelligence_extensions.php';
 require_once __DIR__ . '/probabilistic_nowcast_helpers.php';
@@ -170,12 +170,12 @@ function meteonexa_radar4_p34_persist_review_snapshot(string $deviceId, array $s
     }
 }
 
-/**
- * Server-side Radar4 shadow evidence cycle for registered pipeline locations.
- * Reuses calibration models/observations already fetched by the scheduled
- * worker; additional sources are provider-cached. This makes P3 live evidence
- * collection independent from opening the PWA.
- */
+
+
+
+
+
+
 function meteonexa_radar4_live_shadow_cycle(PDO $pdo, array $config, array $loc, array $calibration): array {
     if (($config['radar4']['mode'] ?? 'shadow') !== 'shadow') {
         return ['available'=>false, 'status'=>'off', 'reason'=>'radar4-shadow-disabled'];

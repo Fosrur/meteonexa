@@ -4,7 +4,8 @@ import json,sys
 ROOT=Path(sys.argv[1]).resolve() if len(sys.argv)>1 else Path(__file__).resolve().parents[1]
 errors=[]
 def text(rel): return (ROOT/rel).read_text(encoding='utf-8')
-ht=text('.htaccess'); deploy=text('docker/deploy-production.sh'); mode=text('docker/maintenance-mode.sh'); html=text('maintenance.html'); js=text('js/maintenance.js'); lifecycle=text('modules/esm/domains/app-lifecycle.mjs'); status_api=text('api/system/maintenance-status.php'); browser_router=text('qa/php-browser-router.php'); workflow=text('.github/workflows/meteonexa-tests.yml'); notifications=text('modules/esm/domains/notifications.mjs')
+ht=text('.htaccess'); deploy=text('docker/deploy-production.sh'); mode=text('docker/maintenance-mode.sh'); html=text('maintenance.html'); js=text('js/maintenance.js'); lifecycle=text('modules/esm/domains/app-lifecycle.mjs'); status_api=text('api/system/maintenance-status.php'); browser_router=text('qa/php-browser-router.php'); workflow=text('.github/workflows/meteonexa-tests.yml'); notifications=text('modules/esm/domains/notifications.mjs')+text('modules/esm/domains/pwa-notifications.mjs')
+app_runtime=text('js/app.js')+''.join(path.read_text(encoding='utf-8') for path in sorted((ROOT/'js/app-components').glob('*.js')))
 for needle in ['/var/lib/meteonexa/maintenance.flag','api/maintenance.php']:
     if needle not in ht: errors.append(f'.htaccess missing {needle}')
 canonical_pos=ht.find('RewriteCond %{HTTP_HOST} ^meteonexa\\.com$')
@@ -68,7 +69,7 @@ if "target.origin !== location.origin" not in js:
     errors.append('maintenance return target must remain same-origin')
 if 'METEONEXA_KEEP_MAINTENANCE' not in deploy: errors.append('deploy cannot retain maintenance through internal replacement checks')
 if 'api/system/status.php' not in deploy: errors.append('deploy must gate release on dynamic system status/schema migration endpoint')
-if 'app-boot-pending' not in text('index.html') or "document.documentElement.classList.remove('app-boot-pending')" not in text('js/app.js'):
+if 'app-boot-pending' not in text('index.html') or "document.documentElement.classList.remove('app-boot-pending')" not in app_runtime:
     errors.append('refresh boot gate missing: login/app surfaces can flash before auth reconciliation')
 seed=json.loads(text('api/install/translations.json'))['rows']
 keys={r['text_key'] for r in seed}; locales={r['locale'] for r in seed if r['text_key'].startswith('maintenance.')}

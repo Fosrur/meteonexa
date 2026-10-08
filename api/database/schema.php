@@ -23,11 +23,11 @@ function meteonexa_db_column_exists(PDO $pdo, string $table, string $column) : b
     }
     return false;
 }
-/**
- * First upgrade to the secret-verifier schema: prove that the supplied key can
- * actually decrypt existing protected material before trusting it. This avoids
- * silently binding a copied database to the wrong .app-secret.
- */
+
+
+
+
+
 function meteonexa_verify_existing_secret_material(PDO $pdo, array $config) : void {
     $checked = false;
     if (meteonexa_db_table_exists($pdo, 'smtp_settings')) {
@@ -57,12 +57,12 @@ function meteonexa_verify_existing_secret_material(PDO $pdo, array $config) : vo
         }
     }
 }
-/**
- * Merge translation keys added by newer application packages into an existing
- * runtime database without overwriting operator customisations. The baseline is
- * a seed catalog, not the authoritative runtime copy: only missing locale/key
- * pairs are inserted, and a seed-version marker avoids the scan on every request.
- */
+
+
+
+
+
+
 function meteonexa_sync_baseline_translations(PDO $pdo) : void {
     $baselinePath = meteonexa_baseline_sqlite_path();
     if (!is_file($baselinePath)||(int)@filesize($baselinePath) < 1024)return;
@@ -186,16 +186,16 @@ function meteonexa_sync_packaged_translations(PDO $pdo) : void {
         throw $error;
     }
 }
-/**
- * Import the packaged non-secret SMTP profile directly into the active DB.
- *
- * This is intentionally independent from PDO SQLite: an installation already
- * migrated to MySQL/MariaDB must still be able to restore Aruba's local mail()
- * transport even when pdo_sqlite is unavailable. The package never contains
- * an SMTP password. Existing encrypted credentials are preserved verbatim.
- * After a valid profile is present in the runtime DB, the one-shot seed file
- * is removed.
- */
+
+
+
+
+
+
+
+
+
+
 function meteonexa_sync_packaged_smtp_profile(PDO $pdo) : void {
     if (!meteonexa_db_table_exists($pdo, 'smtp_settings'))return;
     $path = __DIR__ . '/install/smtp-profile-provision.json';
@@ -245,20 +245,20 @@ function meteonexa_sync_packaged_smtp_profile(PDO $pdo) : void {
         meteonexa_scrub_provision_file($path);
     }
 }
-/**
- * Merge the non-secret SMTP delivery profile from the distributable baseline
- * into the active runtime DB. This restores the legacy Aruba local-mail path
- * without putting SMTP passwords back into PHP/config files.
- *
- * Only missing/blank non-secret fields are filled. A configured runtime row,
- * and especially password_encrypted, is never overwritten.
- */
+
+
+
+
+
+
+
+
 function meteonexa_sync_baseline_smtp_profile(PDO $pdo) : void {
     if (!meteonexa_db_table_exists($pdo, 'smtp_settings'))return;
     $current = $pdo->query("SELECT id,host,port,encryption,username,password_encrypted,from_email,from_name,timeout_seconds FROM smtp_settings WHERE id=1")->fetch();
-    // Fast path: after the first successful seed, do not reopen the baseline on
-    // every API request. Password completeness is intentionally irrelevant here;
-    // this profile also exists to support Aruba's local PHP mail transport.
+    
+    
+    
     if (is_array($current)&&trim((string)($current['host']??''))!==''&&(int)($current['port']??0) > 0&&in_array(strtolower(trim((string)($current['encryption']??''))),['ssl', 'tls'], true)&&trim((string)($current['username']??''))!==''&&filter_var(trim((string)($current['from_email']??'')), FILTER_VALIDATE_EMAIL)!==false&&trim((string)($current['from_name']??''))!==''&&(int)($current['timeout_seconds']??0)>=5) {
         return;
     }
@@ -269,8 +269,8 @@ function meteonexa_sync_baseline_smtp_profile(PDO $pdo) : void {
         $seed = $baseline->query("SELECT host,port,encryption,username,from_email,from_name,timeout_seconds FROM smtp_settings WHERE id=1")->fetch();
         if (!is_array($seed))return;
     } catch (Throwable $ignored) {
-        // MySQL-only deployments may intentionally lack PDO SQLite. In that
-        // case the already-migrated runtime DB remains authoritative.
+        
+        
         return;
     }
     $now = gmdate('c');

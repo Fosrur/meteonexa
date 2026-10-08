@@ -71,9 +71,9 @@ function meteonexa_object_nowcast(PDO $pdo, string $deviceId, string $locationKe
         $radius = round(2.5 + $minute *(1 - $confidence / 100) * .18 +($minute / 90) * 4, 1);
         $cone[] =['minute'=>$minute, 'distanceKm'=>$distance, 'radiusKm'=>$radius];
     }
-    // ETA verification must never use the same fusion probability that produced
-    // the forecast as its own ground truth. Only rows closed by the independent
-    // observation verifier are eligible for the single-sample UI indicator.
+    
+    
+    
     $verification =['available'=>false, 'errorMinutes'=>null, 'predictedAt'=>null, 'sampleAt'=>null, 'basis'=>'independent-observation-ledger'];
     if (meteonexa_db_table_exists($pdo, 'radar_eta_predictions')) {
         try {

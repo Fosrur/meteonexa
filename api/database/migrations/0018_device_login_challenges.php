@@ -10,10 +10,10 @@ return [
             return $schemaVersion;
         }
 
-        // Device-bound email-login challenges. This migration is deliberately
-        // non-fatal: shared-hosting deployments can briefly expose a partially
-        // migrated schema while files are being replaced. request-code.php has
-        // a protected filesystem challenge fallback, so login must stay usable.
+        
+        
+        
+        
         try {
             $pdo->exec("CREATE TABLE IF NOT EXISTS auth_login_challenges (
                 challenge_hash VARCHAR(128) PRIMARY KEY,

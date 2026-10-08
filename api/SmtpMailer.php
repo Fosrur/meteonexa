@@ -6,7 +6,7 @@ require_once __DIR__ . '/backend_i18n.php';
 final class SmtpMailer
 {
     private array $config;
-    /** @var resource|null */
+    
     private $socket = null;
 
     public function __construct(array $config)
@@ -34,7 +34,7 @@ final class SmtpMailer
         if (preg_match('/^[A-Za-z0-9.-]+$/', $host) !== 1 || $port < 1 || $port > 65535) {
             throw new RuntimeException('SMTP_SERVER_INVALID');
         }
-        // Credentials must never be sent over an unencrypted SMTP transport.
+        
         if (!in_array($encryption, ['ssl', 'tls'], true)) {
             throw new RuntimeException('SMTP_INSECURE_TRANSPORT');
         }
@@ -42,9 +42,9 @@ final class SmtpMailer
         $transport = $encryption === 'ssl' ? 'ssl://' : 'tcp://';
         $errno = 0;
         $errstr = '';
-        // Require TLS 1.2 or newer for both implicit TLS (465) and
-        // STARTTLS. PHP versions lacking the TLS 1.2 client constant are too old
-        // for this deployment and are rejected rather than silently downgrading.
+        
+        
+        
         if (!defined('STREAM_CRYPTO_METHOD_TLSv1_2_CLIENT')) {
             throw new RuntimeException('SMTP_TLS_VERSION_UNSUPPORTED');
         }
@@ -66,17 +66,17 @@ final class SmtpMailer
                 if ($crypto !== true) {
                     throw new RuntimeException('SMTP_TLS_FAILED');
                 }
-                // Capabilities can change after STARTTLS, so always issue EHLO
-                // again before choosing the authentication mechanism.
+                
+                
                 $ehloResponse = $this->command('EHLO ' . $hostname, [250]);
             }
 
             if ($username !== '') {
-                // Brevo advertises PLAIN, LOGIN and CRAM-MD5. Prefer AUTH PLAIN:
-                // it was verified against smtp-relay.brevo.com on STARTTLS/587,
-                // while AUTH LOGIN can be rejected with 535 for the same valid
-                // credentials. The base64 payload stays inside the TLS session
-                // and is never included in errors/log output.
+                
+                
+                
+                
+                
                 $authCaps = strtoupper($ehloResponse);
                 if (preg_match('/(?:^|\r?\n)250[- ]AUTH(?:=|\s)([^\r\n]+)/i', $ehloResponse, $m) === 1) {
                     $methods = preg_split('/\s+/', strtoupper(trim((string)$m[1]))) ?: [];
@@ -88,7 +88,7 @@ final class SmtpMailer
                     $payload = base64_encode("\0" . $username . "\0" . $password);
                     $this->command('AUTH PLAIN ' . $payload, [235], true);
                 } elseif (in_array('LOGIN', $methods, true) || str_contains($authCaps, 'AUTH LOGIN')) {
-                    // Generic fallback for SMTP servers that do not advertise PLAIN.
+                    
                     $this->command('AUTH LOGIN', [334]);
                     $this->command(base64_encode($username), [334], true);
                     $this->command(base64_encode($password), [235], true);
@@ -114,14 +114,14 @@ final class SmtpMailer
         }
     }
 
-    /**
-     * Shared-hosting OpenSSL builds do not all accept an explicit TLS bitmask on
-     * an implicit-TLS (smtps/465) stream. Try the strict context first; when the
-     * failure happens before SMTP starts, retry once with OpenSSL negotiation
-     * and then verify that the negotiated protocol is still TLS 1.2+.
-     *
-     * @return resource
-     */
+    
+
+
+
+
+
+
+
     private function openSocket(string $transport, string $host, int $port, int $timeout, int $cryptoMethod, string $encryption)
     {
         if ($encryption !== 'ssl') {
@@ -159,8 +159,8 @@ final class SmtpMailer
         );
         if (is_resource($socket)) return $socket;
 
-        // Compatibility retry is safe only because it occurs before any SMTP
-        // command/credential is sent and certificate validation remains enabled.
+        
+        
         $compatContext = stream_context_create(['ssl'=>$baseSsl]);
         $socket = @stream_socket_client(
             $transport . $host . ':' . $port,
@@ -318,8 +318,8 @@ final class SmtpMailer
         }
         $code = (int)substr($response, 0, 3);
         if (!in_array($code, $expected, true)) {
-            // Never propagate provider responses or SMTP commands: they may
-            // contain addresses, server banners or other deployment details.
+            
+            
             $safeCode = $code >= 100 && $code <= 599 ? (string)$code : 'UNKNOWN';
             throw new RuntimeException('SMTP_ERROR_' . $safeCode);
         }

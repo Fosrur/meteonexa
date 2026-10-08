@@ -1,8 +1,4 @@
-/* MeteoNexa — UX/readability hotfix: devices, Route, History, Advanced, Intelligence. */
 
-/* Devices/accesses: desktop dialogs should use the available canvas instead of
-   creating an unnecessary inner scrollbar. Small/short viewports keep the
-   existing safe scroll behaviour. */
 @media (min-width:901px) and (min-height:720px){
   .devices-access-dialog{width:min(1120px,calc(100vw - 56px))!important;max-width:1120px!important;max-height:none!important;overflow:visible!important}
   .devices-access-dialog>form.dialog-layout{max-height:none!important;height:auto!important;overflow:visible!important}
@@ -16,9 +12,6 @@
   .devices-access-dialog .dialog-body{overflow:auto!important}
 }
 
-/* Route controls: date, time and travel mode share exactly the same visual
-   height. This matters especially in tablet landscape where mixed native/custom
-   controls otherwise jump by several pixels. */
 #page-route .route-datetime .meteo-date-trigger,
 #page-route .route-datetime .meteo-select-control,
 #page-route .route-datetime .meteo-select-trigger{
@@ -32,8 +25,6 @@
   #page-route .route-datetime .meteo-select-trigger{height:50px!important;min-height:50px!important;max-height:50px!important}
 }
 
-/* History toolbar: two clear layers, location/quick ranges above and the active
-   period/actions below. No crowded 3-column legacy bar. */
 #page-history .history-toolbar-panel{display:grid!important;grid-template-columns:1fr!important;gap:18px!important;padding:24px!important;overflow:visible!important}
 #page-history .history-toolbar-head{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:18px!important;align-items:center!important;padding-bottom:18px!important;border-bottom:1px solid var(--line)!important}
 #page-history .history-location-card{padding:0!important}
@@ -63,9 +54,6 @@
   #page-history .history-quick-actions button{width:100%!important;padding-inline:8px!important}
 }
 
-/* Advanced nowcast: real 15-minute observations/forecast buckets, with a
-   relative rain bar and an explicit trend marker. This makes equal values
-   visually equal instead of looking like a decorative repeated timeline. */
 #page-advanced .advanced-nowcast-timeline{display:grid!important;grid-template-columns:repeat(8,minmax(72px,1fr))!important;gap:8px!important;margin-top:16px!important;overflow-x:auto!important;padding:2px 2px 7px!important;scroll-snap-type:x proximity!important}
 #page-advanced .advanced-nowcast-slot{min-width:72px!important;min-height:116px!important;padding:10px 8px!important;display:grid!important;grid-template-rows:auto 54px auto auto!important;gap:5px!important;align-items:end!important;text-align:center!important;border:1px solid var(--line)!important;border-radius:14px!important;background:var(--surface-faint)!important;scroll-snap-align:start!important}
 #page-advanced .advanced-nowcast-slot>small{color:var(--muted)!important;font-size:.66rem!important;font-weight:750!important}
@@ -77,8 +65,6 @@
 #page-advanced .advanced-nowcast-slot[data-trend="down"] em{color:#83b9ef!important}
 #page-advanced .advanced-official-note{margin-top:12px!important;padding:11px 13px!important;border:1px solid rgba(244,190,75,.34)!important;border-radius:13px!important;background:rgba(244,190,75,.07)!important;color:var(--text-soft)!important;font-size:.76rem!important;line-height:1.5!important}
 
-/* Advanced model cards: readable six-point forecast strips rather than tiny
-   compressed sparkline geometry. */
 #page-advanced .advanced-model-panel>.panel-title{margin-bottom:24px!important}
 #page-advanced .advanced-model-panel>.suite-model-summary{margin-top:0!important;margin-bottom:18px!important}
 #page-advanced .advanced-model-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important;align-items:stretch!important}
@@ -95,22 +81,17 @@
 @media(max-width:760px){.model-hour-strip{grid-template-columns:repeat(3,minmax(0,1fr))!important}.model-hour-point{grid-template-rows:auto auto 28px auto!important}.model-hour-point>span{height:28px!important}.model-hour-point>span i{height:calc(26px * var(--rain,0))!important}}
 @media(max-width:390px){.model-hour-strip{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 
-/* Intelligence model comparison: one card per readable lane. Ensemble keeps a
-   full-width featured position, individual models use two columns on desktop. */
 #page-intelligence .model-comparison{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:14px!important;align-items:stretch!important}
 #page-intelligence .model-comparison .model-card{min-width:0!important;height:100%!important;overflow:visible!important}
 #page-intelligence .model-comparison .ensemble-model-card{grid-column:1/-1!important}
 #page-intelligence .model-readable-chart{height:auto!important;min-height:0!important;margin-top:12px!important;overflow:visible!important;background:none!important}
 @media(max-width:980px){#page-intelligence .model-comparison{grid-template-columns:1fr!important}}
 
-/* Skill and changes must stay visually balanced in the shared two-column row. */
 #page-intelligence .intelq-quality-grid{align-items:stretch!important}
 #page-intelligence #intelq-skill-panel,#page-intelligence #intelq-change-panel{height:100%!important;min-height:360px!important;display:flex!important;flex-direction:column!important}
 #page-intelligence #intelq-skill-panel>.intelq-skill-table,#page-intelligence #intelq-change-panel>#intelq-change-content{flex:1 1 auto!important}
 @media(max-width:980px){#page-intelligence #intelq-skill-panel,#page-intelligence #intelq-change-panel{min-height:0!important}}
 
-/* Panels: clearer visual hierarchy and inputs that do not look like tiny
-   native number boxes. */
 #page-intelligence .personal-feature-grid{align-items:stretch!important}
 #page-intelligence .personal-feature-grid>.glass-panel{height:100%!important;min-height:420px!important}
 #page-intelligence .personal-confidence-panel{background:radial-gradient(circle at 12% 0,rgba(73,218,201,.10),transparent 34%),var(--surface-panel,rgba(6,26,51,.9))!important}
@@ -150,8 +131,6 @@
 @media(max-width:760px){#page-advanced .model-forecast-strip{grid-template-columns:repeat(3,minmax(0,1fr))!important}#page-advanced .model-hour-cell{grid-template-rows:auto auto 28px auto!important}#page-advanced .model-hour-rain{height:28px!important}#page-advanced .model-hour-rain i{height:calc(26px * var(--rain,0))!important}}
 @media(max-width:390px){#page-advanced .model-forecast-strip{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 
-/* in-panel preloaders. Async articles keep their own loading state so
-   the user never sees a frozen placeholder while a server pipeline/API call is running. */
 article.glass-panel{position:relative}
 .article-inline-preloader{position:absolute;z-index:24;inset:0;display:flex;align-items:center;justify-content:center;gap:11px;padding:18px;border-radius:inherit;background:rgba(5,23,46,.88);background:color-mix(in srgb,var(--surface-panel,rgba(5,23,46,.92)) 82%,transparent);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);color:var(--text);text-align:center}
 .article-inline-preloader[hidden]{display:none!important}
@@ -162,7 +141,6 @@ article.is-panel-loading>*:not(.article-inline-preloader){pointer-events:none}
 @media(max-width:560px){.article-inline-preloader{gap:9px;padding:14px}.article-inline-spinner{width:24px;height:24px}.article-inline-preloader strong{font-size:.72rem}}
 @media(prefers-reduced-motion:reduce){.article-inline-spinner{animation-duration:1.8s}}
 
-/* Navigation is never an operation button: fail-safe against stale/nested loader state. */
 .nav-link.button-loading,.mobile-nav-link.button-loading,[data-page].button-loading{pointer-events:auto!important;opacity:1!important}
 .nav-link.button-loading::after,.mobile-nav-link.button-loading::after,[data-page].button-loading::after{display:none!important}
 .nav-link.button-loading>svg,.nav-link.button-loading>span,.mobile-nav-link.button-loading>svg,.mobile-nav-link.button-loading>span,[data-page].button-loading>svg,[data-page].button-loading>span{opacity:1!important}

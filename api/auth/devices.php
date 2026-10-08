@@ -55,17 +55,17 @@ $presentRow = static function(array $row) use ($pdo,$config,$currentSessionHash)
 };
 
 if ($method === 'GET') {
-    // Refresh the current device's approximate location when the browser has
-    // granted geolocation permission. The label is already coarse and contains
-    // no precise coordinate; retaining it follows the same 30-day access history.
+    
+    
+    
     $freshLocation = meteonexa_auth_access_location_label();
     if ($freshLocation !== '' && $currentSessionHash !== '') {
         $pdo->prepare('UPDATE auth_access_history SET location_label=:location WHERE session_hash=:session AND email_hash=:email')
             ->execute([':location'=>$freshLocation,':session'=>$currentSessionHash,':email'=>$emailHash]);
     }
-    // Backfill sessions that were already active before schema 19. The current
-    // browser can be described from this request; older remote sessions remain
-    // intentionally generic because MeteoNexa did not previously retain UA/IP data.
+    
+    
+    
     $activeRows = $pdo->prepare('SELECT session_hash,device_id,created_at,last_seen_at FROM auth_sessions WHERE email_hash=:email');
     $activeRows->execute([':email'=>$emailHash]);
     foreach ($activeRows->fetchAll() ?: [] as $activeRow) {
@@ -83,8 +83,8 @@ if ($method === 'GET') {
                 ->execute([':session'=>$hash,':email'=>$emailHash,':device'=>(string)$activeRow['device_id'],':created'=>(int)$activeRow['created_at'],':seen'=>(int)$activeRow['last_seen_at']]);
         }
     }
-    // Retain a bounded successful-login history. Exact IP is encrypted at rest and
-    // returned only to the same authenticated identity.
+    
+    
     $cutoff = $now - 30 * 86400;
     $pdo->prepare('DELETE FROM auth_access_history WHERE email_hash=:email AND ended_at>0 AND last_seen_at<:cutoff')
         ->execute([':email'=>$emailHash,':cutoff'=>$cutoff]);
@@ -96,10 +96,10 @@ if ($method === 'GET') {
     $history = array_values(array_filter($presented, static fn(array $row): bool => ($row['active'] ?? false) !== true));
     $history = array_slice($history, 0, 50);
 
-    // "Disconnect other devices" must also cover still-valid trusted-device
-    // credentials that currently have no auth_session. Previous builds counted
-    // only active sessions, so the control could stay disabled even though a
-    // remote browser was still trusted and could sign in again without OTP.
+    
+    
+    
+    
     $revocableDeviceIds = [];
     foreach ($activeDevices as $row) {
         $candidate = (string)($row['deviceId'] ?? '');
@@ -114,7 +114,7 @@ if ($method === 'GET') {
     $revocableOthersCount = count($revocableDeviceIds);
     respond([
         'ok'=>true,
-        'devices'=>array_merge($activeDevices, $history), // compatibility with Verified Trust clients
+        'devices'=>array_merge($activeDevices, $history), 
         'activeDevices'=>$activeDevices,
         'history'=>$history,
         'retentionDays'=>30,
@@ -145,9 +145,9 @@ if ($action === 'deleteHistory') {
 }
 
 if ($action === 'clearHistory') {
-    // Delete only ended/no-longer-active audit rows for this identity. Active
-    // sessions remain untouched even if their audit row is old. The portable
-    // NOT IN form works on both SQLite and MySQL/MariaDB.
+    
+    
+    
     $active = $pdo->prepare('SELECT session_hash FROM auth_sessions WHERE email_hash=:email');
     $active->execute([':email'=>$emailHash]);
     $activeHashes = array_values(array_filter(array_map('strval', $active->fetchAll(PDO::FETCH_COLUMN) ?: [])));
@@ -182,9 +182,9 @@ if ($action === 'revokeOthers') {
         if ($hash !== '') $pdo->prepare('DELETE FROM auth_sessions WHERE session_hash=:session')->execute([':session'=>$hash]);
     }
 
-    // Revoke dormant trusted-device credentials as well. Keep credentials for
-    // the current physical device so "disconnect others" never signs out the
-    // browser that issued the command.
+    
+    
+    
     $trustedRows = $pdo->prepare('SELECT DISTINCT device_id FROM trusted_devices WHERE email_hash=:email AND device_id<>:current AND expires_at>:now');
     $trustedRows->execute([':email'=>$trustedEmailHash,':current'=>$deviceId,':now'=>$now]);
     foreach ($trustedRows->fetchAll(PDO::FETCH_COLUMN) ?: [] as $trustedDevice) {

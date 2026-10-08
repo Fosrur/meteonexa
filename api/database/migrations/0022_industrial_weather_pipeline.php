@@ -4,8 +4,8 @@ return['version'=>22, 'name'=>'industrial-weather-pipeline', 'drivers'=>['mysql'
     if ($driver!=='mysql'||$schemaVersion>=22) {
         return $schemaVersion;
     }
-    // Industrial Weather Pipeline: provider health/SLA, worker runs,
-    // official-alert lifecycle revisions and server-side lightning/radar quality evidence.
+    
+    
     $pdo->exec("CREATE TABLE IF NOT EXISTS weather_provider_health (
             provider_id VARCHAR(96) PRIMARY KEY,status VARCHAR(24) NOT NULL DEFAULT 'unknown',last_attempt_at VARCHAR(40) NOT NULL DEFAULT '',last_success_at VARCHAR(40) NOT NULL DEFAULT '',last_failure_at VARCHAR(40) NOT NULL DEFAULT '',latency_ms INT NOT NULL DEFAULT 0,consecutive_failures INT NOT NULL DEFAULT 0,freshness_seconds INT NULL,details_json MEDIUMTEXT NOT NULL,updated_at VARCHAR(40) NOT NULL
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");

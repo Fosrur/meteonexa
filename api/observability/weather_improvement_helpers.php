@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-/** Post-roadmap metric-driven improvement candidates. Production remains unchanged until canary review. */
+
 function meteonexa_weather_improvement_policy(): array { return [
     'minimumDriftSamplesPerWindow'=>30,
     'relativeMaeDriftThresholdPct'=>15.0,

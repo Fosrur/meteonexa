@@ -5,8 +5,9 @@ root=Path(__file__).resolve().parents[1]; fail=[]
 def ck(v,m): print(('PASS' if v else 'FAIL')+': '+m); fail.append(m) if not v else None
 def t(p): return (root/p).read_text(encoding='utf-8')
 def compact(source): return re.sub(r'\s+', '', source)
-html=t('index.html'); app=t('js/app.js'); advanced=t('js/advanced.js'); suite=t('js/suite.js')
-quality=t('api/intelligence/quality_helpers.php'); radar=t('qa/radar3_production_gate_smoke.php')
+html=t('index.html'); app=t('js/app.js')+''.join(path.read_text(encoding='utf-8') for path in sorted((root/'js/app-components').glob('*.js'))); advanced=t('js/advanced.js'); suite=t('js/suite.js')
+quality=t('api/intelligence/quality_helpers.php')+''.join(path.read_text(encoding='utf-8') for path in sorted((root/'api/intelligence/quality').glob('*.php'))); radar=t('qa/radar3_production_gate_smoke.php')
+model_intelligence=t('modules/esm/domains/model-intelligence.mjs')
 analytics=t('qa/traffic_analytics_removed_smoke.py'); decision=t('api/intelligence/decision_timeline_helpers.php')
 prob=t('api/intelligence/probabilistic_nowcast_helpers.php'); accuracy=t('api/accuracy/public.php')
 watch=t('api/plans/watch_engine.php'); intel=t('js/weather-intelligence.js'); cop=t('api/ai/orchestrator.php'); route=t('api/route/weather_engine.php')
@@ -14,7 +15,7 @@ watch=t('api/plans/watch_engine.php'); intel=t('js/weather-intelligence.js'); co
 m=re.search(r'function\s+meteonexa_intelq_model_definitions\s*\(\s*\)\s*:\s*array\s*\{\s*return\s*\[(.*?)\];\s*\}',quality,re.S)
 providers=re.findall(r"'([a-z0-9_]+)'\s*=>\s*\[",m.group(1)) if m else []
 ck(len(providers)==6,'six canonical provider families are defined server-side')
-ck('loadForecastFusion({ force })' in app and 'loadForecastFusion({ force })' in advanced,'Home/Intelligence/Advanced reuse server fusion evidence')
+ck('loadForecastFusion({ force })' in app and 'loadForecastFusion({ force })' in model_intelligence and 'loadForecastFusion({ force })' in advanced,'Home/Intelligence/Advanced reuse server fusion evidence')
 ck(all(token not in app+advanced+suite for token in ['CONFIG.ECMWF_API','CONFIG.AIFS_API','CONFIG.ICON_API','CONFIG.GFS_API','CONFIG.METEOFRANCE_API','CONFIG.UKMO_API']),'browser has no direct model-provider fan-out')
 ck('20' in radar and 'probation' in radar.lower(),'Radar authority retains evidence-gated probation coverage')
 # Analytics/tracking removal

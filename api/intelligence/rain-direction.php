@@ -18,9 +18,9 @@ if (abs($lat) > 90 || abs($lon) > 180) {
     respond(['ok'=>false,'code'=>'INVALID_COORDINATES','message'=>meteonexa_backend_text('api.backend.invalid_coordinates')], 422);
 }
 
-// This helper is public/guest-safe and never persists exact coordinates. Two
-// decimals are sufficient for a mesoscale direction estimate and preserve the
-// same privacy boundary as the public Intelligence demo.
+
+
+
 $lat = round($lat, 2);
 $lon = round($lon, 2);
 $lonStep = .18 / max(.45, cos(deg2rad($lat)));
@@ -91,8 +91,8 @@ try {
     ]);
 } catch (Throwable $error) {
     if (function_exists('meteonexa_log_event')) meteonexa_log_event('rain_direction_upstream_degraded', $error);
-    // Upstream 429/5xx is a degraded optional signal, not an application error.
-    // Return HTTP 200 so Safari/Firefox do not surface a noisy failed XHR and
-    // the rest of Intelligence remains usable.
+    
+    
+    
     respond(['ok'=>true,'available'=>false,'degraded'=>true,'reason'=>'upstream_unavailable','source'=>'MeteoNexa server proxy']);
 }

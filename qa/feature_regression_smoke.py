@@ -5,7 +5,7 @@ root=Path(__file__).resolve().parents[1]; fail=[]
 def ck(v,m): print(('PASS' if v else 'FAIL')+': '+m); fail.append(m) if not v else None
 def t(p): return (root/p).read_text(encoding='utf-8')
 def compact(source): return re.sub(r'\s+', '', source)
-html=t('index.html');dec=t('api/intelligence/decision_timeline_helpers.php');prob=t('api/intelligence/probabilistic_nowcast_helpers.php');acc=t('api/accuracy/public.php');app=t('js/app.js');watch=t('api/plans/watch_engine.php')
+html=t('index.html');dec=t('api/intelligence/decision_timeline_helpers.php');prob=t('api/intelligence/probabilistic_nowcast_helpers.php');acc=t('api/accuracy/public.php');app=t('js/app.js')+'\n'+'\n'.join(path.read_text(encoding='utf-8') for path in sorted((root/'js/app-components').glob('*.js')));watch=t('api/plans/watch_engine.php')
 activities=['run','bike','motorcycle','sea','trekking','kids','pets','worksite','commute','event','photography']
 ck(all(("'"+a+"'=>") in dec and ('data-decision-activity="'+a+'"') in html for a in activities),'Decision Timeline keeps 11 activity profiles')
 ck("timeShiftMinutes'=>30" in dec and "rainProbabilityDelta'=>15" in dec and "agreementDelta'=>15" in dec,'Forecast Change materiality thresholds remain')

@@ -1,18 +1,18 @@
 <?php
 declare(strict_types=1);
 
-/**
- * Resolve MeteoNexa runtime storage outside the web server document root.
- *
- * Priority:
- *  1. METEONEXA_STORAGE_PATH (recommended for production and path-stable deploys)
- *  2. the hosting account home directory (HOME / USERPROFILE)
- *  3. the parent of DOCUMENT_ROOT
- *  4. the parent of the application directory (CLI/dev fallback)
- *
- * The automatically selected directory is deployment-specific to avoid clashes
- * between multiple copies of the application owned by the same account.
- */
+
+
+
+
+
+
+
+
+
+
+
+
 function meteonexa_application_root(): string
 {
     $root = realpath(dirname(__DIR__));
@@ -74,10 +74,10 @@ function meteonexa_external_storage_candidate(): string
         if (is_dir($parent) && is_writable($parent)) return $candidate;
     }
 
-    // Shared hosting (notably configurations where DOCUMENT_ROOT is the only
-    // writable account directory) may legitimately have no writable parent
-    // outside the web root. Do not return a path that we already know cannot be
-    // created: the resolver below will use the protected compatibility storage.
+    
+    
+    
+    
     throw new RuntimeException('EXTERNAL_STORAGE_PATH_UNAVAILABLE');
 }
 
@@ -93,8 +93,8 @@ function meteonexa_storage_path(): string
         $candidate = rtrim($configured, DIRECTORY_SEPARATOR);
         if ($candidate === '') throw new RuntimeException('STORAGE_PATH_INVALID');
         if ($documentRoot !== '' && meteonexa_path_is_within($candidate, $documentRoot)) {
-            // An explicitly configured production path is always strict: never
-            // silently weaken a deployment that asked for external storage.
+            
+            
             throw new RuntimeException('STORAGE_INSIDE_DOCUMENT_ROOT');
         }
         return $resolved = $candidate;
@@ -103,11 +103,11 @@ function meteonexa_storage_path(): string
     try {
         return $resolved = meteonexa_external_storage_candidate();
     } catch (Throwable $error) {
-        // Compatibility fallback for shared hosting accounts that expose no
-        // writable persistent directory outside DOCUMENT_ROOT. The directory is
-        // protected at three levels: root .htaccess, api/.htaccess and its own
-        // Require-all-denied .htaccess. This keeps existing installations usable
-        // instead of turning public APIs (especially i18n) into HTTP 503 errors.
+        
+        
+        
+        
+        
         $legacy = meteonexa_legacy_storage_path();
         if (!is_dir($legacy) && !@mkdir($legacy, 0770, true) && !is_dir($legacy)) {
             throw new RuntimeException('STORAGE_UNAVAILABLE');
@@ -203,10 +203,10 @@ function meteonexa_legacy_storage_path(): string
 }
 
 
-/**
- * Harden the shared-hosting compatibility storage before any runtime file is
- * created there. This is a fallback only; external storage remains preferred.
- */
+
+
+
+
 function meteonexa_ensure_protected_web_storage(string $directory): void
 {
     if (!is_dir($directory)) return;
@@ -278,18 +278,18 @@ function meteonexa_copy_directory_tree(string $source, string $destination): voi
     }
 }
 
-/**
- * One-shot upgrade path from releases that stored runtime files in api/storage.
- * It runs only when the external destination is still uninitialized. If both
- * locations contain runtime state, fail closed instead of guessing which copy
- * is authoritative.
- */
+
+
+
+
+
+
 function meteonexa_migrate_legacy_storage(string $destination): void
 {
     $legacy = meteonexa_legacy_storage_path();
-    // On shared-hosting fallback the legacy directory is intentionally also the
-    // active destination. There is nothing to migrate and, importantly, this is
-    // not a conflict.
+    
+    
+    
     if (meteonexa_normalize_filesystem_path($legacy) === meteonexa_normalize_filesystem_path($destination)) {
         meteonexa_ensure_protected_web_storage($legacy);
         return;
@@ -307,14 +307,14 @@ function meteonexa_migrate_legacy_storage(string $destination): void
     }
 
     try {
-        // Another worker may have completed the move while this request waited.
+        
         if (!is_dir($legacy) || !meteonexa_directory_has_runtime_state($legacy)) return;
         if (meteonexa_directory_has_runtime_state($destination)) {
             throw new RuntimeException('LEGACY_STORAGE_CONFLICT');
         }
 
-        // Atomic rename is preferred: it avoids leaving a sensitive duplicate in
-        // the document root and preserves the exact SQLite/secret pairing.
+        
+        
         if (!file_exists($destination) && @rename($legacy, $destination)) {
             @chmod($destination, 0770);
         } else {
@@ -344,11 +344,11 @@ function meteonexa_migrate_legacy_storage(string $destination): void
     }
 }
 
-/**
- * Create the per-installation runtime SQLite database from the sanitized
- * read-only baseline. This lives in the storage layer so even endpoints that
- * only need translations cannot accidentally make SQLite create an empty DB.
- */
+
+
+
+
+
 function meteonexa_prepare_sqlite_database(string $databasePath): void
 {
     if (is_file($databasePath) && (int)@filesize($databasePath) > 0) return;
@@ -372,9 +372,9 @@ function meteonexa_prepare_sqlite_database(string $databasePath): void
     try {
         if (is_file($databasePath) && (int)@filesize($databasePath) > 0) return;
 
-        // The distributable baseline must never contain deployment-bound
-        // material. Keep this check here because every DB entry-point passes
-        // through this initializer, including i18n-only requests.
+        
+        
+        
         $seedPdo = new PDO('sqlite:' . $seed, null, null, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
@@ -408,11 +408,11 @@ function meteonexa_prepare_sqlite_database(string $databasePath): void
     }
 }
 
-/**
- * Resolve a readable translations database without making the public catalog
- * depend on writable runtime storage. Runtime/legacy data wins so DB edits keep
- * working; the sanitized packaged baseline is the final read-only fallback.
- */
+
+
+
+
+
 function meteonexa_translation_sqlite_path(): string
 {
     try {
@@ -427,10 +427,10 @@ function meteonexa_translation_sqlite_path(): string
     }
 }
 
-/**
- * Return a ready-to-open runtime DB path. Migration and baseline creation are
- * deliberately centralized here so mutable API consumers behave consistently.
- */
+
+
+
+
 function meteonexa_runtime_sqlite_path(): string
 {
     $storage = meteonexa_storage_path();

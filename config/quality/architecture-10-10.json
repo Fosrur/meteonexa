@@ -1,0 +1,9 @@
+{
+  "final_targets": {
+    "js/app.js": 1000,
+    "js/suite.js": 600,
+    "js/app-components/*.js": 500,
+    "modules/esm/**/*.mjs": 500,
+    "api/**/*.php": 500
+  }
+}

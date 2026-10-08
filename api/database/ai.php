@@ -82,8 +82,8 @@ function meteonexa_load_ai(array $config): array
     if ($model === '') $model = $provider === 'groq' ? 'openai/gpt-oss-20b' : 'nvidia/nemotron-3-super-120b-a12b:free';
     $freeOnly = (bool)($config['ai']['openrouter_free_only'] ?? true);
     if ($provider === 'openrouter' && $freeOnly && $model !== 'nvidia/nemotron-3-super-120b-a12b:free') {
-        // Persist the effective zero-cost router as well, so diagnostics/DB state
-        // match what is actually sent to OpenRouter. The API key is untouched.
+        
+        
         try {
             $update = $pdo->prepare('UPDATE ai_settings SET model=:model, updated_at=:updated WHERE id=1 AND provider=:provider');
             $update->execute([':model'=>'nvidia/nemotron-3-super-120b-a12b:free', ':updated'=>gmdate('c'), ':provider'=>'openrouter']);
@@ -107,8 +107,8 @@ function meteonexa_load_ai(array $config): array
 function meteonexa_scrub_provision_file(string $path): void
 {
     if (!is_file($path)) return;
-    // Best-effort overwrite before deletion. Some shared-hosting deployments
-    // may deny writes to application files; api/install is web-denied anyway.
+    
+    
     $size = (int)@filesize($path);
     if ($size > 0 && is_writable($path)) {
         @file_put_contents($path, str_repeat('0', min($size, 4096)), LOCK_EX);
@@ -118,11 +118,11 @@ function meteonexa_scrub_provision_file(string $path): void
 
 function meteonexa_recover_ai_from_legacy_sqlite(PDO $target, array $config): bool
 {
-    // MySQL migration safety net: an existing SQLite runtime is deliberately
-    // kept as rollback. If the MySQL ai_settings row is missing/unusable, copy
-    // the provider credential from that rollback DB only when it can be
-    // decrypted with the ACTIVE deployment secret. No ciphertext is copied
-    // blindly across installations with a different .app-secret.
+    
+    
+    
+    
+    
     if (meteonexa_pdo_driver($target) !== 'mysql') return false;
     $legacyPath = meteonexa_runtime_sqlite_path();
     if (!is_file($legacyPath) || (int)@filesize($legacyPath) < 1024) return false;
@@ -161,19 +161,19 @@ function meteonexa_provision_ai_if_missing(array $config): bool
     $sealedBootstrapPath = __DIR__ . '/install/ai-provider-bootstrap.json';
     $provisionPath = __DIR__ . '/install/ai-provider-provision.json';
 
-    // Runtime DB is authoritative. Once a usable row exists, remove any
-    // one-shot provisioning material left by the update package.
+    
+    
     if (meteonexa_ai_row_is_usable($pdo, $config)) {
         meteonexa_scrub_provision_file($sealedBootstrapPath);
         meteonexa_scrub_provision_file($provisionPath);
         return false;
     }
 
-    // One-shot shared-hosting provisioning. The update package may carry a
-    // server-only credential file under api/install (Require all denied). It is
-    // read only when ai_settings is not usable, immediately encrypted with the
-    // ACTIVE deployment secret and persisted to ai_settings, then scrubbed.
-    // This avoids binding the bootstrap ciphertext to a different .app-secret.
+    
+    
+    
+    
+    
     if (is_file($provisionPath)) {
         $raw = @file_get_contents($provisionPath);
         $data = is_string($raw) ? json_decode($raw, true) : null;
@@ -187,7 +187,7 @@ function meteonexa_provision_ai_if_missing(array $config): bool
                     'site_url'=>(string)($data['site_url'] ?? ''),
                     'site_name'=>(string)($data['site_name'] ?? 'MeteoNexa'),
                 ], $plain);
-                // Clear the in-memory copy as soon as possible as well.
+                
                 $plain = '';
                 meteonexa_scrub_provision_file($provisionPath);
                 meteonexa_scrub_provision_file($sealedBootstrapPath);
@@ -199,8 +199,8 @@ function meteonexa_provision_ai_if_missing(array $config): bool
         }
     }
 
-    // Backward-compatible sealed bootstrap. This works only when the archive
-    // was prepared for the same deployment secret.
+    
+    
     if (is_file($sealedBootstrapPath)) {
         $raw = @file_get_contents($sealedBootstrapPath);
         $data = is_string($raw) ? json_decode($raw, true) : null;
@@ -223,18 +223,18 @@ function meteonexa_provision_ai_if_missing(array $config): bool
         }
     }
 
-    // Migration recovery: when MySQL became authoritative but its AI row was
-    // not carried over, recover from the intentionally retained SQLite rollback
-    // database before requiring any operator action.
+    
+    
+    
     if (meteonexa_recover_ai_from_legacy_sqlite($pdo, $config)) {
         meteonexa_scrub_provision_file($sealedBootstrapPath);
         meteonexa_scrub_provision_file($provisionPath);
         return true;
     }
 
-    // Generic deployment fallback: environment configuration is imported once
-    // and re-encrypted into the runtime DB, exactly like the SMTP provisioning
-    // path. The DB remains authoritative afterwards.
+    
+    
+    
     $runtimeAi = (array)($config['ai'] ?? []);
     $provider = strtolower(trim((string)($runtimeAi['provider'] ?? 'openrouter')));
     if (!in_array($provider, ['openrouter','groq'], true)) $provider = 'openrouter';

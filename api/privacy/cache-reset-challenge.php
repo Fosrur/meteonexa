@@ -17,15 +17,15 @@ $pdo = meteonexa_db($config);
 $tr = static fn(string $source, array $params =[]) : string=>meteonexa_auth_translate($pdo, $language, $source, $params);
 $secret = auth_secret($config);
 $action = strtolower(trim((string)($data['action']??'start')));
-// This endpoint is guest-only. If a stale server session survived a browser
-// reset, close it before issuing a guest verification challenge. A verified
-// email session must never be silently re-used as a guest receipt identity.
+
+
+
 $session = meteonexa_current_auth_session($pdo, $config, false);
 if (is_array($session)) {
     $proofOk = meteonexa_verify_device_proof($pdo, (string)($session['device_id']??''));
     if ($proofOk) {
-        // A valid authenticated session must use the server-derived recipient flow.
-        // Do not revoke it merely because the guest challenge endpoint was called.
+        
+        
         respond(['ok'=>false, 'code'=>'AUTH_SESSION_ACTIVE', 'message'=>$tr('settings.cache.verify.auth_session_closed')], 409);
     }
     try {

@@ -44,8 +44,8 @@ try {
         try {
             $capture = meteonexa_backfill_radar_location($pdo, $config, ['id'=>$id, 'latitude'=>$lat, 'longitude'=>$lon], 4);
         } catch (Throwable $error) {
-            // A failed backfill must not prevent registration; fall back to the
-            // single latest observation and let the scheduled capture grow it.
+            
+            
             try { $capture = meteonexa_capture_radar_location($pdo, $config, ['id'=>$id, 'latitude'=>$lat, 'longitude'=>$lon]); }
             catch (Throwable $captureError) { $capture = ['captured'=>false, 'message'=>meteonexa_backend_text('api.backend.radar_capture_failed')]; }
         }

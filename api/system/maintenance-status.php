@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-/**
- * Lightweight deployment-state probe.
- *
- * This endpoint deliberately has no DB/bootstrap dependency: an already-open
- * MeteoNexa session must be able to discover maintenance while containers and
- * database migrations are transitioning.
- */
+
+
+
+
+
+
+
 $flag = trim((string)(getenv('METEONEXA_MAINTENANCE_FLAG') ?: '/var/lib/meteonexa/maintenance.flag'));
 if ($flag === '') {
     $flag = '/var/lib/meteonexa/maintenance.flag';

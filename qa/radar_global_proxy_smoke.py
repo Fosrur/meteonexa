@@ -4,7 +4,7 @@ import sys
 root=Path(__file__).resolve().parents[1]
 frames=(root/'api/radar/frames.php').read_text(encoding='utf-8')
 tile=(root/'api/radar/tile.php').read_text(encoding='utf-8')
-controller=(root/'modules/esm/domains/radar-controller.mjs').read_text(encoding='utf-8')
+controller=''.join((root/name).read_text(encoding='utf-8') for name in ['modules/esm/domains/radar-controller.mjs','modules/esm/domains/radar-vector-map.mjs','modules/esm/domains/radar-renderer.mjs','modules/esm/domains/radar-playback.mjs'])
 motion=(root/'modules/esm/domains/radar-motion.mjs').read_text(encoding='utf-8')
 config=(root/'api/config.php').read_text(encoding='utf-8')
 checks={
@@ -13,7 +13,7 @@ checks={
  'browser vector tiles send signed host': "host: frame.tileHost || frame.host || ''" in controller,
  'motion tiles send signed host': "host: frame.tileHost || frame.host || ''" in motion,
  'tile endpoint verifies v2 host-bound signature': "radar-frame-v2" in tile and "$device . '|' . $host . '|' . $path" in tile,
- 'signed v2 tiles do not require metadata lookup': "if (!$validFrameSignature)" in tile and "Compatibility path only for old tabs" in tile,
+ 'signed v2 tiles do not require metadata lookup': bool(__import__('re').search(r'if\s*\(!\$validFrameSignature\)\s*\{[^}]*meteonexa_radar_metadata', tile, __import__('re').S)),
  'provider host remains allowlisted': 'meteonexa_validate_remote_url($host' in tile and 'meteonexa_radar_allowed_hosts($config)' in tile,
  'radar palette is high contrast': '$color = 10;' in frames and 'tileColor ?? 10' in controller,
  'global tile budget is configurable': 'METEONEXA_RADAR_TILE_GLOBAL_HOUR' in config and '30000' in config,

@@ -1,13 +1,13 @@
 <?php
 declare(strict_types=1);
 
-/**
- * Official Warning Hub canonical contract.
- *
- * Official-warning evidence remains authoritative and distinct from MeteoNexa
- * forecast/nowcast output. Provider adapters normalize CAP/GeoJSON-like rows
- * into this deterministic contract before lifecycle persistence or display.
- */
+
+
+
+
+
+
+
 function meteonexa_official_hub_version(): int { return 1; }
 
 function meteonexa_official_hub_iso(mixed $value): ?string {
@@ -74,7 +74,7 @@ function meteonexa_official_hub_geometry(mixed $geometry): ?array {
     return null;
 }
 
-/** CAP polygon uses latitude,longitude pairs; GeoJSON uses longitude,latitude. */
+
 function meteonexa_official_hub_cap_polygon(mixed $value): ?array {
     $raw = trim((string)$value);
     if ($raw === '') return null;
@@ -88,7 +88,7 @@ function meteonexa_official_hub_cap_polygon(mixed $value): ?array {
     return $ring ? ['type' => 'Polygon', 'coordinates' => [$ring]] : null;
 }
 
-/** Convert a CAP circle (lat,lon radiusKm) to a conservative 36-point polygon. */
+
 function meteonexa_official_hub_cap_circle(mixed $value): ?array {
     $raw = trim((string)$value);
     if ($raw === '') return null;
@@ -150,8 +150,8 @@ function meteonexa_official_hub_provider_key(string $source, string $authority, 
     $sourceKey = strtolower(trim($source));
     $authorityKey = strtolower(trim($authority));
     $senderKey = strtolower(trim($sender));
-    // EDR and Atom are transport adapters for the same MeteoAlarm warning
-    // authority; adapter names must not create duplicate canonical events.
+    
+    
     if (str_contains($sourceKey, 'meteoalarm') || str_contains($authorityKey, 'meteoalarm')) return 'meteoalarm';
     if ($senderKey !== '') return $senderKey;
     if ($authorityKey !== '') return $authorityKey;
@@ -252,7 +252,7 @@ function meteonexa_official_hub_normalize_row(array $row, ?float $lat = null, ?f
     ]);
 }
 
-/** Keep the latest version for each event+area while preserving independent areas. */
+
 function meteonexa_official_hub_dedupe(array $rows, ?float $lat = null, ?float $lon = null): array {
     $latest = [];
     foreach ($rows as $raw) {

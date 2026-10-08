@@ -46,7 +46,7 @@ function meteonexa_baseline_catalog(string $language): array
 
 function meteonexa_merged_catalog(PDO $pdo, string $language): array
 {
-    // Baseline provides new build keys; runtime values win so DB edits remain authoritative.
+    
     return array_replace(meteonexa_baseline_catalog($language), meteonexa_catalog($pdo, $language));
 }
 

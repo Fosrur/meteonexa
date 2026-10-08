@@ -3,6 +3,8 @@ from pathlib import Path
 import sys
 root=Path(__file__).resolve().parents[1]
 files={name:(root/name).read_text(encoding="utf-8") for name in ["js/app.js","js/advanced.js","js/suite.js","modules/esm/domains/suite-support.mjs","js/config.js"]}
+app_shell=files["js/app.js"]+"\n"+"\n".join(path.read_text(encoding="utf-8") for path in sorted((root/"js/app-components").glob("*.js")))
+model_intelligence=(root/"modules/esm/domains/model-intelligence.mjs").read_text(encoding="utf-8")
 fusion=(root/"api/weather/fusion.php").read_text(encoding="utf-8")
 err=[]
 for name,text in files.items():
@@ -11,7 +13,7 @@ for name,text in files.items():
     if "https://api.open-meteo.com/v1/ecmwf" in text or "https://api.open-meteo.com/v1/dwd-icon" in text or "https://api.open-meteo.com/v1/gfs" in text or "https://api.open-meteo.com/v1/meteofrance" in text or "ukmo_seamless" in text:
         err.append(f"direct model provider URL remains in browser file: {name}")
 if "weatherFusion: 'api/weather/fusion.php'" not in files["modules/esm/domains/suite-support.mjs"]: err.append("suite support server weather fusion endpoint missing")
-if "loadForecastFusion({ force })" not in files["js/app.js"]: err.append("app Intelligence does not reuse server fusion")
+if "loadForecastFusion({ force })" not in app_shell or "loadForecastFusion({ force })" not in model_intelligence: err.append("app Intelligence does not reuse server fusion")
 if "loadForecastFusion({ force })" not in files["js/advanced.js"]: err.append("Advanced does not reuse server fusion")
 if "'models'=>$modelEvidence" not in fusion: err.append("server normalized model evidence missing")
 print("Server model source: "+("PASS" if not err else "FAIL"))

@@ -14,9 +14,9 @@ require_device_rate_limit($pdo, 'push_inbox_device', $device, 360, 3600);
 $action = strtolower(clean_text($data['action'] ?? 'list', 20, 'list'));
 $now = gmdate('c');
 
-// Retention is deliberately short after a notification has been consumed.
-// Expired event notifications disappear immediately; dismissed rows are kept
-// only for a day, read rows for 3 days, and never-read rows for at most 14 days.
+
+
+
 $pdo->prepare("DELETE FROM push_notifications WHERE expires_at<>'' AND expires_at<=:now")->execute([':now'=>$now]);
 $pdo->prepare("DELETE FROM push_notifications WHERE dismissed_at<>'' AND dismissed_at<:cutoff")->execute([':cutoff'=>gmdate('c', time()-86400)]);
 $pdo->prepare("DELETE FROM push_notifications WHERE read_at<>'' AND read_at<:cutoff")->execute([':cutoff'=>gmdate('c', time()-3*86400)]);

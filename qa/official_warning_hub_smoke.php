@@ -74,6 +74,7 @@ $staleRows=(array)($staleYellow['relevant']??[]);
 $ok(count($staleRows)===2&&($staleRows[0]['severity']??'')==='orange'&&!isset($staleYellow['territorialSeverityVerified']),'stale municipality cache never changes fresh provider warnings');
 
 $appSource=(string)file_get_contents(dirname(__DIR__).'/js/app.js');
+foreach(glob(dirname(__DIR__).'/js/app-components/*.js')?:[] as $appComponent){$appSource.='\n'.(string)file_get_contents($appComponent);}
 $apiSource=(string)file_get_contents(dirname(__DIR__).'/api/official/alerts.php');
 $matchSource=(string)file_get_contents(dirname(__DIR__).'/api/official/administrative_area_match.php');
 $styleSource=(string)file_get_contents(dirname(__DIR__).'/styles/main/99-reliability-patches.css');

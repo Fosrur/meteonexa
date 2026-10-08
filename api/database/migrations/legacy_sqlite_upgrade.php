@@ -37,8 +37,8 @@ function meteonexa_run_sqlite_legacy_upgrade(PDO $pdo, int $schemaVersion, int $
             kicker TEXT NOT NULL DEFAULT '', heading TEXT NOT NULL DEFAULT '', intro TEXT NOT NULL DEFAULT '',
             footer TEXT NOT NULL DEFAULT '', updated_at TEXT NOT NULL, PRIMARY KEY(template_key,locale)
         )");
-            // Kept for upgrade compatibility with early builds. New code uses
-            // app_preferences instead.
+            
+            
             $pdo->exec('CREATE TABLE IF NOT EXISTS browser_preferences (
             preference_key TEXT PRIMARY KEY,
             preference_value TEXT NOT NULL,
@@ -366,7 +366,7 @@ function meteonexa_run_sqlite_legacy_upgrade(PDO $pdo, int $schemaVersion, int $
             $pdo->exec('CREATE INDEX IF NOT EXISTS idx_auth_access_email ON auth_access_history(email_hash,last_seen_at)');
             $pdo->exec('CREATE INDEX IF NOT EXISTS idx_auth_access_session ON auth_access_history(session_hash)');
             $pdo->exec('CREATE INDEX IF NOT EXISTS idx_auth_access_device ON auth_access_history(device_id,last_seen_at)');
-            // Older databases predated oauth_states.language.
+            
             $oauthColumns = array_column($pdo->query('PRAGMA table_info(oauth_states)')->fetchAll(), 'name');
             if (!in_array('language', $oauthColumns, true)) {
                 $pdo->exec("ALTER TABLE oauth_states ADD COLUMN language TEXT NOT NULL DEFAULT 'it'");
@@ -376,48 +376,48 @@ function meteonexa_run_sqlite_legacy_upgrade(PDO $pdo, int $schemaVersion, int $
                 $pdo->exec("ALTER TABLE auth_sessions ADD COLUMN email_encrypted TEXT NOT NULL DEFAULT ''");
             }
             if ($schemaVersion < 9) {
-                // The previous schema stored only an irreversible email HMAC. It is
-                // impossible to reconstruct the full address safely, so existing
-                // sessions are invalidated once and the next OTP login persists the
-                // address encrypted with the active per-installation secret.
+                
+                
+                
+                
                 $pdo->exec('DELETE FROM auth_sessions');
-                // Alerts/notification delivery is now centralized in Settings. Keep
-                // the old page DB-configurable, but disabled by default after upgrade.
+                
+                
                 $visibility = $pdo->prepare('UPDATE ui_visibility SET guest_visible=0, authenticated_visible=0, updated_at=:updated WHERE feature_key=:feature');
                 $visibility->execute([':updated'=>gmdate('c'), ':feature'=>'page.alerts']);
-                // Old notification deep links continue to work client-side, but
-                // newly persisted pending notifications use the canonical
-                // Settings notification center.
+                
+                
+                
                 $pdo->exec("UPDATE push_notifications SET target_url='./#notifications' WHERE target_url='./#alerts'");
             }
             if ($schemaVersion < 10) {
-                // The SMTP activation UI was a short-lived migration mechanism.
-                // Remove its now-unused catalogue entries/markers from runtime DBs.
+                
+                
                 $pdo->exec("DELETE FROM translations WHERE text_key LIKE 'smtp.setup.%'");
                 $pdo->exec("DELETE FROM app_metadata WHERE meta_key LIKE 'smtp_activation_%' OR meta_key LIKE 'smtp_legacy_recovery_%'");
             }
             if ($schemaVersion < 11) {
-                // Optical-flow and synoptic diagnostics were removed from the UI:
-                // they depended on remote analysis paths that were not reliable
-                // enough to present as product features. Visibility configuration
-                // must not keep orphaned feature flags around after upgrade.
+                
+                
+                
+                
                 $pdo->exec("DELETE FROM ui_visibility WHERE feature_key IN ('section.advanced.optical','section.advanced.synoptic')");
             }
             if ($schemaVersion < 12) {
-                // Trusted-device credentials are separate from active sessions. A
-                // normal logout revokes only the session; a full cache/device reset
-                // explicitly revokes this remembered-device credential as well.
+                
+                
+                
                 $pdo->exec('DELETE FROM trusted_devices WHERE expires_at < ' . time());
             }
             if ($schemaVersion < 13) {
-                // AI provider credentials are runtime-only secrets. The table is
-                // intentionally created empty; provisioning stores the key encrypted
-                // with this installation's deployment secret.
+                
+                
+                
                 $pdo->exec("DELETE FROM ai_settings WHERE TRIM(api_key_encrypted) = ''");
             }
             if ($schemaVersion < 14) {
-                // Product capabilities are explicit in UI visibility so
-                // guest/authenticated behavior is deterministic and DB-driven.
+                
+                
                 $visibilitySeed14 = $pdo->prepare('INSERT INTO ui_visibility(feature_key,guest_visible,authenticated_visible,updated_at)
                 VALUES(:feature,:guest,:authenticated,:updated)
                 ON CONFLICT(feature_key) DO UPDATE SET guest_visible=excluded.guest_visible,
@@ -427,8 +427,8 @@ function meteonexa_run_sqlite_legacy_upgrade(PDO $pdo, int $schemaVersion, int $
                 }
             }
             if ($schemaVersion < 3) {
-                // Older builds keyed radar locations only by coordinates. Move
-                // legacy rows to a device-scoped id while preserving frames.
+                
+                
                 $legacyLocations = $pdo->query('SELECT * FROM radar_archive_locations')->fetchAll();
                 foreach ($legacyLocations as $legacy) {
                     $legacyId = (string)($legacy['id']??'');
@@ -448,17 +448,17 @@ function meteonexa_run_sqlite_legacy_upgrade(PDO $pdo, int $schemaVersion, int $
                 }
             }
             if ($schemaVersion < 5) {
-                // Sessions created before encrypted display metadata are invalidated
-                // once instead of retaining legacy plaintext identifiers.
+                
+                
                 $pdo->exec('DELETE FROM auth_sessions');
             }
             if ($schemaVersion < 26) {
                 $pdo->exec("CREATE TABLE IF NOT EXISTS product_metrics_daily (metric_date TEXT NOT NULL,event_name TEXT NOT NULL,event_count INTEGER NOT NULL DEFAULT 0 CHECK(event_count>=0),updated_at TEXT NOT NULL,PRIMARY KEY(metric_date,event_name))");
                 $pdo->exec("CREATE INDEX IF NOT EXISTS idx_product_metrics_event ON product_metrics_daily(event_name,metric_date)");
             }
-            // Translation revision triggers make direct DB edits observable. The
-            // browser can compare a tiny revision hash and only reload the full
-            // catalog when a translation actually changes.
+            
+            
+            
             $pdo->exec("CREATE TRIGGER IF NOT EXISTS translations_revision_insert AFTER INSERT ON translations BEGIN
             INSERT INTO app_metadata(meta_key,meta_value,updated_at) VALUES('translation_revision','1',strftime('%Y-%m-%dT%H:%M:%fZ','now'))
             ON CONFLICT(meta_key) DO UPDATE SET meta_value=CAST(CAST(meta_value AS INTEGER)+1 AS TEXT),updated_at=excluded.updated_at;

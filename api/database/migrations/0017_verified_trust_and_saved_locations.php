@@ -10,7 +10,7 @@ return [
             return $schemaVersion;
         }
 
-        // Verified Trust: server-side model calibration, run history and multi-location.
+        
         $pdo->exec("CREATE TABLE IF NOT EXISTS model_skill_samples (
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
             device_id VARCHAR(191) NOT NULL, location_key VARCHAR(191) NOT NULL,

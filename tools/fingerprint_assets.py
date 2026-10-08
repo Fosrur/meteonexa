@@ -13,7 +13,7 @@ DIST=ROOT/'dist'
 ESBUILD_PROD=ROOT/'.build/esbuild-production'
 MANIFEST_JSON=ROOT/'asset-manifest.json'
 MANIFEST_JS=ROOT/'js/asset-manifest.js'
-ASSETS=[
+STATIC_ASSETS=[
     'css/styles.css','css/advanced.css','css/suite.css','css/intelligence.css','css/decision-timeline.css','css/watch-plan.css','css/copilot.css','css/light-theme.css','css/standalone.css',
     'js/boot-clock.js','js/i18n-runtime.js','js/config.js','js/security-runtime.js','js/custom-controls.js',
 'js/app.js','js/advanced.js','js/suite.js','js/weather-intelligence.js','js/privacy-context.js','js/page-i18n.js',
@@ -24,6 +24,9 @@ ASSETS=[
     'modules/esm/features/route-weather.mjs','modules/esm/features/intelligence.mjs','modules/esm/features/decision-timeline.mjs','modules/esm/features/watch-plan.mjs','modules/esm/features/copilot.mjs',
     'install/installer.css','install/installer.js','diagnostics/diagnostics.css','diagnostics/diagnostics.js','qa/qa.css','qa/qa.js',
 ]
+MODULE_ASSETS=sorted(path.relative_to(ROOT).as_posix() for path in (ROOT/'modules/esm').rglob('*.mjs') if path.is_file())
+APP_COMPONENT_ASSETS=sorted(path.relative_to(ROOT).as_posix() for path in (ROOT/'js/app-components').glob('*.js') if path.is_file())
+ASSETS=list(dict.fromkeys(STATIC_ASSETS+MODULE_ASSETS+APP_COMPONENT_ASSETS))
 ROOT_HTML=['index.html','privacy.html','cookie-policy.html','offline.html']
 # Semantic aliases from previous asset names. They are used only while
 # normalizing an existing work tree; generated public manifests contain only
@@ -132,6 +135,7 @@ def reset_aux_refs(previous:dict[str,str])->None:
 def build()->dict[str,str]:
     if DIST.exists(): shutil.rmtree(DIST)
     manifest={}
+    source_preserving_modules=[]
     require_esbuild='--require-esbuild' in sys.argv or os.environ.get('METEONEXA_REQUIRE_ESBUILD','').strip()=='1'
     for logical in ASSETS:
         source=ROOT/logical
@@ -142,6 +146,8 @@ def build()->dict[str,str]:
             raise SystemExit(f'missing esbuild production asset: {logical}; run npm run build:esm')
         else:
             src=source
+            if logical.endswith('.mjs'):
+                source_preserving_modules.append(logical)
         if not src.is_file(): raise SystemExit(f'missing asset: {logical}')
         rel=Path(logical)
         out_rel=Path('dist')/rel.parent/f'{rel.stem}.{digest(src)}{rel.suffix}'
@@ -149,6 +155,10 @@ def build()->dict[str,str]:
         out.parent.mkdir(parents=True,exist_ok=True)
         shutil.copy2(src,out)
         manifest[logical]='./'+out_rel.as_posix()
+    for logical in source_preserving_modules:
+        sidecar=DIST/logical
+        sidecar.parent.mkdir(parents=True,exist_ok=True)
+        shutil.copy2(ROOT/logical,sidecar)
     return manifest
 
 def rewrite_html(manifest:dict[str,str])->None:

@@ -38,7 +38,7 @@ function clean_device_id(mixed $value): string
 function clean_text(mixed $value, int $maxLength, string $fallback = ''): string
 {
     $text = trim((string)$value);
-    // Remove C0/C1 controls while preserving normal whitespace and Unicode text.
+    
     $text = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F]/u', '', $text) ?? '';
     if ($text === '') return $fallback;
     return meteonexa_text_substr($text, 0, max(1, $maxLength));
@@ -53,10 +53,10 @@ function meteonexa_device_key(): string
     return $value;
 }
 
-/**
- * Binds device-scoped server state to a browser-held random key.
- * Existing installations enroll the key on the first request after upgrade.
- */
+
+
+
+
 function require_ip_rate_limit(PDO $pdo, string $scope, int $limit, int $windowSeconds): void
 {
     $config = load_config();
@@ -90,11 +90,11 @@ function require_device_rate_limit(PDO $pdo, string $scope, string $deviceId, in
     }
 }
 
-/**
- * Non-enrolling device proof used by server-side auth sessions. Unlike
- * require_device_access(), this never creates a new credential and therefore
- * cannot silently rebind an existing email session.
- */
+
+
+
+
+
 function meteonexa_verify_device_proof(PDO $pdo, string $expectedDeviceId): bool
 {
     $requestId = trim((string)($_SERVER['HTTP_X_METEONEXA_DEVICE_ID'] ?? ''));
@@ -114,16 +114,16 @@ function meteonexa_verify_device_proof(PDO $pdo, string $expectedDeviceId): bool
 }
 
 
-/**
- * Require a real server-side email session bound to the same browser device.
- *
- * This is deliberately non-enrolling: private endpoints must never turn an
- * unauthenticated request into a valid device credential before authentication.
- * A valid auth cookie alone is insufficient; the request must also prove the
- * browser-held device key that was enrolled after OTP verification.
- *
- * @return array<string,mixed> Authenticated session metadata.
- */
+
+
+
+
+
+
+
+
+
+
 function require_authenticated_device_session(PDO $pdo, array $config, string $deviceId): array
 {
     require_once __DIR__ . '/auth_session.php';
@@ -135,8 +135,8 @@ function require_authenticated_device_session(PDO $pdo, array $config, string $d
 
     $sessionDeviceId = trim((string)($session['device_id'] ?? ''));
     if ($sessionDeviceId === '' || !meteonexa_verify_device_proof($pdo, $sessionDeviceId)) {
-        // A copied/stale auth cookie is useless without the browser device proof.
-        // Revoke it immediately instead of allowing repeated bearer-only attempts.
+        
+        
         meteonexa_revoke_current_auth_session($pdo, $config);
         respond(['ok'=>false, 'code'=>'AUTH_REQUIRED', 'message'=>'api.security.auth_required'], 401);
     }
@@ -164,9 +164,9 @@ function require_device_access(PDO $pdo, string $deviceId): void
     $statement->execute([':device'=>$deviceId]);
     $row = $statement->fetch();
     if (!is_array($row)) {
-        // First enrollment is bounded both per IP and globally. A device row is
-        // intentionally never pruned independently from its data, because doing
-        // so could let a new key re-enroll an old device id and inherit its state.
+        
+        
+        
         $config = load_config();
         $deviceConfig = (array)($config['device'] ?? []);
         $secret = auth_secret($config);
@@ -189,7 +189,7 @@ function require_device_access(PDO $pdo, string $deviceId): void
             $insert->execute([':device'=>$deviceId, ':hash'=>$keyHash, ':now'=>gmdate('c')]);
             return;
         } catch (PDOException $error) {
-            // A concurrent first request may have enrolled the device. Re-read below.
+            
             $statement->execute([':device'=>$deviceId]);
             $row = $statement->fetch();
         }
@@ -254,7 +254,7 @@ function meteonexa_validate_push_endpoint(string $url, array $allowedPatterns = 
             $pattern = strtolower(rtrim(trim((string)$pattern), '.'));
             if ($pattern === '') continue;
             if (str_starts_with($pattern, '.')) {
-                // A leading dot means a true DNS suffix, never a substring.
+                
                 $suffix = ltrim($pattern, '.');
                 if ($host === $suffix || str_ends_with($host, '.' . $suffix)) {
                     $allowed = true;
@@ -268,8 +268,8 @@ function meteonexa_validate_push_endpoint(string $url, array $allowedPatterns = 
         if (!$allowed) throw new InvalidArgumentException(meteonexa_backend_text('api.security.remote_url_invalid'));
     }
 
-    // Resolve hostname when possible and reject any private/reserved answer. Literal
-    // public IPs were already validated above.
+    
+    
     if (filter_var($host, FILTER_VALIDATE_IP) === false && function_exists('dns_get_record')) {
         $records = @dns_get_record($host, DNS_A | DNS_AAAA);
         if (is_array($records) && $records !== []) {

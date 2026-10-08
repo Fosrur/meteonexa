@@ -80,7 +80,7 @@ for marker in ('CRITICAL_SHELL', 'OPTIONAL_SHELL', 'WARM_OPTIONAL_SHELL', "cache
 install_match = re.search(r"addEventListener\('install'.{0,500}", sw, re.S)
 if not install_match or 'CRITICAL_SHELL' not in install_match.group(0) or 'APP_SHELL' in install_match.group(0):
     fail('service worker install must precache critical shell only')
-notifications = text('modules/esm/domains/notifications.mjs')
+notifications = text('modules/esm/domains/notifications.mjs') + text('modules/esm/domains/pwa-notifications.mjs')
 if 'scheduleOptionalShellWarmup' not in notifications or 'WARM_OPTIONAL_SHELL' not in notifications:
     fail('optional shell warmup is not scheduled from the app')
 
