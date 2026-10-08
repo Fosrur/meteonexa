@@ -193,7 +193,7 @@ d366b3e33ffdb3d214efe0226d0491d701b26f1c45cbb1d2f7946113c1e9039f  ./api/system/s
 09aa9cc2bf195e3fafe1bbe99270d6517932e41a865bd495079c149c405278f2  ./api/weather/fusion.php
 cb3ac771cd80984d75fda7226b7c4861fdde73dc8ac8b0b02a1b30f51536351c  ./api/weather/severe.php
 aa68a62bf31d23649ffdeedf87c585bf608e696d457f8423b94ea60de34f83b3  ./api/web_push.php
-aea4ae2625a5303ad685180f180cd1a61b6ef362db44467635c73b2e8df0f3b1  ./apply_meteonexa_actions_v6_checksum_fix.py
+3c8a3f1026640c9ce69700c435bc28a5632ba21c7518565a3e6b31f8f389ccf9  ./apply_meteonexa_actions_v8_checksum_fix.py
 d08cab224432feca2f06412312519e341f39fb474a1d72c6188bd4e47e73def4  ./asset-manifest.json
 af5339da7ab53a1b08aa5b15ee72f10164ac7c62695adde8997f5f2a3524c417  ./assets/data/world-lines.json
 a103b42946a897344b3015a06482c173652b00e9623bb14b44be6255c32a45e4  ./assets/i18n/de.json
@@ -233,7 +233,7 @@ b56288947d74c271eaf60c9037e39468c56beb821c4740c9edf1c09fa3ecf2f5  ./css/suite.cs
 1ebd4aca18a30327e4c2c31fc832f6fadbd2297fb4e9861dfe25db5fecc92adb  ./diagnostics/diagnostics.css
 834385d4e357e0a8ce4977ea38f114fb204755bf96b0529641fd32e2bde5c9d8  ./diagnostics/diagnostics.js
 9b3f7fbb2df75583552aba10f65821d008b021c4817e29106d9880efb60252de  ./diagnostics/index.php
-3adca6b4167be4362596d53cb771c63aa7c74788a3e5d9204dd2865cfedd3caa  ./dist/build-attestation.json
+08fc0245afecfeead28f022d8ca2c18e7b21f598a12d1ab966300cb2d24fe173  ./dist/build-attestation.json
 0b369fa3eb461705ddd25ee20070b9b925da548e6b97b524867e3b10fe37c955  ./dist/css/advanced.0b369fa3eb46.css
 4fd87953ed0b48d7763a1f1d8f3c4ddbe3f56324f8ab289b6d66bd1494d6cd2e  ./dist/css/copilot.4fd87953ed0b.css
 cd00f78ec4fc7d9682145914359782b159c361aa1eb7e34b89d5e17de590176e  ./dist/css/decision-timeline.cd00f78ec4fc.css
@@ -448,9 +448,9 @@ c4a6126c5a4ab5d273f69047d04fd217a22bdf8f2a9e81789e9641dafa4f8798  ./modules/esm/
 f7591d909a4f257883a338192ef68fffe57aeffcb408fec29332e6e640b3598a  ./modules/esm/features/watch-plan.mjs
 85c93171077ff00cfa7ad1bc0fcd82d64f9658957a3ea49875e280123dadb3dd  ./offline.html
 3fe0a5c863a9d895957c4b904948c1a95db29e13e57ae6a5552f986183ec89df  ./package-lock.json
-0e3f593014a217456c22d9424bb51243199aa82cbc9e9e6baa9eb8592596b1aa  ./package.json
-9de82720c6d49c15db500b75af1d8cffd00bac81ec189ea067511f0b07d619e2  ./payload/tools/update-release-checksums.mjs
-800b30a948d623e7aff6cdce6967a510beb34161f8690adcc45889b38db5ddd2  ./payload/tools/verify-checksums.py
+a11007547148d72e4c2e965c5240c6835bb6d613f29cd2cddbc75d645683376a  ./package.json
+878659398a42ee52ac4184711cc9ff63da8bf4f404a7ebb754400cc141727efe  ./payload/tools/update-release-checksums.mjs
+8e78b9f7436905bdeb6c81246af9637b4403b0295ed8dcd5635bf7d0b6bbc86c  ./payload/tools/verify-release-checksums.mjs
 f0fbc68f3c9482d62532976dd9788a88e20798e92a808e5eb7ada8f2d04665f9  ./privacy.html
 27a41d276743bde5248c2390b312fafb4454491dcd231798d2748cce123f8fea  ./qa/.htaccess
 4c7c92f0685227507c14a449c41e90df376cf5f777ec50d231fe02ad6543064d  ./qa/ai_meteorologist_v2_smoke.php
@@ -474,10 +474,10 @@ d892eef0c2d8a0e166ab7548e09b1281eee05d230b3f58d50a27e791dd284083  ./qa/decision_
 ad283edc6f3e815848c57ca081bbc1af4f3929e629627af48758d57065ff4250  ./qa/e2e/auth-guest.spec.mjs
 30a46f9a2a1dc12f79de54b9e7efa6ec2273b123617153f1cb25af40f3e190df  ./qa/e2e/auth-refresh-no-flash.spec.mjs
 fdb44a409927f65082f2f2c45b19df06c4dec7cf1792946b364b3d5b6b497746  ./qa/e2e/bug-report.spec.mjs
-ba9d52af6b29897226051150f6c0555ecb573c3a34340e01d7d2f54c24a6d961  ./qa/e2e/charts.spec.mjs
+10e7c85afba846022f71e2ec05fdc9ff1bb489b2a808429bd00bfc9d8e6ba017  ./qa/e2e/charts.spec.mjs
 a747fee0f85a498156057e674118d8a85675bcf41a04182ef989ac6e8ff6f1d6  ./qa/e2e/maintenance-active-session.spec.mjs
 57dcdec27b35827dfaa37dc77e64a7d381e6e14cf3229abfac29c208df84519f  ./qa/e2e/performance.spec.mjs
-0f52bab2fd5658fe27824856ad1da6dd6fd2cb037fcad037a6674bcecd2f8a79  ./qa/e2e/radar-layers-v2.spec.mjs
+27965b0f1f037c75923c75713ae51ff05ca0e6ddb4306817e981b7384c4efff4  ./qa/e2e/radar-layers-v2.spec.mjs
 9a65bc0b4000c22bc109a2d75cb99e674e298588572a664444fd6a1a4d644bb8  ./qa/e2e/responsive-all.spec.mjs
 52d96aed6c515f8305577cae7aae697758e6fb74a0123fef3010a1c2dadf8cd7  ./qa/e2e/test-helpers.mjs
 f7e2db043db1e68d9c9c78def93a521784087f4872d722d64495bed936fda704  ./qa/e2e/ui-controls.spec.mjs
@@ -625,3 +625,4 @@ c46b89e7c61c3dc9de3df8cc15b448fe9a933375ef5e681a4156c9992bcb4020  ./tools/static
 9de82720c6d49c15db500b75af1d8cffd00bac81ec189ea067511f0b07d619e2  ./tools/update-release-checksums.mjs
 34abfdf04a8ccdf9e065d0baa4eadde9d8b7a88facf80c5ce0c8002776cd6618  ./tools/update-release-checksums.sh
 800b30a948d623e7aff6cdce6967a510beb34161f8690adcc45889b38db5ddd2  ./tools/verify-checksums.py
+c02fa7cc0149e1ba8cdcd8c686654168242881c92f5a6240ad6d3341065c16fd  ./tools/verify-release-checksums.mjs

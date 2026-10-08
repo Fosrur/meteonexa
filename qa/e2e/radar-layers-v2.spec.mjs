@@ -11,11 +11,12 @@ test.describe('Radar Layer V2', () => {
       const state = window.MeteoNexaServices.require('runtimeApi').get().getState();
       state.location = { ...state.location, name: 'Lavagna', admin1: 'Liguria', latitude: 44.3096, longitude: 9.343 };
     });
+    await page.locator('.nav-link[data-page="radar"]').click();
+    await expect(page.locator('#page-radar')).toHaveClass(/active-page/, { timeout: 5000 });
   });
 
   for (const layer of ['cloud', 'temperature', 'wind', 'pressure', 'snow', 'air', 'marine']) {
     test(`${layer} gives visible feedback`, async ({ page }) => {
-      await page.locator('[data-nav-target="radar"]').first().click().catch(() => null);
       await page.locator('.radar-more-layers').evaluate(node => { node.open = true; });
       const button = page.locator(`[data-suite-map-layer="${layer}"]`);
       await expect(button).toBeVisible();
@@ -39,7 +40,6 @@ test.describe('Radar Layer V2', () => {
         return originalFetch(input, init);
       };
     });
-    await page.locator('[data-nav-target="radar"]').first().click().catch(() => null);
     await page.locator('.radar-more-layers').evaluate(node => { node.open = true; });
     await page.locator('[data-suite-map-layer="snow"]').click();
     const legend = page.locator('.radar-layer-v2-legend');

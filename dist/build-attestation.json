@@ -6,5 +6,5 @@
   "manifestSha256": "b15506cf8fa3d37a57fd01541cf09f89f6686dffd1639ea8dcc6756e25e51238",
   "mode": "esbuild-0.28.2",
   "offlineFallbackPolicy": "source-preserving-esm-no-static-imports",
-  "sourceSha256": "d586f57561afddc3668d56dfaaddd47768ce5770f5a99299e967d14880858921"
+  "sourceSha256": "0c90a0e8f75d91e5ffe3b6a60641cbe6511e30138dcae7d444d8f3a29c31da1b"
 }

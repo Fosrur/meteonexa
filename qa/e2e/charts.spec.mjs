@@ -142,8 +142,8 @@ test.describe('Mobile authentication recovery UX', () => {
     await page.goto('./', { waitUntil: 'domcontentloaded' });
     await waitForMeteoNexaReady(page);
 
-    const js = await loadBuiltSource(page, 'js/app.js');
-    const start = js.indexOf('const PRESERVED_LOCAL_KEYS_ON_CACHE_RESET');
+    const js = await loadBuiltSource(page, 'js/app-components/app-functions-07.js');
+    const start = js.indexOf('function settleBrowserOperation(');
     const end = js.indexOf('async function requestGuestCacheReceiptProof()', start);
 
     expect(start).toBeGreaterThan(-1);
