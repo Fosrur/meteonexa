@@ -30,7 +30,7 @@
     "check:i18n-copy": "python3 qa/i18n_hardcoded_copy_smoke.py .",
     "check:services": "node qa/esm_service_publication_smoke.mjs",
     "checksums:update": "node tools/update-release-checksums.mjs",
-    "checksums:verify": "sha256sum -c SHA256SUMS.txt",
+    "checksums:verify": "node tools/run-python.mjs tools/verify-checksums.py",
     "build:release": "npm run build:production && npm run checksums:update",
     "check:provenance": "python3 qa/release_provenance_smoke.py .",
     "check:i18n-runtime": "python3 qa/i18n_runtime_literal_smoke.py .",
@@ -50,7 +50,7 @@
     "check:roadmap-complete": "npm run check:ai-v2 && npm run check:personal-twin && npm run check:weather-observability && python3 qa/roadmap_contract_smoke.py",
     "qa:fast": "node tools/run-quality.mjs fast",
     "qa:release": "node tools/run-quality.mjs release",
-    "qa:full": "node tools/run-quality.mjs full",
+    "qa:full": "npm run lint:eslint && npm run build:production && npm run check:ci-runtime && node tools/run-quality.mjs full",
     "build:reproducible": "python3 tools/reproducible-build.py --check-twice",
     "check:build-reproducibility": "python3 qa/build_reproducibility_smoke.py",
     "check:quality-trends": "python3 qa/quality_trends_contract_smoke.py",
@@ -63,7 +63,8 @@
     "check:i18n-db": "python3 qa/i18n_db_source_smoke.py .",
     "check:app-shell": "python3 qa/app_shell_components_smoke.py .",
     "check:php-components": "python3 qa/php_helper_components_smoke.py .",
-    "check:10-10": "python3 qa/roadmap_10_10_final_smoke.py ."
+    "check:10-10": "python3 qa/roadmap_10_10_final_smoke.py .",
+    "check:ci-runtime": "node tools/run-python.mjs qa/ci_runtime_parity_smoke.py"
   },
   "engines": {
     "node": ">=20.19"

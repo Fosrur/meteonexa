@@ -24,7 +24,7 @@ function factory(window, deps, provided) {
         const {
             canvasSetup, hideChartTooltip, registerChartInteraction,
             drawChartAxisTitle, chartUnitAxisLabel, schedulePrimaryChartMotion
-        } = createVisualizationChartCore({ window, state, $, clamp, appLocale, meteonexaText });
+        } = createVisualizationChartCore({ window, state, $, $$, clamp, appLocale, capitalize, meteonexaText, t, escapeHTML });
         function drawChart(canvas, hours, detailed = false, motionElapsed = null) {
             const setup = canvasSetup(canvas);
             if (!setup || !state.weather)
@@ -170,9 +170,9 @@ function factory(window, deps, provided) {
         const {
             initializeWeatherFX, resizeWeatherFX, updateWeatherAtmosphere
         } = createVisualizationAtmosphere({ window, state, $, clamp, currentResolvedCondition, meteonexaText });
-        const { drawMotionChart } = createVisualizationMotionCharts({
+        const { drawMotionChart, drawChartPlayhead } = createVisualizationMotionCharts({
             window, state, $, clamp, canvasSetup, appLocale, drawChartAxisTitle,
-            chartUnitAxisLabel, registerChartInteraction
+            chartUnitAxisLabel, registerChartInteraction, formatClock, t, meteonexaText
         });
         function drawTrendCharts(includeDetails = false) {
             if (!state.weather?.hourly)

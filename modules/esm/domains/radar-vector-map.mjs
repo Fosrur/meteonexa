@@ -1,6 +1,6 @@
 export function createRadarVectorMap(context) {
     const {
-        window, state, CONFIG, $, clamp, meteonexaText, drawRadarBaseMap,
+        window, state, CONFIG, $, clamp, meteonexaText, drawRadarBaseMap, security,
         loadRadarBaseData, loadRadarAdminData, renderRadarMap,
         drawForecastRadarLayer, scheduleRadarRender
     } = context;
@@ -26,7 +26,7 @@ function radarVectorTileTemplate(frame) {
         return '';
     const params = new URLSearchParams({
         host: frame.tileHost || frame.host || '', path: frame.path, z: '{z}', x: '{x}', y: '{y}', color: String(frame.tileColor ?? 10), smooth: String(frame.tileSmooth || '1_1'),
-        deviceId: deps.security?.deviceId || '', exp: String(frame.tileExpires), frameSig: frame.frameSignature
+        deviceId: security?.deviceId || '', exp: String(frame.tileExpires), frameSig: frame.frameSignature
     });
     return `api/radar/tile.php?${params.toString().replaceAll('%7Bz%7D', '{z}').replaceAll('%7Bx%7D', '{x}').replaceAll('%7By%7D', '{y}')}`;
 }

@@ -1,6 +1,6 @@
 export function createPwaNotifications(context) {
     const {
-        state, APP_BUILD, $, isHandheldOrTabletDevice, isStandalonePWA,
+        window, state, APP_BUILD, $, isHandheldOrTabletDevice, isStandalonePWA,
         syncNotificationButton, updateNetworkStatus, meteonexaText, showToast, withLoader
     } = context;
     if (!state || typeof $ !== 'function') {

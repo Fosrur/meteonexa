@@ -1,5 +1,5 @@
 export function createVisualizationChartCore(context) {
-    const { window, state, $, clamp, appLocale, meteonexaText } = context;
+    const { window, state, $, $$, clamp, appLocale, capitalize, meteonexaText, t, escapeHTML } = context;
     if (!state || typeof $ !== 'function') {
         throw new Error('METEONEXA_VISUALIZATION_CHART_CORE_CONTEXT_INVALID');
     }

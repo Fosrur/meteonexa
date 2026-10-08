@@ -1,7 +1,7 @@
 export function createVisualizationMotionCharts(context) {
     const {
         window, state, $, clamp, canvasSetup, appLocale, drawChartAxisTitle,
-        chartUnitAxisLabel, registerChartInteraction
+        chartUnitAxisLabel, registerChartInteraction, formatClock, t, meteonexaText
     } = context;
     if (!state || typeof $ !== 'function') {
         throw new Error('METEONEXA_VISUALIZATION_MOTION_CONTEXT_INVALID');
@@ -223,5 +223,5 @@ function drawMotionChart(canvas, datasets, labels, options = {}) {
     };
     canvas._motionRaf = requestAnimationFrame(paint);
 }
-    return Object.freeze({ drawMotionChart });
+    return Object.freeze({ drawMotionChart, drawChartPlayhead });
 }

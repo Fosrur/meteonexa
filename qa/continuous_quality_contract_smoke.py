@@ -42,6 +42,9 @@ for mode in ('fast', 'release', 'full'):
 require(launcher_path.is_file(), 'cross-platform quality launcher missing')
 require(python_launcher_path.is_file(), 'cross-platform Python launcher missing')
 require(checksum_path.is_file(), 'cross-platform checksum verifier missing')
+require('lint:eslint' in scripts.get('qa:full', ''), 'qa:full must execute ESLint before the exhaustive suite')
+require('check:ci-runtime' in scripts.get('qa:full', ''), 'qa:full must execute the local HTTP runtime parity gate')
+require('check:ci-runtime' in scripts, 'check:ci-runtime package script missing')
 for mode in ('fast', 'release', 'full'):
     for gate in catalog.get('modes', {}).get(mode, []):
         command = gate.get('command') or []

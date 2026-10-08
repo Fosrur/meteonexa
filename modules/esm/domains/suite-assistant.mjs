@@ -368,6 +368,10 @@ function factory(window, deps, provided) {
             async function askAssistant(question) {
                 const guest = isGuest();
                 if (guest && suite.assistantMode !== 'local') setAssistantMode('local', false);
+                if (assistantMatches(normalizeQuestion(question), 'assistant.pattern.clear')) {
+                    resetAssistant();
+                    return;
+                }
                 if (suite.assistantBusy)
                     return;
                 const value = String(question || '').trim();

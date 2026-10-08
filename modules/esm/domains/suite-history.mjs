@@ -5,7 +5,7 @@ function factory(window, deps, provided) {
     void deps;
     provided.suiteHistory = Object.freeze({
         create(context) {
-            const { CONFIG, suite, state, q, n, clamp, safe, mean, loader, fetchJson, dateInput, addDays, toast, meteonexaText } = context;
+            const { CONFIG, suite, state, q, n, clamp, safe, mean, loader, fetchJson, dateInput, addDays, toast, meteonexaText, locationLabel, tempText } = context;
     function historicalUrl(start, end) { const p = new URLSearchParams({ latitude: state.location.latitude, longitude: state.location.longitude, start_date: start, end_date: end, daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,snowfall_sum,wind_gusts_10m_max', timezone: 'auto', wind_speed_unit: 'kmh' }); return `${CONFIG.HISTORICAL_API}?${p}`; }
     function previousRunsUrl(start, end) { const p = new URLSearchParams({ latitude: state.location.latitude, longitude: state.location.longitude, start_date: start, end_date: end, hourly: 'temperature_2m,temperature_2m_previous_day1,precipitation,precipitation_previous_day1', timezone: 'auto' }); return `${CONFIG.PREVIOUS_RUNS_API}?${p}`; }
     async function loadEnhancedHistory() {

@@ -372,7 +372,7 @@ export function install(services, host = globalThis) {
                 }
 
                 const { updatePwaSettingsStatus, registerPWA, installPWA } = createPwaNotifications({
-                    state, APP_BUILD, $, isHandheldOrTabletDevice, isStandalonePWA,
+                    window, state, APP_BUILD, $, isHandheldOrTabletDevice, isStandalonePWA,
                     syncNotificationButton, updateNetworkStatus, meteonexaText, showToast, withLoader
                 });
                 function bindNotificationEvents() {

@@ -24,7 +24,7 @@ export function install(services, host = globalThis) {
 
                 const runtime = {};
                 const vector = createRadarVectorMap({
-                    window, state, CONFIG, $, clamp, meteonexaText, drawRadarBaseMap,
+                    window, state, CONFIG, $, clamp, meteonexaText, drawRadarBaseMap, security: deps.security,
                     loadRadarBaseData, loadRadarAdminData,
                     renderRadarMap: (...args) => runtime.renderRadarMap(...args),
                     drawForecastRadarLayer: (...args) => runtime.drawForecastRadarLayer(...args),
@@ -38,8 +38,10 @@ export function install(services, host = globalThis) {
                     syncRadarVectorMap: vector.syncRadarVectorMap,
                     syncRadarVectorLayer: vector.syncRadarVectorLayer,
                     removeRadarVectorLayer: vector.removeRadarVectorLayer,
+                    clearRadarFallbackCanvas: vector.clearRadarFallbackCanvas,
                     ensureRadar: (...args) => runtime.ensureRadar(...args),
-                    setRadarFrame: (...args) => runtime.setRadarFrame(...args)
+                    setRadarFrame: (...args) => runtime.setRadarFrame(...args),
+                    stopRadarAnimation: (...args) => runtime.stopRadarAnimation(...args)
                 });
                 Object.assign(runtime, renderer);
                 const playback = createRadarPlayback({
@@ -59,7 +61,10 @@ export function install(services, host = globalThis) {
                     loadLiveRadar: renderer.loadLiveRadar,
                     updateRadarStats: renderer.updateRadarStats,
                     scheduleRadarRefresh: renderer.scheduleRadarRefresh,
-                    syncRadarVectorMap: vector.syncRadarVectorMap
+                    syncRadarVectorMap: vector.syncRadarVectorMap,
+                    syncRadarVectorLayer: vector.syncRadarVectorLayer,
+                    scheduleRadarRender: renderer.scheduleRadarRender,
+                    radarService: deps.radar
                 });
                 Object.assign(runtime, playback);
                 const {

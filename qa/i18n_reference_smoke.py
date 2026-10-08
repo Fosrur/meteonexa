@@ -9,8 +9,9 @@ patterns=[
     re.compile(r'data-i18n-key=["\']([^"\']+)["\']'),
     re.compile(r'\b(?:meteonexaText|meteonexa_backend_text|ui|text|t)\(\s*["\']([^"\']+)["\']')
 ]
+ignored_dirs={'.git','.build','dist','vendor','node_modules','.quality-reports','playwright-report','test-results','coverage','payload','__pycache__'}
 for path in root.rglob('*'):
-    if not path.is_file() or 'dist' in path.parts or 'vendor' in path.parts or path.name=='translations.json':
+    if not path.is_file() or ignored_dirs.intersection(path.parts) or path.name=='translations.json':
         continue
     if path.suffix.lower() not in {'.html','.js','.mjs','.php'}:
         continue

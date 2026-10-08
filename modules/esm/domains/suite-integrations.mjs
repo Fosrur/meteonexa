@@ -50,7 +50,7 @@ function factory(window, deps, provided) {
         }
     }
     const {
-        showLiveLightning, registerRadarArchive, destroyArchiveMap, loadRadarArchive
+        showLiveLightning, registerRadarArchive, destroyArchiveMap, loadRadarArchive, removeLightningLayers
     } = createSuiteRadarIntegrations({
         window, deps, CONFIG, state, suite, q, qa, num, clamp, safe, currentLocale,
         fetchJson, API, setText, locationData, ensureRadar, removeRadarVectorLayer,

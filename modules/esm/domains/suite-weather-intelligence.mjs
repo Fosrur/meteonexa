@@ -9,7 +9,7 @@ function factory(window, deps, provided) {
                 CONFIG, SERVICES, API, KEYS, suite, state, q, qa, n, clamp, safe, currentLocale,
                 mean, deviation, localTime, tempText, locationLabel, locationKey, ui, toast, loader,
                 deviceId, isGuest, fetchJson, dateInput, nearestTimeIndex, directionName, updateThreshold,
-                temperature, weatherMeta, weatherArt, meteonexaText, sendDeviceNotification
+                temperature, weatherMeta, weatherArt, meteonexaText, sendDeviceNotification, configureBackgroundChecks
             } = context;
     const MODEL_DEFINITIONS = [
         ['ecmwf', meteonexaText('provider.ecmwf'), meteonexaText("advanced.loadmodels.european_model")],

@@ -172,7 +172,7 @@ function load_config(): array
     if (is_array($loaded)) return $loaded;
 
     $customPath = trim((string)(getenv('METEONEXA_CONFIG_PATH') ?: ''));
-    $path = $customPath !== '' ? $customPath : __DIR__ . '/config.php';
+    $path = $customPath !== '' ? $customPath : dirname(__DIR__) . '/config.php';
     if (!is_file($path)) {
         respond(['ok' => false, 'code' => 'CONFIG_MISSING', 'message' => 'api.bootstrap.config_missing'], 500);
     }
@@ -185,7 +185,7 @@ function load_config(): array
     $config['auth']['app_secret'] = meteonexa_resolve_app_secret();
 
     try {
-        require_once __DIR__ . '/database.php';
+        require_once dirname(__DIR__) . '/database.php';
         $databaseSmtp = [];
         try {
             $databaseSmtp = meteonexa_load_smtp($config);

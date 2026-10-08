@@ -3,8 +3,8 @@ export function createRadarRenderer(context) {
         window, state, CONFIG, STORAGE, $, $$, t, meteonexaText, escapeHTML, clamp,
         persistLocalSettings, fetchJSON, currentHourlyIndex, sleep, appLocale, showToast,
         drawRadarBaseMap, lonLatToWorld, worldToLonLat, radarTileUrl,
-        syncRadarVectorMap, syncRadarVectorLayer, removeRadarVectorLayer,
-        ensureRadar, setRadarFrame
+        syncRadarVectorMap, syncRadarVectorLayer, removeRadarVectorLayer, clearRadarFallbackCanvas,
+        ensureRadar, setRadarFrame, stopRadarAnimation
     } = context;
     if (!state || typeof $ !== 'function') {
         throw new Error('METEONEXA_RADAR_RENDERER_CONTEXT_INVALID');

@@ -351,10 +351,7 @@ function assistantIntentFromText(text) {
 }
 async function localAssistantAnswer(question) {
     const text = normalizeQuestion(question);
-    if (assistantMatches(text, 'assistant.pattern.clear')) {
-        resetAssistant();
-        return '';
-    }
+    if (assistantMatches(text, 'assistant.pattern.clear')) return '';
     const socialIntent = assistantSocialIntent(text);
     if (socialIntent) {
         suite.assistantContext.lastSocialIntent = socialIntent;

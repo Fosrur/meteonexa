@@ -8,7 +8,7 @@ export function createRadarPlayback(context) {
         lonLatToWorld, worldToLonLat, radarTileUrl, analyzeRadarMotion, renderRadarMotion,
         initRadarMap, activeRadarFrames, setRadarStatus, updateRadarModeUI, renderRadarMap,
         drawForecastRadarLayer, loadForecastRadar, loadLiveRadar, updateRadarStats,
-        scheduleRadarRefresh, syncRadarVectorMap
+        scheduleRadarRefresh, syncRadarVectorMap, syncRadarVectorLayer, scheduleRadarRender, radarService
     } = context;
     if (!state || typeof $ !== 'function') {
         throw new Error('METEONEXA_RADAR_PLAYBACK_CONTEXT_INVALID');
@@ -21,7 +21,7 @@ async function ensureRadar(force = false, options = {}) {
     if (state.radar.loaded && !force)
         return;
     state.radar.loading = true;
-    deps.radar?.begin?.(force ? 'refresh' : 'load', 14000);
+    radarService?.begin?.(force ? 'refresh' : 'load', 14000);
     $('#radar-refresh').classList.add('loading');
     const task = async () => {
         if (force) {
@@ -65,7 +65,7 @@ async function ensureRadar(force = false, options = {}) {
         renderRadarMotion();
         if (liveOk) analyzeRadarMotion({ force }).catch(error => console.warn('RADAR_PREDICTIVE_BACKGROUND_FAILED', error));
         scheduleRadarRefresh();
-        deps.radar?.complete?.({
+        radarService?.complete?.({
             mode: desired,
             liveAvailable: Boolean(liveOk),
             forecastAvailable: Boolean(forecastOk),
@@ -83,7 +83,7 @@ async function ensureRadar(force = false, options = {}) {
                 await withLoader(force ? "" + meteonexaText("radar.task.radar_update") : "" + meteonexaText("radar.task.radar_connection"), "" + meteonexaText("radar.loading_precipitation_observations_forecast"), task, 620);
         }
         catch (error) {
-            deps.radar?.fail?.(error);
+            radarService?.fail?.(error);
             throw error;
         }
         finally {
