@@ -1,11 +1,11 @@
 import { test, expect } from '@playwright/test';
-import { prepareStableApp, waitForMeteoNexaReady } from './test-helpers.mjs';
+import { prepareStableApp, waitForMeteoNexaInteractiveReady } from './test-helpers.mjs';
 
 test.describe('Radar Layer V2', () => {
   test.beforeEach(async ({ page }) => {
     await prepareStableApp(page);
     await page.goto('?preview', { waitUntil: 'domcontentloaded' });
-    await waitForMeteoNexaReady(page);
+    await waitForMeteoNexaInteractiveReady(page);
     await expect(page.locator('#weather-app')).toBeVisible({ timeout: 5000 });
     await page.evaluate(() => {
       const state = window.MeteoNexaServices.require('runtimeApi').get().getState();

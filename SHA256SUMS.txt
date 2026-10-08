@@ -194,7 +194,7 @@ d366b3e33ffdb3d214efe0226d0491d701b26f1c45cbb1d2f7946113c1e9039f  ./api/system/s
 cb3ac771cd80984d75fda7226b7c4861fdde73dc8ac8b0b02a1b30f51536351c  ./api/weather/severe.php
 aa68a62bf31d23649ffdeedf87c585bf608e696d457f8423b94ea60de34f83b3  ./api/web_push.php
 3c8a3f1026640c9ce69700c435bc28a5632ba21c7518565a3e6b31f8f389ccf9  ./apply_meteonexa_actions_v8_checksum_fix.py
-d08cab224432feca2f06412312519e341f39fb474a1d72c6188bd4e47e73def4  ./asset-manifest.json
+474dc5c561a048d505f08571ec399421e5eef33a8ac9f1dcfa5034c1fdfc6c85  ./asset-manifest.json
 af5339da7ab53a1b08aa5b15ee72f10164ac7c62695adde8997f5f2a3524c417  ./assets/data/world-lines.json
 a103b42946a897344b3015a06482c173652b00e9623bb14b44be6255c32a45e4  ./assets/i18n/de.json
 aa532cfa8672142c8105716ebe4d2efe702d9841dcfe51d49b547febc67b7fe3  ./assets/i18n/en.json
@@ -233,7 +233,6 @@ b56288947d74c271eaf60c9037e39468c56beb821c4740c9edf1c09fa3ecf2f5  ./css/suite.cs
 1ebd4aca18a30327e4c2c31fc832f6fadbd2297fb4e9861dfe25db5fecc92adb  ./diagnostics/diagnostics.css
 834385d4e357e0a8ce4977ea38f114fb204755bf96b0529641fd32e2bde5c9d8  ./diagnostics/diagnostics.js
 9b3f7fbb2df75583552aba10f65821d008b021c4817e29106d9880efb60252de  ./diagnostics/index.php
-08fc0245afecfeead28f022d8ca2c18e7b21f598a12d1ab966300cb2d24fe173  ./dist/build-attestation.json
 0b369fa3eb461705ddd25ee20070b9b925da548e6b97b524867e3b10fe37c955  ./dist/css/advanced.0b369fa3eb46.css
 4fd87953ed0b48d7763a1f1d8f3c4ddbe3f56324f8ab289b6d66bd1494d6cd2e  ./dist/css/copilot.4fd87953ed0b.css
 cd00f78ec4fc7d9682145914359782b159c361aa1eb7e34b89d5e17de590176e  ./dist/css/decision-timeline.cd00f78ec4fc.css
@@ -270,7 +269,7 @@ f25d4fb62f2b26746601a562f18263300d8ce075695539126a795feaf49d6d65  ./dist/js/app-
 87189b624efbfbce9180e6aba3dab11c1aa5757b0ec3279c27001e7a745d7ffd  ./dist/js/privacy-context.87189b624efb.js
 dcf93af2c2ebb33b9ca4116993cb74003528a05f7b30a3b8cefb84faf72346ed  ./dist/js/protected-page.dcf93af2c2eb.js
 b4dbf8677d9d29e3a61619a941b1c5892d0598e1cebc2b6850670fe402bc46b3  ./dist/js/security-runtime.b4dbf8677d9d.js
-7385e2ceaf680c00f815c1c7d7452e37c7843c0ed9c49a0f15d2852a4aa61365  ./dist/js/suite.9f6148e70650.js
+be9c9a971cf745f5e16242800b64386499ecddb5d51fb79f873a123dea30b572  ./dist/js/suite.be9c9a971cf7.js
 7e320d20f747e7ae84d17d3efa9e54c26dd1b28914a342dab3f1ca7738e10a51  ./dist/js/weather-intelligence.7e320d20f747.js
 078615c1cbf331c842ddaf98e029ddec82b593f178487a78d6b0625ab3a12641  ./dist/modules/esm/bootstrap.078615c1cbf3.mjs
 271cfe7c109db13d81c3de1f6f61964cd864114344de1af68909cbe239af6fed  ./dist/modules/esm/core/i18n-catalog.271cfe7c109d.mjs
@@ -375,7 +374,7 @@ e19122db197e43e8e32e2bc778b5262386af6b12e9ba39469aef7637275ae2fe  ./js/app-compo
 ab9837b266695f9944b72311cbc0cc097e88ac6e1c8335157b26a88b62a811bc  ./js/app-components/app-functions-09.js
 f25d4fb62f2b26746601a562f18263300d8ce075695539126a795feaf49d6d65  ./js/app-components/app-functions-10.js
 553d92ad30e1e5d711ee8466816d6d0a03a25187b61cf527a2f8575b0ae92a75  ./js/app.js
-25d766570c5845a2a247324be27039ad524a820f7e91e3924363b514961f9502  ./js/asset-manifest.js
+b87dda8aebf3aef4e2280398fffcaf0fea43e4055590ff500d08325b45c2748f  ./js/asset-manifest.js
 32af12cec1ca294fa129e660fab69b54a3c850d8a408525b41b5a5ae85ff6aac  ./js/boot-clock.js
 5d96b58eba4c3524747dd0cafd1d5b2091efd0d2a01dc0d84e67aa6062b86a8f  ./js/config.js
 6b61f9c9288f2e2ea9e12930213eabe99d73fa13c0acc0297f27f15f4e212eb1  ./js/custom-controls.js
@@ -387,7 +386,7 @@ f25d4fb62f2b26746601a562f18263300d8ce075695539126a795feaf49d6d65  ./js/app-compo
 87189b624efbfbce9180e6aba3dab11c1aa5757b0ec3279c27001e7a745d7ffd  ./js/privacy-context.js
 dcf93af2c2ebb33b9ca4116993cb74003528a05f7b30a3b8cefb84faf72346ed  ./js/protected-page.js
 b4dbf8677d9d29e3a61619a941b1c5892d0598e1cebc2b6850670fe402bc46b3  ./js/security-runtime.js
-7385e2ceaf680c00f815c1c7d7452e37c7843c0ed9c49a0f15d2852a4aa61365  ./js/suite.js
+be9c9a971cf745f5e16242800b64386499ecddb5d51fb79f873a123dea30b572  ./js/suite.js
 6fbd2282fb3aec6954850d4d5dc15c5500c6f21973008b60629b45f38e402280  ./js/sw.js
 7e320d20f747e7ae84d17d3efa9e54c26dd1b28914a342dab3f1ca7738e10a51  ./js/weather-intelligence.js
 8f4e121a2abf36f87f28292ee056139da625c2fca9923e7671a1d1c65f67527f  ./maintenance.html
@@ -477,7 +476,7 @@ fdb44a409927f65082f2f2c45b19df06c4dec7cf1792946b364b3d5b6b497746  ./qa/e2e/bug-r
 10e7c85afba846022f71e2ec05fdc9ff1bb489b2a808429bd00bfc9d8e6ba017  ./qa/e2e/charts.spec.mjs
 a747fee0f85a498156057e674118d8a85675bcf41a04182ef989ac6e8ff6f1d6  ./qa/e2e/maintenance-active-session.spec.mjs
 57dcdec27b35827dfaa37dc77e64a7d381e6e14cf3229abfac29c208df84519f  ./qa/e2e/performance.spec.mjs
-27965b0f1f037c75923c75713ae51ff05ca0e6ddb4306817e981b7384c4efff4  ./qa/e2e/radar-layers-v2.spec.mjs
+ffafef5baf798a4dfe37d3c671b41d9d8de8c8a7df3e6d5546d40244e3048b3e  ./qa/e2e/radar-layers-v2.spec.mjs
 9a65bc0b4000c22bc109a2d75cb99e674e298588572a664444fd6a1a4d644bb8  ./qa/e2e/responsive-all.spec.mjs
 52d96aed6c515f8305577cae7aae697758e6fb74a0123fef3010a1c2dadf8cd7  ./qa/e2e/test-helpers.mjs
 f7e2db043db1e68d9c9c78def93a521784087f4872d722d64495bed936fda704  ./qa/e2e/ui-controls.spec.mjs

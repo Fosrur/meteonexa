@@ -328,14 +328,21 @@
         if (isGuest() || !state.weather) return;
         loadEnvironment().then(() => renderExtendedAlerts()).catch(() => renderExtendedAlerts());
     });
-    document.addEventListener('meteonexa:ready', () => {
+    let suiteInitialized = false;
+    function initializeSuite() {
+        if (suiteInitialized)
+            return;
+        suiteInitialized = true;
         bind();
         patchLifecycle();
         setTimeout(() => {
             if (state.currentPage === 'advanced' && state.weather && !suite.advancedRefreshedAt)
                 refreshAdvanced(false).catch(() => { });
         }, 250);
-    }, { once: true });
+    }
+    document.addEventListener('meteonexa:ready', initializeSuite, { once: true });
+    if (state.bootComplete === true)
+        queueMicrotask(initializeSuite);
     const suiteService = Object.assign(SERVICES.get('suite') || {}, { build: BUILD, refresh: refreshAdvanced, calculateRoute: calculateRouteUI, openAssistant: openAssistantDialog, openAssistantWithAi });
     SERVICES.publish('suite', suiteService);
 })();
