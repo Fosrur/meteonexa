@@ -2,6 +2,15 @@ name: MeteoNexa Dependency Security
 
 on:
   workflow_dispatch:
+  push:
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+      - 'qa/package.json'
+      - 'qa/package-lock.json'
+      - 'composer.json'
+      - 'composer.lock'
+      - '.github/workflows/dependency-security.yml'
   schedule:
     - cron: '15 3 * * *'
 

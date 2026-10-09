@@ -3,7 +3,7 @@ c1737961e6677cce2837327e0f9c6fbe07770c5d6827cc3e836082110fc4c6e1  ./.dockerignor
 7ea5bb511286e6a9ae4c81338392d1d62da5092335fdf6cec1bbfe127d1c80db  ./.env.staging.example
 d695b25f257a92ff1f62aaa1462f9a1ca6c40ab294a7dcfe5e6934e45577c291  ./.gitattributes
 dbdf47f62a27badc00789cd9369768de4d210117e6b04d534677154701c19435  ./.github/.htaccess
-a4ff7fed1a80ba5e269f62c732ee83073b5a5c7c6f2d02b83fdef82d080e338c  ./.github/workflows/dependency-security.yml
+c97f5e7179a8531f30107086e7cbb7ce96bea92bb42a86ae5c3a344e3d2f1cab  ./.github/workflows/dependency-security.yml
 8bb3285f29977fb02a30d8c05ecaa230a1e111040e93547709f08c33f1301f81  ./.github/workflows/deploy-production.yml
 f085e97806ca58f44f319995fbdf7ba1d38b00716ca453185b803ae3ca6f1a0b  ./.github/workflows/meteonexa-tests.yml
 b1201f22e6ca77aecf5c07c6b5952f9f1b39f93579839db8fff798f4558c897b  ./.gitignore
@@ -446,7 +446,7 @@ d0995977c0eea213794fa8ed9f71c314332be788643dca8aad415c7886f59408  ./modules/esm/
 c4a6126c5a4ab5d273f69047d04fd217a22bdf8f2a9e81789e9641dafa4f8798  ./modules/esm/features/route-weather.mjs
 f7591d909a4f257883a338192ef68fffe57aeffcb408fec29332e6e640b3598a  ./modules/esm/features/watch-plan.mjs
 85c93171077ff00cfa7ad1bc0fcd82d64f9658957a3ea49875e280123dadb3dd  ./offline.html
-3fe0a5c863a9d895957c4b904948c1a95db29e13e57ae6a5552f986183ec89df  ./package-lock.json
+89b2c6c0f7d424a2a3da051e1361c0e4e0ca519791391ce7c194bca3210c8695  ./package-lock.json
 a11007547148d72e4c2e965c5240c6835bb6d613f29cd2cddbc75d645683376a  ./package.json
 878659398a42ee52ac4184711cc9ff63da8bf4f404a7ebb754400cc141727efe  ./payload/tools/update-release-checksums.mjs
 8e78b9f7436905bdeb6c81246af9637b4403b0295ed8dcd5635bf7d0b6bbc86c  ./payload/tools/verify-release-checksums.mjs
